@@ -11,7 +11,7 @@ find_package(rmw REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rmw_implementation REQUIRED)
-find_package(simple_msgs REQUIRED)
+find_package(std_interfaces REQUIRED)
 
 find_package(roscpp)
 find_package(std_msgs)
@@ -30,7 +30,7 @@ function(build_executable executable)
   add_executable(${executable} ${ARG_UNPARSED_ARGUMENTS})
   ament_target_dependencies(${executable}
     "rclcpp"
-    "simple_msgs"
+    "std_interfaces"
     "rmw_implementation")
   if(ARG_ROS1_DEPENDENCIES)
     ament_target_dependencies(${executable}
@@ -45,7 +45,7 @@ function(build_executable executable)
     add_executable(${executable}__${middleware_impl_tmp} ${ARG_UNPARSED_ARGUMENTS})
     ament_target_dependencies(${executable}__${middleware_impl_tmp}
       "rclcpp"
-      "simple_msgs"
+      "std_interfaces"
       "${middleware_impl_tmp}")
     if(ARG_ROS1_DEPENDENCIES)
       ament_target_dependencies(${executable}__${middleware_impl_tmp}
@@ -57,6 +57,7 @@ function(build_executable executable)
   endforeach()
 endfunction()
 
+build_executable(bridge src/bridge.cpp ROS1_DEPENDENCIES)
 build_executable(bridge_1_to_2 src/bridge_1_to_2.cpp ROS1_DEPENDENCIES)
 build_executable(bridge_2_to_1 src/bridge_2_to_1.cpp ROS1_DEPENDENCIES)
 build_executable(ros1_bridge_talker src/talker.cpp)

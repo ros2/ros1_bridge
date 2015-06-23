@@ -20,12 +20,12 @@
 
 // include ROS 2
 #include <rclcpp/rclcpp.hpp>
-#include <simple_msgs/msg/string.hpp>
+#include <std_interfaces/msg/string.hpp>
 
 
 ros::Publisher pub;
 
-void chatterCallback(const simple_msgs::msg::String::ConstSharedPtr & ros2_msg)
+void chatterCallback(const std_interfaces::msg::String::ConstSharedPtr & ros2_msg)
 {
   std::cout << "I heard: [" << ros2_msg->data << "]" << std::endl;
 
@@ -45,7 +45,7 @@ int main(int argc, char * argv[])
   // ROS 2 node and subscriber
   rclcpp::init(argc, argv);
   auto node = rclcpp::node::Node::make_shared("listener");
-  auto sub = node->create_subscription<simple_msgs::msg::String>("chatter", 10, chatterCallback);
+  auto sub = node->create_subscription<std_interfaces::msg::String>("chatter", 10, chatterCallback);
 
   rclcpp::spin(node);
 

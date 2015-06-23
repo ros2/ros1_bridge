@@ -1,0 +1,94 @@
+// Copyright 2015 Open Source Robotics Foundation, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#include <iostream>
+
+// include ROS 1
+#include <ros/message.h>
+#include <ros/ros.h>
+#include <std_msgs/String.h>
+
+// include ROS 2
+#include <rclcpp/rclcpp.hpp>
+#include <std_interfaces/msg/string.hpp>
+
+
+ros::Publisher ros1_pub;
+
+void ros2ChatterCallback(const std_interfaces::msg::String::ConstSharedPtr & ros2_msg)
+{
+  printf("  I heard from ROS 2: [%s]\n", ros2_msg->data.c_str());
+
+  std_msgs::String ros1_msg;
+  ros1_msg.data = ros2_msg->data;
+  printf("  Passing along to ROS 1: [%s]\n", ros1_msg.data.c_str());
+  ros1_pub.publish(ros1_msg);
+}
+
+
+publisher::Publisher::SharedPtr ros2_pub;
+
+void ros1ChatterCallback(const ros::MessageEvent<std_msgs::String const> & ros1_msg_event)
+{
+  const boost::shared_ptr<ros::M_string>& connection_header = ros1_msg_event.getConnectionHeaderPtr();
+  std::string key = "callerid";
+  if (connection_header->find(key) != connection_header->end()) {
+    if (connection_header->at(key) == "/ros_bridge") {
+      printf("    I heard from ROS 1 from myself\n");
+      return;
+    }
+    printf("I heard from ROS 1 from: [%s]\n", connection_header->at(key).c_str());
+  }
+
+  const boost::shared_ptr<std_msgs::String const> & ros1_msg = ros1_msg_event.getConstMessage();
+  printf("I heard from ROS 1: [%s]\n", ros1_msg->data.c_str());
+
+  auto ros2_msg = std::make_shared<std_interfaces::msg::String>();
+  ros2_msg->data = ros1_msg->data;
+  printf("Passing along to ROS 2: [%s]\n", ros2_msg->data.c_str());
+  ros2_pub->publish(ros2_msg);
+}
+
+
+int main(int argc, char * argv[])
+{
+  // ROS 1 node and publisher
+  ros::init(argc, argv, "ros_bridge");
+  ros::NodeHandle ros1_node;
+  ros1_pub = ros1_node.advertise<std_msgs::String>("chatter", 10);
+
+  // ROS 2 node and publisher
+  rclcpp::init(argc, argv);
+  auto ros2_node = rclcpp::node::Node::make_shared("ros_bridge");
+  ros2_pub = ros2_node->create_publisher<std_interfaces::msg::String>("chatter", 10);
+
+  // ROS 1 subscriber
+  ros::Subscriber ros1_sub = ros1_node.subscribe("chatter", 10, ros1ChatterCallback);
+
+  // ROS 2 subscriber
+  auto ros2_sub = ros2_node->create_subscription<std_interfaces::msg::String>(
+    "chatter", 10, ros2ChatterCallback, nullptr, true);
+
+  // ROS 1 asynchronous spinner
+  ros::AsyncSpinner async_spinner(1);
+  async_spinner.start();
+
+  // ROS 2 spinning loop
+  rclcpp::executors::SingleThreadedExecutor executor;
+  while (ros1_node.ok() && rclcpp::utilities::ok()) {
+    executor.spin_node_once(ros2_node, true);
+  }
+
+  return 0;
+}
