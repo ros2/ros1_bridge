@@ -39,7 +39,7 @@ roscore
 # Shell B:
 . <workspace-with-bridge>/install/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
-bridge
+simple_bridge
 ```
 
 Now you can start publishers / subscribers on either side:
@@ -89,7 +89,7 @@ rosrun roscpp_tutorials talker
 # Shell C:
 . <workspace-with-bridge>/install/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
-bridge_1_to_2
+simple_bridge_1_to_2
 ```
 
 ```
@@ -116,7 +116,7 @@ roscore
 # Shell C:
 . <workspace-with-bridge>/install/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
-bridge_2_to_1
+simple_bridge_2_to_1
 ```
 
 ```
