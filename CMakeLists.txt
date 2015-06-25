@@ -16,6 +16,8 @@ find_package(std_interfaces REQUIRED)
 find_package(roscpp)
 find_package(std_msgs)
 
+ament_export_include_directories(include)
+
 ament_package()
 
 # Get the implementations ahead of time
@@ -23,6 +25,8 @@ get_available_rmw_implementations(middleware_implementations)
 foreach(middleware_impl ${middleware_implementations})
   find_package("${middleware_impl}" REQUIRED)
 endforeach()
+
+include_directories(include)
 
 function(build_executable executable)
   cmake_parse_arguments(ARG "ROS1_DEPENDENCIES" "" "" ${ARGN})
@@ -57,8 +61,14 @@ function(build_executable executable)
   endforeach()
 endfunction()
 
+build_executable(static_bridge src/static_bridge.cpp ROS1_DEPENDENCIES)
 build_executable(simple_bridge src/simple_bridge.cpp ROS1_DEPENDENCIES)
 build_executable(simple_bridge_1_to_2 src/simple_bridge_1_to_2.cpp ROS1_DEPENDENCIES)
 build_executable(simple_bridge_2_to_1 src/simple_bridge_2_to_1.cpp ROS1_DEPENDENCIES)
 build_executable(ros1_bridge_talker src/talker.cpp)
 build_executable(ros1_bridge_listener src/listener.cpp)
+
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
