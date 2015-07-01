@@ -21,7 +21,7 @@
 #include <ros1_bridge/bridge.hpp>
 
 // TODO hack until rclcpp has been refactored into a library
-#include "factory.cpp"
+#include "generated_factories.cpp"
 
 
 int main(int argc, char * argv[])

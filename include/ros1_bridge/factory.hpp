@@ -101,7 +101,7 @@ protected:
     const boost::shared_ptr<ROS1_T const> & ros1_msg = ros1_msg_event.getConstMessage();
 
     auto ros2_msg = std::make_shared<ROS2_T>();
-    convert_1_to_2(ros1_msg, ros2_msg);
+    convert_1_to_2(*ros1_msg, *ros2_msg);
     printf("Passing message from ROS 1 to ROS 2\n");
     ros2_pub->publish(ros2_msg);
   }
@@ -113,21 +113,24 @@ protected:
     )
   {
     ROS1_T ros1_msg;
-    convert_2_to_1(ros2_msg, ros1_msg);
+    convert_2_to_1(*ros2_msg, ros1_msg);
     printf("Passing message from ROS 2 to ROS 1\n");
     ros1_pub.publish(ros1_msg);
   }
+
+// since convert functions call each other for sub messages they must be public
+public:
 
   // defined outside of the class
   static
   void
   convert_1_to_2(
-    typename ROS1_T::ConstPtr ros1_msg,
-    typename ROS2_T::SharedPtr ros2_msg);
+    const ROS1_T & ros1_msg,
+    ROS2_T & ros2_msg);
   static
   void
   convert_2_to_1(
-    typename ROS2_T::ConstSharedPtr ros2_msg,
+    const ROS2_T & ros2_msg,
     ROS1_T & ros1_msg);
 };
 
