@@ -108,7 +108,12 @@ ament_index_get_resources(message_packages "rosidl_interfaces")
 foreach(message_package ${message_packages})
   find_package(${message_package} REQUIRED)
 endforeach()
+
 build_executable(static_bridge src/static_bridge.cpp ROS1_DEPENDENCIES
+  DEPENDENCIES generate_factories
+  TARGET_DEPENDENCIES ${message_packages})
+
+build_executable(dynamic_bridge src/dynamic_bridge.cpp ROS1_DEPENDENCIES
   DEPENDENCIES generate_factories
   TARGET_DEPENDENCIES ${message_packages})
 
