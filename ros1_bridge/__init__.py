@@ -154,6 +154,8 @@ def determine_field_mapping(ros1_msg, ros2_msg, rospack=None):
     #   is_builtin
     #   is_header
 
+    ros1_field_missing_in_ros2 = False
+
     mapping = Mapping(ros1_msg, ros2_msg)
     for ros1_field in ros1_spec.parsed_fields():
         # TODO handle header correctly
@@ -174,8 +176,20 @@ def determine_field_mapping(ros1_msg, ros2_msg, rospack=None):
                 mapping.add_field_pair(ros1_field, ros2_field)
                 break
         else:
-            # if any field is not mappable the whole message is not mappable
-            return None
+            # this allows fields to exist in ROS 1 but not in ROS 2
+            ros1_field_missing_in_ros2 = True
+
+    if ros1_field_missing_in_ros2:
+        # if some fields exist in ROS 1 but not in ROS 2
+        # check that no fields exist in ROS 2 but not in ROS 1
+        # since then it might be the case that those have been renamed and should be mapped
+        for ros2_field in ros2_spec.fields:
+            for ros1_field in ros1_spec.parsed_fields():
+                if ros1_field.name.lower() == ros2_field.name:
+                    break
+            else:
+                # if fields from both sides are not mappable the whole message is not mappable
+                return None
 
     return mapping
 
