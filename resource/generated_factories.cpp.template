@@ -136,6 +136,10 @@ Factory<
   const @(m.ros1_msg.package_name)::@(m.ros1_msg.message_name) & ros1_msg,
   @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name) & ros2_msg)
 {
+@[if not m.fields_1_to_2]@
+  (void)ros1_msg;
+  (void)ros2_msg;
+@[end if]@
 @[for ros1_field, ros2_field in m.fields_1_to_2.items()]@
 @
 @ @[if not ros2_field.type.is_array]@
@@ -218,6 +222,10 @@ Factory<
   const @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name) & ros2_msg,
   @(m.ros1_msg.package_name)::@(m.ros1_msg.message_name) & ros1_msg)
 {
+@[if not m.fields_2_to_1]@
+  (void)ros2_msg;
+  (void)ros1_msg;
+@[end if]@
 @[for ros2_field, ros1_field in m.fields_2_to_1.items()]@
 @
 @ @[if not ros2_field.type.is_array]@

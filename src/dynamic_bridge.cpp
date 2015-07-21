@@ -128,7 +128,7 @@ int main(int argc, char * argv[])
 
   // setup polling of ROS 1 master
   auto ros1_poll = [&ros1_node, ros2_node, &ros1_topics, &ros2_topics, &bridges](
-    const ros::TimerEvent & timer_event
+    const ros::TimerEvent &
   ) -> void
   {
     // collect all topics names which have at least one publisher or subscriber beside this bridge
