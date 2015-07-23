@@ -23,7 +23,7 @@ except ImportError:
         try:
             catkin_pkg_path = subprocess.check_output(
                 [python_executable, '-c', 'import catkin_pkg; print(catkin_pkg.__file__)'])
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, FileNotFoundError):
             continue
         catkin_pkg_path = catkin_pkg_path.decode().strip()
         if catkin_pkg_path.endswith('.pyc'):
@@ -41,7 +41,7 @@ except ImportError:
         try:
             rospkg_path = subprocess.check_output(
                 [python_executable, '-c', 'import rospkg; print(rospkg.__file__)'])
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, FileNotFoundError):
             continue
         rospkg_path = rospkg_path.decode().strip()
         if rospkg_path.endswith('.pyc'):
