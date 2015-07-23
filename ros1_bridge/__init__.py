@@ -11,8 +11,47 @@ import rosidl_parser
 # ROS 1 imports
 import genmsg
 import genmsg.msg_loader
+
+# import catkin_pkg and rospkg which are required by rosmsg
+# and likely only available for Python 2
+try:
+    import catkin_pkg
+except ImportError:
+    from importlib.machinery import SourceFileLoader
+    import subprocess
+    for python_executable in ['python2', 'python2.7']:
+        try:
+            catkin_pkg_path = subprocess.check_output(
+                [python_executable, '-c', 'import catkin_pkg; print(catkin_pkg.__file__)'])
+        except subprocess.CalledProcessError:
+            continue
+        catkin_pkg_path = catkin_pkg_path.decode().strip()
+        if catkin_pkg_path.endswith('.pyc'):
+            catkin_pkg_path = catkin_pkg_path[:-1]
+        catkin_pkg = SourceFileLoader('catkin_pkg', catkin_pkg_path).load_module()
+    if not catkin_pkg:
+        raise
+
+try:
+    import rospkg
+except ImportError:
+    from importlib.machinery import SourceFileLoader
+    import subprocess
+    for python_executable in ['python2', 'python2.7']:
+        try:
+            rospkg_path = subprocess.check_output(
+                [python_executable, '-c', 'import rospkg; print(rospkg.__file__)'])
+        except subprocess.CalledProcessError:
+            continue
+        rospkg_path = rospkg_path.decode().strip()
+        if rospkg_path.endswith('.pyc'):
+            rospkg_path = rospkg_path[:-1]
+        rospkg = SourceFileLoader('rospkg', rospkg_path).load_module()
+    if not rospkg:
+        raise
+
+# more ROS 1 imports
 import rosmsg
-import rospkg
 
 
 def generate_cpp(output_file, template_dir):
