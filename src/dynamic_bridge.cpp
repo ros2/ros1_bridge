@@ -123,6 +123,7 @@ int main(int argc, char * argv[])
   // TODO hard coded test topic until ROS 2 can query the current topics
   ros2_topics["chatter"] = "std_interfaces/String";
   ros2_topics["image"] = "sensor_interfaces/Image";
+  ros2_topics["flip_image"] = "std_interfaces/Bool";
 
   std::map<std::string, BridgeHandlesAndMessageTypes> bridges;
 
