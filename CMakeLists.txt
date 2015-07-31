@@ -14,8 +14,10 @@ find_package(rmw_implementation REQUIRED)
 find_package(std_interfaces REQUIRED)
 
 # find ROS 1 packages
-find_package(roscpp)
-find_package(std_msgs)
+include(cmake/find_ros1_package.cmake)
+find_package(PkgConfig REQUIRED)
+find_ros1_package(roscpp REQUIRED)
+find_ros1_package(std_msgs REQUIRED)
 
 ament_export_include_directories(include)
 
@@ -44,8 +46,8 @@ function(build_executable executable)
     "rmw_implementation")
   if(ARG_ROS1_DEPENDENCIES)
     ament_target_dependencies(${executable}
-      "roscpp"
-      "std_msgs")
+      "ros1_roscpp"
+      "ros1_std_msgs")
   endif()
   if(ARG_DEPENDENCIES)
     add_dependencies(${executable}
@@ -66,8 +68,8 @@ function(build_executable executable)
       "${middleware_impl_tmp}")
     if(ARG_ROS1_DEPENDENCIES)
       ament_target_dependencies(${executable}__${middleware_impl_tmp}
-        "roscpp"
-        "std_msgs")
+        "ros1_roscpp"
+        "ros1_std_msgs")
     endif()
     if(ARG_DEPENDENCIES)
       add_dependencies(${executable}__${middleware_impl_tmp}
@@ -120,6 +122,10 @@ build_executable(dynamic_bridge src/dynamic_bridge.cpp ROS1_DEPENDENCIES
 install(
   PROGRAMS bin/ros1_bridge_generate_factories
   DESTINATION lib/ros1_bridge_generate_factories
+)
+install(
+  DIRECTORY cmake
+  DESTINATION share/${PROJECT_NAME}
 )
 install(
   DIRECTORY include/
