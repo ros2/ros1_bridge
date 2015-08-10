@@ -1,11 +1,9 @@
 from collections import OrderedDict
-import em
-from io import StringIO
 import os
 import re
 import sys
-
 import ament_index_python
+from rosidl_cmake import expand_template
 import rosidl_parser
 
 # ROS 1 imports
@@ -96,18 +94,14 @@ def generate_cpp(output_file, template_dir):
                 print('  -', '%s/%s' % (d.package_name, d.message_name), file=sys.stderr)
         print(file=sys.stderr)
 
-    for m in ordered_mappings:
-        print(' ', '%s <-> %s' %
-              ('%s/%s' % (m.ros1_msg.package_name, m.ros1_msg.message_name),
-               '%s/%s' % (m.ros2_msg.package_name, m.ros2_msg.message_name)))
-
     data = {
         'ros1_msgs': [m.ros1_msg for m in ordered_mappings],
         'ros2_msgs': [m.ros2_msg for m in ordered_mappings],
         'mappings': ordered_mappings,
     }
 
-    write_cpp(data, output_file, template_dir)
+    template_file = os.path.join(template_dir, 'generated_factories.cpp.template')
+    expand_template(template_file, data, output_file)
 
 
 def get_ros1_messages(rospack=None):
@@ -287,39 +281,6 @@ class Mapping(object):
         if ros2_field.type.pkg_name and ros2_field.type.pkg_name != 'builtin_interfaces':
             self.depends_on_ros2_messages.add(
                 Message(ros2_field.type.pkg_name, ros2_field.type.type))
-
-
-def write_cpp(data, output_file, template_dir):
-    try:
-        output = StringIO()
-        interpreter = em.Interpreter(
-            output=output,
-            options={
-                em.RAW_OPT: True,
-                em.BUFFERED_OPT: True,
-            },
-            globals=data,
-        )
-        template_file = os.path.join(template_dir, 'generated_factories.cpp.template')
-        interpreter.file(open(template_file))
-        content = output.getvalue()
-        interpreter.shutdown()
-    except Exception:
-        if os.path.exists(output_file):
-            os.remove(output_file)
-        raise
-
-    # only overwrite file if necessary
-    if os.path.exists(output_file):
-        with open(output_file, 'r') as h:
-            if h.read() == content:
-                return
-    try:
-        os.makedirs(os.path.dirname(output_file))
-    except FileExistsError:
-        pass
-    with open(output_file, 'w') as h:
-        h.write(content)
 
 
 def camel_case_to_lower_case_underscore(value):

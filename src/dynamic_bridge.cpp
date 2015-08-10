@@ -28,8 +28,16 @@
 std::mutex g_bridge_mutex;
 
 
-struct BridgeHandlesAndMessageTypes {
-  ros1_bridge::BridgeHandles bridge_handles;
+struct Bridge1to2HandlesAndMessageTypes
+{
+  ros1_bridge::Bridge1to2Handles bridge_handles;
+  std::string ros1_type_name;
+  std::string ros2_type_name;
+};
+
+struct Bridge2to1HandlesAndMessageTypes
+{
+  ros1_bridge::Bridge2to1Handles bridge_handles;
   std::string ros1_type_name;
   std::string ros2_type_name;
 };
@@ -38,71 +46,144 @@ struct BridgeHandlesAndMessageTypes {
 void update_bridge(
   ros::NodeHandle & ros1_node,
   rclcpp::node::Node::SharedPtr ros2_node,
-  const std::map<std::string, std::string> & ros1_topics,
-  const std::map<std::string, std::string> & ros2_topics,
-  std::map<std::string, BridgeHandlesAndMessageTypes> & bridges)
+  const std::map<std::string, std::string> & ros1_publishers,
+  const std::map<std::string, std::string> & ros1_subscribers,
+  const std::map<std::string, std::string> & ros2_publishers,
+  const std::map<std::string, std::string> & ros2_subscribers,
+  std::map<std::string, Bridge1to2HandlesAndMessageTypes> & bridges_1to2,
+  std::map<std::string, Bridge2to1HandlesAndMessageTypes> & bridges_2to1)
 {
   std::lock_guard<std::mutex> lock(g_bridge_mutex);
 
-  for (auto ros1_topic : ros1_topics) {
-    // identify topics available in ROS 1 as well as ROS 2
-    auto topic_name = ros1_topic.first;
-    auto ros2_topic = ros2_topics.find(topic_name);
-    if (ros2_topic == ros2_topics.end()) {
+  // create 1to2 bridges
+  for (auto ros1_publisher : ros1_publishers) {
+    // identify topics available as ROS 1 publishers as well as ROS 2 subscribers
+    auto topic_name = ros1_publisher.first;
+    auto ros2_subscriber = ros2_subscribers.find(topic_name);
+    if (ros2_subscriber == ros2_subscribers.end()) {
       continue;
     }
 
-    std::string ros1_type_name = ros1_topic.second;
-    std::string ros2_type_name = ros2_topic->second;
+    std::string ros1_type_name = ros1_publisher.second;
+    std::string ros2_type_name = ros2_subscriber->second;
+    // printf("topic name '%s' has ROS 1 publishers and ROS 2 subscribers\n", topic_name.c_str());
 
-    // check if bridge for the same topic exists
-    if (bridges.find(topic_name) != bridges.end()) {
-      auto bridge = bridges.find(topic_name)->second;
+    // check if 1to2 bridge for the topic exists
+    if (bridges_1to2.find(topic_name) != bridges_1to2.end()) {
+      auto bridge = bridges_1to2.find(topic_name)->second;
       if (bridge.ros1_type_name == ros1_type_name && bridge.ros2_type_name == ros2_type_name) {
         // skip if bridge with correct types is already in place
         continue;
       }
       // remove existing bridge with previous types
-      bridges.erase(topic_name);
-      printf("removed bridge for topic '%s'\n", topic_name.c_str());
+      bridges_1to2.erase(topic_name);
+      printf("replace 1to2 bridge for topic '%s'\n", topic_name.c_str());
     }
 
-    BridgeHandlesAndMessageTypes bridge;
+    Bridge1to2HandlesAndMessageTypes bridge;
     bridge.ros1_type_name = ros1_type_name;
     bridge.ros2_type_name = ros2_type_name;
 
     try {
-      bridge.bridge_handles = ros1_bridge::create_bidirectional_bridge(
-        ros1_node, ros2_node, bridge.ros1_type_name, bridge.ros2_type_name, topic_name, 10);
+      bridge.bridge_handles = ros1_bridge::create_bridge_from_1_to_2(
+        ros1_node, ros2_node,
+        bridge.ros1_type_name, topic_name, 10,
+        bridge.ros2_type_name, topic_name, 10);
     } catch (std::runtime_error & e) {
       fprintf(
         stderr,
-        "failed to create bridge for topic '%s' with ROS 1 type '%s' and ROS 2 type '%s': %s\n",
+        "failed to create 1to2 bridge for topic '%s' with ROS 1 type '%s' and ROS 2 type '%s': %s\n",
         topic_name.c_str(), bridge.ros1_type_name.c_str(), bridge.ros2_type_name.c_str(), e.what());
       continue;
     }
 
-    bridges[topic_name] = bridge;
+    bridges_1to2[topic_name] = bridge;
     printf(
-      "created bridge for topic '%s' with ROS 1 type '%s' and ROS 2 type '%s'\n",
+      "created 1to2 bridge for topic '%s' with ROS 1 type '%s' and ROS 2 type '%s'\n",
       topic_name.c_str(), bridge.ros1_type_name.c_str(), bridge.ros2_type_name.c_str());
   }
 
+  // create 2to1 bridges
+  for (auto ros1_subscriber : ros1_subscribers) {
+    // identify topics available as ROS 1 subscribers as well as ROS 2 publishers
+    auto topic_name = ros1_subscriber.first;
+    auto ros2_publisher = ros2_publishers.find(topic_name);
+    if (ros2_publisher == ros2_publishers.end()) {
+      continue;
+    }
+
+    std::string ros1_type_name = ros1_subscriber.second;
+    std::string ros2_type_name = ros2_publisher->second;
+    // printf("topic name '%s' has ROS 1 subscribers and ROS 2 publishers\n", topic_name.c_str());
+
+    // check if 2to1 bridge for the topic exists
+    if (bridges_2to1.find(topic_name) != bridges_2to1.end()) {
+      auto bridge = bridges_2to1.find(topic_name)->second;
+      if ((bridge.ros1_type_name == ros1_type_name || bridge.ros1_type_name == "") &&
+        bridge.ros2_type_name == ros2_type_name)
+      {
+        // skip if bridge with correct types is already in place
+        continue;
+      }
+      // remove existing bridge with previous types
+      bridges_2to1.erase(topic_name);
+      printf("replace 2to1 bridge for topic '%s'\n", topic_name.c_str());
+    }
+
+    Bridge2to1HandlesAndMessageTypes bridge;
+    bridge.ros1_type_name = ros1_type_name;
+    bridge.ros2_type_name = ros2_type_name;
+
+    try {
+      bridge.bridge_handles = ros1_bridge::create_bridge_from_2_to_1(
+        ros2_node, ros1_node,
+        bridge.ros2_type_name, topic_name, 10,
+        bridge.ros1_type_name, topic_name, 10);
+    } catch (std::runtime_error & e) {
+      fprintf(
+        stderr,
+        "failed to create 2to1 bridge for topic '%s' with ROS 2 type '%s' and ROS 1 type '%s': %s\n",
+        topic_name.c_str(), bridge.ros2_type_name.c_str(), bridge.ros1_type_name.c_str(), e.what());
+      continue;
+    }
+
+    bridges_2to1[topic_name] = bridge;
+    printf(
+      "created 2to1 bridge for topic '%s' with ROS 2 type '%s' and ROS 1 type '%s'\n",
+      topic_name.c_str(), bridge.ros2_type_name.c_str(), bridge.ros1_type_name.c_str());
+  }
+
   // remove obsolete bridges
-  std::vector<std::string> to_be_removed;
-  for (auto it : bridges) {
+  std::vector<std::string> to_be_removed_1to2;
+  for (auto it : bridges_1to2) {
     std::string topic_name = it.first;
     if (
-      ros1_topics.find(topic_name) == ros1_topics.end() ||
-      ros2_topics.find(topic_name) == ros2_topics.end()
+      ros1_publishers.find(topic_name) == ros1_publishers.end() ||
+      ros2_subscribers.find(topic_name) == ros2_subscribers.end()
     )
     {
-      to_be_removed.push_back(topic_name);
+      to_be_removed_1to2.push_back(topic_name);
     }
   }
-  for (auto topic_name : to_be_removed) {
-    bridges.erase(topic_name);
-    printf("removed bridge for topic '%s'\n", topic_name.c_str());
+  for (auto topic_name : to_be_removed_1to2) {
+    bridges_1to2.erase(topic_name);
+    printf("removed 1to2 bridge for topic '%s'\n", topic_name.c_str());
+  }
+
+  std::vector<std::string> to_be_removed_2to1;
+  for (auto it : bridges_2to1) {
+    std::string topic_name = it.first;
+    if (
+      ros1_subscribers.find(topic_name) == ros1_subscribers.end() ||
+      ros2_publishers.find(topic_name) == ros2_publishers.end()
+    )
+    {
+      to_be_removed_2to1.push_back(topic_name);
+    }
+  }
+  for (auto topic_name : to_be_removed_2to1) {
+    bridges_2to1.erase(topic_name);
+    printf("removed 2to1 bridge for topic '%s'\n", topic_name.c_str());
   }
 }
 
@@ -116,85 +197,172 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
   auto ros2_node = rclcpp::node::Node::make_shared("ros_bridge");
 
+
   // mapping of available topic names to type names
-  std::map<std::string, std::string> ros1_topics;
-  std::map<std::string, std::string> ros2_topics;
+  std::map<std::string, std::string> ros1_publishers;
+  std::map<std::string, std::string> ros1_subscribers;
+  std::map<std::string, std::string> ros2_publishers;
+  std::map<std::string, std::string> ros2_subscribers;
 
-  // TODO hard coded test topic until ROS 2 can query the current topics
-  ros2_topics["chatter"] = "std_interfaces/String";
-  ros2_topics["image"] = "sensor_interfaces/Image";
-  ros2_topics["flip_image"] = "std_interfaces/Bool";
+  std::map<std::string, Bridge1to2HandlesAndMessageTypes> bridges_1to2;
+  std::map<std::string, Bridge2to1HandlesAndMessageTypes> bridges_2to1;
 
-  std::map<std::string, BridgeHandlesAndMessageTypes> bridges;
 
   // setup polling of ROS 1 master
-  auto ros1_poll = [&ros1_node, ros2_node, &ros1_topics, &ros2_topics, &bridges](
-    const ros::TimerEvent &
-  ) -> void
-  {
-    // collect all topics names which have at least one publisher or subscriber beside this bridge
-    std::set<std::string> active_topic_names;
+  auto ros1_poll = [
+    &ros1_node, ros2_node,
+    &ros1_publishers, &ros1_subscribers,
+    &ros2_publishers, &ros2_subscribers,
+    &bridges_1to2, &bridges_2to1
+    ](const ros::TimerEvent &) -> void
+    {
+      // collect all topics names which have at least one publisher or subscriber beside this bridge
+      std::set<std::string> active_publishers;
+      std::set<std::string> active_subscribers;
 
-    XmlRpc::XmlRpcValue args, result, payload;
-    args[0] = ros::this_node::getName();
-    if (!ros::master::execute("getSystemState", args, result, payload, true)) {
-      fprintf(stderr, "failed to get system state from ROS 1 master\n");
-      return;
-    }
-    // check publishers
-    if (payload.size() >= 1) {
-      for (int j = 0; j < payload[0].size(); ++j) {
-        std::string topic_name = payload[0][j][0];
-        for (int k = 0; k < payload[0][j][1].size(); ++k){
-          std::string node_name = payload[0][j][1][k];
-          if (node_name == ros::this_node::getName()) {
-            continue;
+      XmlRpc::XmlRpcValue args, result, payload;
+      args[0] = ros::this_node::getName();
+      if (!ros::master::execute("getSystemState", args, result, payload, true)) {
+        fprintf(stderr, "failed to get system state from ROS 1 master\n");
+        return;
+      }
+      // check publishers
+      if (payload.size() >= 1) {
+        for (int j = 0; j < payload[0].size(); ++j) {
+          std::string topic_name = payload[0][j][0];
+          if (topic_name.compare(0, 1, "/") == 0) {
+            topic_name = topic_name.substr(1);
           }
-          active_topic_names.insert(topic_name);
-          break;
+          for (int k = 0; k < payload[0][j][1].size(); ++k) {
+            std::string node_name = payload[0][j][1][k];
+            // ignore publishers from the bridge itself
+            if (node_name == ros::this_node::getName()) {
+              continue;
+            }
+            active_publishers.insert(topic_name);
+            break;
+          }
         }
       }
-    }
-    // check subscribers
-    if (payload.size() >= 2) {
-      for (int j = 0; j < payload[1].size(); ++j) {
-        std::string topic_name = payload[1][j][0];
-        for (int k = 0; k < payload[1][j][1].size(); ++k){
-          std::string node_name = payload[1][j][1][k];
-          if (node_name == ros::this_node::getName()) {
-            continue;
+      // check subscribers
+      if (payload.size() >= 2) {
+        for (int j = 0; j < payload[1].size(); ++j) {
+          std::string topic_name = payload[1][j][0];
+          if (topic_name.compare(0, 1, "/") == 0) {
+            topic_name = topic_name.substr(1);
           }
-          active_topic_names.insert(topic_name);
-          break;
+          for (int k = 0; k < payload[1][j][1].size(); ++k) {
+            std::string node_name = payload[1][j][1][k];
+            // ignore subscribers from the bridge itself
+            if (node_name == ros::this_node::getName()) {
+              continue;
+            }
+            active_subscribers.insert(topic_name);
+            break;
+          }
         }
       }
-    }
 
-    // get message types for all topics
-    ros::master::V_TopicInfo topics;
-    bool success = ros::master::getTopics(topics);
-    if (!success) {
-      fprintf(stderr, "failed to poll ROS 1 master\n");
-      return;
-    }
-
-    ros1_topics.clear();
-    for (auto topic : topics) {
-      auto topic_name = topic.name;
-      if (active_topic_names.find(topic_name) == active_topic_names.end()) {
-        // skip inactive topics
-        continue;
+      // get message types for all topics
+      ros::master::V_TopicInfo topics;
+      bool success = ros::master::getTopics(topics);
+      if (!success) {
+        fprintf(stderr, "failed to poll ROS 1 master\n");
+        return;
       }
-      if (topic_name.compare(0, 1, "/") == 0) {
-        topic_name = topic_name.substr(1);
-      }
-      ros1_topics[topic_name] = topic.datatype;
-    }
 
-    update_bridge(ros1_node, ros2_node, ros1_topics, ros2_topics, bridges);
-  };
+      ros1_publishers.clear();
+      ros1_subscribers.clear();
+      for (auto topic : topics) {
+        auto topic_name = topic.name;
+        if (topic_name.compare(0, 1, "/") == 0) {
+          topic_name = topic_name.substr(1);
+        }
+        bool has_publisher = active_publishers.find(topic_name) != active_publishers.end();
+        bool has_subscriber = active_subscribers.find(topic_name) != active_subscribers.end();
+        if (!has_publisher && !has_subscriber) {
+          // skip inactive topics
+          continue;
+        }
+        if (has_publisher) {
+          ros1_publishers[topic_name] = topic.datatype;
+        }
+        if (has_subscriber) {
+          ros1_subscribers[topic_name] = topic.datatype;
+        }
+        printf("  ROS 1: %s (%s) [%s pubs, %s subs]\n",
+          topic_name.c_str(), topic.datatype.c_str(),
+          has_publisher ? ">0" : "0", has_subscriber ? ">0" : "0");
+      }
+
+      // since ROS 1 subscribers don't report their type they must be added anyway
+      for (auto active_subscriber : active_subscribers) {
+        if (ros1_subscribers.find(active_subscriber) == ros1_subscribers.end()) {
+          ros1_subscribers[active_subscriber] = "";
+          printf("  ROS 1: %s (<unknown>) sub++\n", active_subscriber.c_str());
+        }
+      }
+
+      update_bridge(
+        ros1_node, ros2_node,
+        ros1_publishers, ros1_subscribers,
+        ros2_publishers, ros2_subscribers,
+        bridges_1to2, bridges_2to1);
+    };
 
   auto ros1_poll_timer = ros1_node.createTimer(ros::Duration(1.0), ros1_poll);
+
+  std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+  // setup polling of ROS 2
+  auto ros2_poll = [
+    &ros1_node, ros2_node,
+    &ros1_publishers, &ros1_subscribers,
+    &ros2_publishers, &ros2_subscribers,
+    &bridges_1to2, &bridges_2to1
+    ]() -> void
+    {
+      auto ros2_topics = ros2_node->get_topic_names_and_types();
+
+      ros2_publishers.clear();
+      ros2_subscribers.clear();
+      for (auto it : ros2_topics) {
+        auto publisher_count = ros2_node->count_publishers(it.first);
+        auto subscriber_count = ros2_node->count_subscribers(it.first);
+
+        // ignore publishers from the bridge itself
+        if (bridges_1to2.find(it.first) != bridges_1to2.end()) {
+          if (publisher_count > 0) {
+            --publisher_count;
+          }
+        }
+        // ignore subscribers from the bridge itself
+        if (bridges_2to1.find(it.first) != bridges_2to1.end()) {
+          if (subscriber_count > 0) {
+            --subscriber_count;
+          }
+        }
+
+        if (publisher_count) {
+          ros2_publishers[it.first] = it.second;
+        }
+        if (subscriber_count) {
+          ros2_subscribers[it.first] = it.second;
+        }
+        printf("  ROS 2: %s (%s) [%ld pubs, %ld subs]\n",
+          it.first.c_str(), it.second.c_str(), publisher_count, subscriber_count);
+      }
+
+      update_bridge(
+        ros1_node, ros2_node,
+        ros1_publishers, ros1_subscribers,
+        ros2_publishers, ros2_subscribers,
+        bridges_1to2, bridges_2to1);
+    };
+
+  auto ros2_poll_timer = ros2_node->create_wall_timer(
+    std::chrono::nanoseconds(1 * 1000 * 1000 * 1000), ros2_poll);
+
 
   // ROS 1 asynchronous spinner
   ros::AsyncSpinner async_spinner(1);

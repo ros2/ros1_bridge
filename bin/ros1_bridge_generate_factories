@@ -26,7 +26,6 @@ def main(argv=sys.argv[1:]):
     args = parser.parse_args(argv)
 
     try:
-        print('Generating code for conversion between all compatible messages')
         return generate_cpp(
             args.output_file,
             args.template_dir,

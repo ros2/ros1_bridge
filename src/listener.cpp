@@ -30,7 +30,8 @@ int main(int argc, char * argv[])
 
   auto node = rclcpp::Node::make_shared("listener");
 
-  auto sub = node->create_subscription<std_interfaces::msg::String>("chatter", 10, chatterCallback);
+  auto sub = node->create_subscription<std_interfaces::msg::String>(
+    "chatter", rmw_qos_profile_default, chatterCallback);
 
   rclcpp::spin(node);
 

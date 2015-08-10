@@ -42,7 +42,9 @@ public:
     const std::string & topic_name,
     size_t queue_size)
   {
-    return node->create_publisher<ROS2_T>(topic_name, queue_size);
+    rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_default;
+    custom_qos_profile.depth = queue_size;
+    return node->create_publisher<ROS2_T>(topic_name, custom_qos_profile);
   }
 
   ros::Subscriber
@@ -73,8 +75,11 @@ public:
     size_t queue_size,
     ros::Publisher ros1_pub)
   {
+    rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_default;
+    custom_qos_profile.depth = queue_size;
     auto callback = boost::bind(&Factory<ROS1_T, ROS2_T>::ros2_callback, _1, ros1_pub);
-    return node->create_subscription<ROS2_T>(topic_name, queue_size, callback, nullptr, true);
+    return node->create_subscription<ROS2_T>(
+      topic_name, custom_qos_profile, callback, nullptr, true);
   }
 
 protected:
@@ -102,7 +107,7 @@ protected:
 
     auto ros2_msg = std::make_shared<ROS2_T>();
     convert_1_to_2(*ros1_msg, *ros2_msg);
-    printf("Passing message from ROS 1 to ROS 2\n");
+    printf("  Passing message from ROS 1 to ROS 2\n");
     ros2_pub->publish(ros2_msg);
   }
 
@@ -114,7 +119,7 @@ protected:
   {
     ROS1_T ros1_msg;
     convert_2_to_1(*ros2_msg, ros1_msg);
-    printf("Passing message from ROS 2 to ROS 1\n");
+    printf("  Passing message from ROS 2 to ROS 1\n");
     ros1_pub.publish(ros1_msg);
   }
 
