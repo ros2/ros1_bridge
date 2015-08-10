@@ -25,7 +25,8 @@ int main(int argc, char * argv[])
 
   auto node = rclcpp::node::Node::make_shared("talker");
 
-  auto chatter_pub = node->create_publisher<std_interfaces::msg::String>("chatter", 10);
+  auto chatter_pub = node->create_publisher<std_interfaces::msg::String>(
+    "chatter", rmw_qos_profile_default);
 
   rclcpp::WallRate loop_rate(10);
 

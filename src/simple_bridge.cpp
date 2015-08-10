@@ -71,14 +71,16 @@ int main(int argc, char * argv[])
   // ROS 2 node and publisher
   rclcpp::init(argc, argv);
   auto ros2_node = rclcpp::node::Node::make_shared("ros_bridge");
-  ros2_pub = ros2_node->create_publisher<std_interfaces::msg::String>("chatter", 10);
+  ros2_pub = ros2_node->create_publisher<std_interfaces::msg::String>(
+    "chatter", rmw_qos_profile_default);
 
   // ROS 1 subscriber
-  ros::Subscriber ros1_sub = ros1_node.subscribe("chatter", 10, ros1ChatterCallback);
+  ros::Subscriber ros1_sub = ros1_node.subscribe(
+    "chatter", 10, ros1ChatterCallback);
 
   // ROS 2 subscriber
   auto ros2_sub = ros2_node->create_subscription<std_interfaces::msg::String>(
-    "chatter", 10, ros2ChatterCallback, nullptr, true);
+    "chatter", rmw_qos_profile_default, ros2ChatterCallback, nullptr, true);
 
   // ROS 1 asynchronous spinner
   ros::AsyncSpinner async_spinner(1);
@@ -87,7 +89,7 @@ int main(int argc, char * argv[])
   // ROS 2 spinning loop
   rclcpp::executors::SingleThreadedExecutor executor;
   while (ros1_node.ok() && rclcpp::utilities::ok()) {
-    executor.spin_node_once(ros2_node, true);
+    executor.spin_node_once(ros2_node, std::chrono::milliseconds(1000));
   }
 
   return 0;
