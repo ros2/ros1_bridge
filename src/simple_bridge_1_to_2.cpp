@@ -20,7 +20,7 @@
 
 // include ROS 2
 #include <rclcpp/rclcpp.hpp>
-#include <std_interfaces/msg/string.hpp>
+#include <std_msgs/msg/string.hpp>
 
 
 publisher::Publisher::SharedPtr pub;
@@ -29,7 +29,7 @@ void chatterCallback(const std_msgs::String::ConstPtr & ros1_msg)
 {
   std::cout << "I heard: [" << ros1_msg->data << "]" << std::endl;
 
-  auto ros2_msg = std::make_shared<std_interfaces::msg::String>();
+  auto ros2_msg = std::make_shared<std_msgs::msg::String>();
   ros2_msg->data = ros1_msg->data;
   std::cout << "Passing along: [" << ros2_msg->data << "]" << std::endl;
   pub->publish(ros2_msg);
@@ -40,7 +40,7 @@ int main(int argc, char * argv[])
   // ROS 2 node and publisher
   rclcpp::init(argc, argv);
   auto node = rclcpp::node::Node::make_shared("talker");
-  pub = node->create_publisher<std_interfaces::msg::String>("chatter", rmw_qos_profile_default);
+  pub = node->create_publisher<std_msgs::msg::String>("chatter", rmw_qos_profile_default);
 
   // ROS 1 node and subscriber
   ros::init(argc, argv, "listener");

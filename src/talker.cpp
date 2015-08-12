@@ -16,7 +16,7 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include <std_interfaces/msg/string.hpp>
+#include <std_msgs/msg/string.hpp>
 
 
 int main(int argc, char * argv[])
@@ -25,14 +25,14 @@ int main(int argc, char * argv[])
 
   auto node = rclcpp::node::Node::make_shared("talker");
 
-  auto chatter_pub = node->create_publisher<std_interfaces::msg::String>(
+  auto chatter_pub = node->create_publisher<std_msgs::msg::String>(
     "chatter", rmw_qos_profile_default);
 
   rclcpp::WallRate loop_rate(10);
 
   auto count = 0;
   while (rclcpp::ok()) {
-    auto msg = std::make_shared<std_interfaces::msg::String>();
+    auto msg = std::make_shared<std_msgs::msg::String>();
     msg->data = "hello world " + std::to_string(count);
     std::cout << msg->data << std::endl;
     chatter_pub->publish(msg);

@@ -11,7 +11,7 @@ find_package(rmw REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rmw_implementation REQUIRED)
-find_package(std_interfaces REQUIRED)
+find_package(std_msgs REQUIRED)
 
 # find ROS 1 packages
 include(cmake/find_ros1_package.cmake)
@@ -81,20 +81,20 @@ function(build_executable executable)
 endfunction()
 
 build_executable(ros1_bridge_talker src/talker.cpp
-  TARGET_DEPENDENCIES "std_interfaces")
+  TARGET_DEPENDENCIES "std_msgs")
 build_executable(ros1_bridge_listener src/listener.cpp
-  TARGET_DEPENDENCIES "std_interfaces")
+  TARGET_DEPENDENCIES "std_msgs")
 
 build_executable(simple_bridge_1_to_2 src/simple_bridge_1_to_2.cpp
   ROS1_DEPENDENCIES
-  TARGET_DEPENDENCIES "std_interfaces")
+  TARGET_DEPENDENCIES "std_msgs")
 build_executable(simple_bridge_2_to_1 src/simple_bridge_2_to_1.cpp
   ROS1_DEPENDENCIES
-  TARGET_DEPENDENCIES "std_interfaces")
+  TARGET_DEPENDENCIES "std_msgs")
 
 build_executable(simple_bridge src/simple_bridge.cpp
   ROS1_DEPENDENCIES
-  TARGET_DEPENDENCIES "std_interfaces")
+  TARGET_DEPENDENCIES "std_msgs")
 
 # TODO until the generated file can be passed to add_executable
 # this must be a custom target instead of a custom command

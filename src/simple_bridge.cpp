@@ -21,12 +21,12 @@
 
 // include ROS 2
 #include <rclcpp/rclcpp.hpp>
-#include <std_interfaces/msg/string.hpp>
+#include <std_msgs/msg/string.hpp>
 
 
 ros::Publisher ros1_pub;
 
-void ros2ChatterCallback(const std_interfaces::msg::String::ConstSharedPtr & ros2_msg)
+void ros2ChatterCallback(const std_msgs::msg::String::ConstSharedPtr & ros2_msg)
 {
   printf("  I heard from ROS 2: [%s]\n", ros2_msg->data.c_str());
 
@@ -54,7 +54,7 @@ void ros1ChatterCallback(const ros::MessageEvent<std_msgs::String const> & ros1_
   const boost::shared_ptr<std_msgs::String const> & ros1_msg = ros1_msg_event.getConstMessage();
   printf("I heard from ROS 1: [%s]\n", ros1_msg->data.c_str());
 
-  auto ros2_msg = std::make_shared<std_interfaces::msg::String>();
+  auto ros2_msg = std::make_shared<std_msgs::msg::String>();
   ros2_msg->data = ros1_msg->data;
   printf("Passing along to ROS 2: [%s]\n", ros2_msg->data.c_str());
   ros2_pub->publish(ros2_msg);
@@ -71,7 +71,7 @@ int main(int argc, char * argv[])
   // ROS 2 node and publisher
   rclcpp::init(argc, argv);
   auto ros2_node = rclcpp::node::Node::make_shared("ros_bridge");
-  ros2_pub = ros2_node->create_publisher<std_interfaces::msg::String>(
+  ros2_pub = ros2_node->create_publisher<std_msgs::msg::String>(
     "chatter", rmw_qos_profile_default);
 
   // ROS 1 subscriber
@@ -79,7 +79,7 @@ int main(int argc, char * argv[])
     "chatter", 10, ros1ChatterCallback);
 
   // ROS 2 subscriber
-  auto ros2_sub = ros2_node->create_subscription<std_interfaces::msg::String>(
+  auto ros2_sub = ros2_node->create_subscription<std_msgs::msg::String>(
     "chatter", rmw_qos_profile_default, ros2ChatterCallback, nullptr, true);
 
   // ROS 1 asynchronous spinner
