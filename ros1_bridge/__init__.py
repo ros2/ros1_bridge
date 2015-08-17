@@ -151,14 +151,17 @@ class Message(object):
 def determine_message_pairs(ros1_msgs, ros2_msgs):
     pairs = []
     ros1_suffix = '_msgs'
-    ros2_suffix = '_interfaces'
+    ros2_suffixes = ['_msgs', '_interfaces']
     for ros1_msg in ros1_msgs:
         if not ros1_msg.package_name.endswith(ros1_suffix):
             continue
         ros1_package_basename = ros1_msg.package_name[:-len(ros1_suffix)]
 
         for ros2_msg in ros2_msgs:
-            if not ros2_msg.package_name.endswith(ros2_suffix):
+            for ros2_suffix in ros2_suffixes:
+                if ros2_msg.package_name.endswith(ros2_suffix):
+                    break
+            else:
                 continue
             ros2_package_basename = ros2_msg.package_name[:-len(ros2_suffix)]
             if ros1_package_basename != ros2_package_basename:
