@@ -35,48 +35,25 @@ include_directories(include)
 
 function(build_executable executable)
   cmake_parse_arguments(ARG "ROS1_DEPENDENCIES" "DEPENDENCIES" "TARGET_DEPENDENCIES" ${ARGN})
-  # Build the normal executable
-  add_executable(${executable} ${ARG_UNPARSED_ARGUMENTS})
-  if(ARG_TARGET_DEPENDENCIES)
-    ament_target_dependencies(${executable}
-      ${ARG_TARGET_DEPENDENCIES})
-  endif()
-  ament_target_dependencies(${executable}
-    "rclcpp"
-    "rmw_implementation")
+
+  set(target_dependencies
+    ${ARG_TARGET_DEPENDENCIES}
+    "rclcpp")
   if(ARG_ROS1_DEPENDENCIES)
-    ament_target_dependencies(${executable}
+    list(APPEND target_dependencies
       "ros1_roscpp"
       "ros1_std_msgs")
   endif()
-  if(ARG_DEPENDENCIES)
-    add_dependencies(${executable}
-      ${ARG_DEPENDENCIES})
-  endif()
 
-  install(TARGETS ${executable} DESTINATION bin)
-
-  # Build an executable for each ROS middleware implementation
-  foreach(middleware_impl_tmp ${middleware_implementations})
-    add_executable(${executable}__${middleware_impl_tmp} ${ARG_UNPARSED_ARGUMENTS})
-    if(ARG_TARGET_DEPENDENCIES)
-      ament_target_dependencies(${executable}__${middleware_impl_tmp}
-        ${ARG_TARGET_DEPENDENCIES})
-    endif()
-    ament_target_dependencies(${executable}__${middleware_impl_tmp}
-      "rclcpp"
-      "${middleware_impl_tmp}")
-    if(ARG_ROS1_DEPENDENCIES)
-      ament_target_dependencies(${executable}__${middleware_impl_tmp}
-        "ros1_roscpp"
-        "ros1_std_msgs")
-    endif()
+  add_executable_for_each_rmw_implementations(${executable}
+    ${ARG_UNPARSED_ARGUMENTS}
+    TARGET_DEPENDENCIES ${target_dependencies}
+    INSTALL
+    ALL_TARGET_NAMES_VAR targets)
+  foreach(target ${targets})
     if(ARG_DEPENDENCIES)
-      add_dependencies(${executable}__${middleware_impl_tmp}
-        ${ARG_DEPENDENCIES})
+      add_dependencies(${target} ${ARG_DEPENDENCIES})
     endif()
-
-    install(TARGETS ${executable}__${middleware_impl_tmp} DESTINATION bin)
   endforeach()
 endfunction()
 
