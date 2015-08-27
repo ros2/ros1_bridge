@@ -16,6 +16,12 @@ find_package(std_msgs REQUIRED)
 # find ROS 1 packages
 include(cmake/find_ros1_package.cmake)
 
+find_package(PkgConfig)
+if(NOT PKG_CONFIG_FOUND)
+  message(STATUS "Failed to find PkgConfig, skipping...")
+  return()
+endif()
+
 find_ros1_package(roscpp)
 if(NOT ros1_roscpp_FOUND)
   message(STATUS "Failed to find ROS 1 roscpp, skipping...")

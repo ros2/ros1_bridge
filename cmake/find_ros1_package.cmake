@@ -21,8 +21,6 @@ macro(find_ros1_package name)
       "find_ros1_package() called with unused arguments: ${ARG_UNPARSED_ARGUMENTS}")
   endif()
 
-  find_package(PkgConfig REQUIRED)
-
   if(_ARG_REQUIRED)
     set(_required "REQUIRED")
   else()
