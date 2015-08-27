@@ -197,6 +197,7 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
   auto ros2_node = rclcpp::node::Node::make_shared("ros_bridge");
 
+  bool output_topic_introspection = (2 == argc && std::string("--show-introspection") == argv[1]);
 
   // mapping of available topic names to type names
   std::map<std::string, std::string> ros1_publishers;
@@ -213,7 +214,8 @@ int main(int argc, char * argv[])
     &ros1_node, ros2_node,
     &ros1_publishers, &ros1_subscribers,
     &ros2_publishers, &ros2_subscribers,
-    &bridges_1to2, &bridges_2to1
+    &bridges_1to2, &bridges_2to1,
+    &output_topic_introspection
     ](const ros::TimerEvent &) -> void
     {
       // collect all topics names which have at least one publisher or subscriber beside this bridge
@@ -290,17 +292,25 @@ int main(int argc, char * argv[])
         if (has_subscriber) {
           ros1_subscribers[topic_name] = topic.datatype;
         }
-        printf("  ROS 1: %s (%s) [%s pubs, %s subs]\n",
-          topic_name.c_str(), topic.datatype.c_str(),
-          has_publisher ? ">0" : "0", has_subscriber ? ">0" : "0");
+        if (output_topic_introspection) {
+          printf("  ROS 1: %s (%s) [%s pubs, %s subs]\n",
+            topic_name.c_str(), topic.datatype.c_str(),
+            has_publisher ? ">0" : "0", has_subscriber ? ">0" : "0");
+        }
       }
 
       // since ROS 1 subscribers don't report their type they must be added anyway
       for (auto active_subscriber : active_subscribers) {
         if (ros1_subscribers.find(active_subscriber) == ros1_subscribers.end()) {
           ros1_subscribers[active_subscriber] = "";
-          printf("  ROS 1: %s (<unknown>) sub++\n", active_subscriber.c_str());
+          if (output_topic_introspection) {
+            printf("  ROS 1: %s (<unknown>) sub++\n", active_subscriber.c_str());
+          }
         }
+      }
+
+      if (output_topic_introspection) {
+        printf("\n");
       }
 
       update_bridge(
@@ -319,7 +329,8 @@ int main(int argc, char * argv[])
     &ros1_node, ros2_node,
     &ros1_publishers, &ros1_subscribers,
     &ros2_publishers, &ros2_subscribers,
-    &bridges_1to2, &bridges_2to1
+    &bridges_1to2, &bridges_2to1,
+    &output_topic_introspection
     ]() -> void
     {
       auto ros2_topics = ros2_node->get_topic_names_and_types();
@@ -349,8 +360,14 @@ int main(int argc, char * argv[])
         if (subscriber_count) {
           ros2_subscribers[it.first] = it.second;
         }
-        printf("  ROS 2: %s (%s) [%ld pubs, %ld subs]\n",
-          it.first.c_str(), it.second.c_str(), publisher_count, subscriber_count);
+        if (output_topic_introspection) {
+          printf("  ROS 2: %s (%s) [%ld pubs, %ld subs]\n",
+            it.first.c_str(), it.second.c_str(), publisher_count, subscriber_count);
+        }
+      }
+
+      if (output_topic_introspection) {
+        printf("\n");
       }
 
       update_bridge(
