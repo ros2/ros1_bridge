@@ -335,9 +335,34 @@ int main(int argc, char * argv[])
     {
       auto ros2_topics = ros2_node->get_topic_names_and_types();
 
+      std::set<std::string> ignored_topics;
+      ignored_topics.insert("CMParticipant");
+      ignored_topics.insert("DCPSCandMCommand");
+      ignored_topics.insert("DCPSDelivery");
+      ignored_topics.insert("DCPSHeartbeat");
+      ignored_topics.insert("DCPSParticipant");
+      ignored_topics.insert("DCPSPublication");
+      ignored_topics.insert("DCPSSubscription");
+      ignored_topics.insert("DCPSTopic");
+      ignored_topics.insert("d_deleteData");
+      ignored_topics.insert("d_groupsRequest");
+      ignored_topics.insert("d_nameSpaces");
+      ignored_topics.insert("d_nameSpacesRequest");
+      ignored_topics.insert("d_newGroup");
+      ignored_topics.insert("d_sampleChain");
+      ignored_topics.insert("d_sampleRequest");
+      ignored_topics.insert("d_status");
+      ignored_topics.insert("d_statusRequest");
+      ignored_topics.insert("parameter_events");
+      ignored_topics.insert("q_bubble");
+
       ros2_publishers.clear();
       ros2_subscribers.clear();
       for (auto it : ros2_topics) {
+        // ignore builtin DDS topics
+        if (ignored_topics.find(it.first) != ignored_topics.end()) {
+          continue;
+        }
         auto publisher_count = ros2_node->count_publishers(it.first);
         auto subscriber_count = ros2_node->count_subscribers(it.first);
 
