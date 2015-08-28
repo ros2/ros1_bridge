@@ -79,6 +79,7 @@ public:
   {
     rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_default;
     custom_qos_profile.depth = queue_size;
+    // TODO(wjwwood): use a lambda until create_subscription supports std/boost::bind.
     auto callback = [this, ros1_pub](const typename ROS2_T::SharedPtr msg) {
       return this->ros2_callback(msg, ros1_pub);
     };
