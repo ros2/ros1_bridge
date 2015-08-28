@@ -88,6 +88,9 @@ Once a *matching* topic has been detected it starts to bridge the messages on th
 
 ```
 # Shell B:
+. /opt/ros/indigo/setup.bash
+# Or, on OSX, something like:
+# . ~/ros_catkin_ws/install_isolated/setup.bash
 . <install-space-with-bridge>/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
 dynamic_bridge
