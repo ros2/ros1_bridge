@@ -28,7 +28,7 @@ The following ROS 1 packages are required to build and use the bridge:
 
 ### Build the bridge from source
 
-Before continuing you should have ROS 2 built from source following [these](https://github.com/ros2/ros2/wiki) instructions.
+Before continuing you should have ROS 2 built from source following [these](https://github.com/ros2/ros2/wiki/Installation) instructions.
 
 **Note:** you need almost 4 GB of free RAM per thread to compile the bridge.
 This will be fixed once `rclcpp` has been [refactored into a library](https://github.com/ros2/rclcpp/issues/48).
@@ -76,6 +76,8 @@ First we start a ROS 1 `roscore`:
 ```
 # Shell A:
 . /opt/ros/indigo/setup.bash
+# Or, on OSX, something like:
+# . ~/ros_catkin_ws/install_isolated/setup.bash
 roscore
 ```
 
