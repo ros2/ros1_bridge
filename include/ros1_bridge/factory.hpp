@@ -15,6 +15,8 @@
 #ifndef __ros1_bridge__factory__hpp__
 #define __ros1_bridge__factory__hpp__
 
+#include <functional>
+
 // include ROS 1 message event
 #include <ros/message.h>
 
@@ -77,7 +79,9 @@ public:
   {
     rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_default;
     custom_qos_profile.depth = queue_size;
-    auto callback = boost::bind(&Factory<ROS1_T, ROS2_T>::ros2_callback, _1, ros1_pub);
+    auto callback = [this, ros1_pub](const typename ROS2_T::SharedPtr msg) {
+      return this->ros2_callback(msg, ros1_pub);
+    };
     return node->create_subscription<ROS2_T>(
       topic_name, custom_qos_profile, callback, nullptr, true);
   }
@@ -113,7 +117,7 @@ protected:
 
   static
   void ros2_callback(
-    typename ROS2_T::ConstSharedPtr ros2_msg,
+    typename ROS2_T::SharedPtr ros2_msg,
     ros::Publisher ros1_pub
     )
   {

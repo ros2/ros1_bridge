@@ -26,7 +26,7 @@
 
 ros::Publisher ros1_pub;
 
-void ros2ChatterCallback(const std_msgs::msg::String::ConstSharedPtr ros2_msg)
+void ros2ChatterCallback(const std_msgs::msg::String::SharedPtr ros2_msg)
 {
   printf("  I heard from ROS 2: [%s]\n", ros2_msg->data.c_str());
 
