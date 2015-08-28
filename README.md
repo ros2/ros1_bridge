@@ -28,7 +28,7 @@ The following ROS 1 packages are required to build and use the bridge:
 
 ### Build the bridge from source
 
-Before continuing you should have ROS 2 built from source following [these](https://github.com/ros2/examples/wiki) instructions.
+Before continuing you should have ROS 2 built from source following [these](https://github.com/ros2/ros2/wiki) instructions.
 
 **Note:** you need almost 4 GB of free RAM per thread to compile the bridge.
 This will be fixed once `rclcpp` has been [refactored into a library](https://github.com/ros2/rclcpp/issues/48).
