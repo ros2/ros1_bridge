@@ -105,6 +105,8 @@ Now we start the ROS 1 talker.
 ```
 # Shell C:
 . /opt/ros/indigo/setup.bash
+# Or, on OSX, something like:
+# . ~/ros_catkin_ws/install_isolated/setup.bash
 rosrun rospy_tutorials talker
 ```
 
