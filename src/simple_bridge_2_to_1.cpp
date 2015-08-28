@@ -25,7 +25,7 @@
 
 ros::Publisher pub;
 
-void chatterCallback(const std_msgs::msg::String::ConstSharedPtr & ros2_msg)
+void chatterCallback(const std_msgs::msg::String::SharedPtr ros2_msg)
 {
   std::cout << "I heard: [" << ros2_msg->data << "]" << std::endl;
 
