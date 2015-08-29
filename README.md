@@ -149,6 +149,8 @@ The steps are very similar to the previous example and therefore only the comman
 ```
 # Shell A:
 . /opt/ros/indigo/setup.bash
+# Or, on OSX, something like:
+# . ~/ros_catkin_ws/install_isolated/setup.bash
 roscore
 ```
 
@@ -156,6 +158,9 @@ roscore
 
 ```
 # Shell B:
+. /opt/ros/indigo/setup.bash
+# Or, on OSX, something like:
+# . ~/ros_catkin_ws/install_isolated/setup.bash
 . <install-space-with-bridge>/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
 dynamic_bridge
@@ -178,6 +183,8 @@ Now we start the ROS 1 listener.
 ```
 # Shell D:
 . /opt/ros/indigo/setup.bash
+# Or, on OSX, something like:
+# . ~/ros_catkin_ws/install_isolated/setup.bash
 rosrun roscpp_tutorials listener
 ```
 
@@ -193,11 +200,16 @@ First we start a ROS 1 `roscore` and the bridge:
 ```
 # Shell A:
 . /opt/ros/indigo/setup.bash
+# Or, on OSX, something like:
+# . ~/ros_catkin_ws/install_isolated/setup.bash
 roscore
 ```
 
 ```
 # Shell B:
+. /opt/ros/indigo/setup.bash
+# Or, on OSX, something like:
+# . ~/ros_catkin_ws/install_isolated/setup.bash
 . <workspace-with-bridge>/install/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
 dynamic_bridge
@@ -210,6 +222,8 @@ Now we start the ROS 1 GUI:
 ```
 # Shell C:
 . /opt/ros/indigo/setup.bash
+# Or, on OSX, something like:
+# . ~/ros_catkin_ws/install_isolated/setup.bash
 rqt_image_view
 ```
 
@@ -220,6 +234,8 @@ Therefore we have to briefly start a ROS 1 publisher to workaround the limitatio
 ```
 # Shell D:
 . /opt/ros/indigo/setup.bash
+# Or, on OSX, something like:
+# . ~/ros_catkin_ws/install_isolated/setup.bash
 rosrun usb_cam usb_cam_node usb_cam/image_raw:=image
 ```
 
@@ -248,6 +264,8 @@ As an alternative you can also run one of the two following `rostopic` commands:
 ```
 # Shell F:
 . /opt/ros/indigo/setup.bash
+# Or, on OSX, something like:
+# . ~/ros_catkin_ws/install_isolated/setup.bash
 rostopic pub -r 1 /flip_image std_msgs/Bool "{data: true}"
 rostopic pub -r 1 /flip_image std_msgs/Bool "{data: false}"
 ```
