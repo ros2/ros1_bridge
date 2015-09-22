@@ -2,7 +2,10 @@ from collections import OrderedDict
 import os
 import re
 import sys
+import yaml
+
 import ament_index_python
+from ament_package import parse_package
 from rosidl_cmake import expand_template
 import rosidl_parser
 
@@ -55,13 +58,14 @@ import rosmsg
 def generate_cpp(output_file, template_dir):
     rospack = rospkg.RosPack()
     ros1_msgs = get_ros1_messages(rospack=rospack)
-    ros2_msgs = get_ros2_messages()
+    ros2_msgs, mapping_rules = get_ros2_messages()
 
-    message_pairs = determine_message_pairs(ros1_msgs, ros2_msgs)
+    package_pairs = determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules)
+    message_pairs = determine_message_pairs(ros1_msgs, ros2_msgs, package_pairs, mapping_rules)
 
     mappings = []
     for ros1_msg, ros2_msg in message_pairs:
-        mapping = determine_field_mapping(ros1_msg, ros2_msg, rospack=rospack)
+        mapping = determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, rospack=rospack)
         if mapping:
             mappings.append(mapping)
 
@@ -117,6 +121,8 @@ def get_ros1_messages(rospack=None):
 
 def get_ros2_messages():
     msgs = []
+    rules = []
+    # get messages from packages
     resource_type = 'rosidl_interfaces'
     resources = ament_index_python.get_resources(resource_type)
     for package_name, prefix_path in resources.items():
@@ -125,7 +131,36 @@ def get_ros2_messages():
         message_names = [i[:-4] for i in interfaces if i.endswith('.msg')]
         for message_name in message_names:
             msgs.append(Message(package_name, message_name, prefix_path))
-    return msgs
+        # check package manifest for mapping rules
+        package_path = os.path.join(prefix_path, 'share', package_name)
+        pkg = parse_package(package_path)
+        for export in pkg.exports:
+            if export.tagname != 'ros1_bridge':
+                continue
+            if 'mapping_rules' not in export.attributes:
+                continue
+            rule_file = os.path.join(package_path, export.attributes['mapping_rules'])
+            rules += read_mapping_rules(rule_file, package_name)
+    return msgs, rules
+
+
+def read_mapping_rules(rule_file, package_name):
+    rules = []
+    with open(rule_file, 'r') as h:
+        rules_data = yaml.load(h)
+        for rule_data in rules_data:
+            for field_name in ['ros1_package_name', 'ros2_package_name']:
+                if field_name not in rule_data:
+                    print("Ignoring rule without a '%s'" % field_name, file=sys.stderr)
+                    continue
+            if rule_data['ros2_package_name'] != package_name:
+                print(
+                    ("Ignoring rule in '%s' which affects a different ROS 2 package (%s) "
+                     'then the one it is defined in (%s)') %
+                    (rule_file, rule_data['ros2_package_name'], package_name), file=sys.stderr)
+                continue
+            rules.append(MappingRule(rule_data))
+    return rules
 
 
 class Message(object):
@@ -148,32 +183,127 @@ class Message(object):
         return hash('%s/%s' % (self.package_name, self.message_name))
 
 
-def determine_message_pairs(ros1_msgs, ros2_msgs):
+class MappingRule(object):
+    __slots__ = [
+        'ros1_package_name',
+        'ros1_message_name',
+        'ros2_package_name',
+        'ros2_message_name',
+        'fields_1_to_2',
+    ]
+
+    def __init__(self, data):
+        self.ros1_package_name = data['ros1_package_name']
+        self.ros2_package_name = data['ros2_package_name']
+        self.ros1_message_name = None
+        self.ros2_message_name = None
+        self.fields_1_to_2 = None
+        if 'ros1_message_name' in data:
+            self.ros1_message_name = data['ros1_message_name']
+            self.ros2_message_name = data['ros2_message_name']
+            if 'fields_1_to_2' in data:
+                self.fields_1_to_2 = OrderedDict()
+                for ros1_field_name, ros2_field_name in data['fields_1_to_2'].items():
+                    self.fields_1_to_2[ros1_field_name] = ros2_field_name
+
+    def is_package_mapping(self):
+        return self.ros1_message_name is None
+
+    def is_message_mapping(self):
+        return self.ros1_message_name is not None and self.fields_1_to_2 is None
+
+    def is_field_mapping(self):
+        return self.fields_1_to_2 is not None
+
+
+def determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules):
     pairs = []
+    # determine package names considered equal between ROS 1 and ROS 2
     ros1_suffix = '_msgs'
     ros2_suffixes = ['_msgs', '_interfaces']
-    for ros1_msg in ros1_msgs:
-        if not ros1_msg.package_name.endswith(ros1_suffix):
+    ros1_package_names = set([m.package_name for m in ros1_msgs])
+    ros2_package_names = set([m.package_name for m in ros2_msgs])
+    for ros1_package_name in ros1_package_names:
+        if not ros1_package_name.endswith(ros1_suffix):
             continue
-        ros1_package_basename = ros1_msg.package_name[:-len(ros1_suffix)]
+        ros1_package_basename = ros1_package_name[:-len(ros1_suffix)]
 
-        for ros2_msg in ros2_msgs:
+        for ros2_package_name in ros2_package_names:
             for ros2_suffix in ros2_suffixes:
-                if ros2_msg.package_name.endswith(ros2_suffix):
+                if ros2_package_name.endswith(ros2_suffix):
                     break
             else:
                 continue
-            ros2_package_basename = ros2_msg.package_name[:-len(ros2_suffix)]
+            ros2_package_basename = ros2_package_name[:-len(ros2_suffix)]
             if ros1_package_basename != ros2_package_basename:
+                continue
+            pairs.append((ros1_package_name, ros2_package_name))
+
+    # add manual package mapping rules
+    for rule in mapping_rules:
+        if not rule.is_package_mapping:
+            continue
+        if rule.ros1_package_name not in ros1_package_names:
+            continue
+        if rule.ros2_package_name not in ros2_package_names:
+            continue
+        pair = (rule.ros1_package_name, rule.ros2_package_name)
+        if pair not in pairs:
+            pairs.append(pair)
+
+    return pairs
+
+
+def determine_message_pairs(ros1_msgs, ros2_msgs, package_pairs, mapping_rules):
+    pairs = []
+    # determine message names considered equal between ROS 1 and ROS 2
+    for ros1_msg in ros1_msgs:
+        for ros2_msg in ros2_msgs:
+            package_pair = (ros1_msg.package_name, ros2_msg.package_name)
+            if package_pair not in package_pairs:
                 continue
             if ros1_msg.message_name != ros2_msg.message_name:
                 continue
             pairs.append((ros1_msg, ros2_msg))
 
+    # add manual message mapping rules
+    for rule in mapping_rules:
+        if not rule.is_message_mapping:
+            continue
+        for ros1_msg in ros1_msgs:
+            if rule.ros1_package_name == ros1_msg.package_name and \
+                    rule.ros1_message_name == ros1_msg.message_name:
+                break
+        else:
+            # skip unknown messages
+            continue
+        for ros2_msg in ros2_msgs:
+            if rule.ros2_package_name == ros2_msg.package_name and \
+                    rule.ros2_message_name == ros2_msg.message_name:
+                break
+        else:
+            # skip unknown messages
+            continue
+
+        pair = (ros1_msg, ros2_msg)
+        if pair not in pairs:
+            pairs.append(pair)
+
     return pairs
 
 
-def determine_field_mapping(ros1_msg, ros2_msg, rospack=None):
+def update_ros1_field_information(ros1_field, package_name):
+    parts = ros1_field.base_type.split('/')
+    assert len(parts) in [1, 2]
+    if len(parts) == 1:
+        ros1_field.pkg_name = package_name
+        ros1_field.msg_name = parts[0]
+    else:
+        ros1_field.pkg_name = parts[0]
+        ros1_field.msg_name = parts[1]
+
+
+def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, rospack=None):
     ros1_spec = load_ros1_message(ros1_msg, rospack=rospack)
     if not ros1_spec:
         return None
@@ -181,34 +311,53 @@ def determine_field_mapping(ros1_msg, ros2_msg, rospack=None):
     if not ros2_spec:
         return None
 
-    # ROS 1 fields
-    #   name
-    #   type
-    #   base_type
-    #   is_array
-    #   array_len
-    #   is_builtin
-    #   is_header
+    mapping = Mapping(ros1_msg, ros2_msg)
 
+    # check for manual field mapping rules first
+    for rule in mapping_rules:
+        if not rule.is_field_mapping:
+            continue
+        if rule.ros1_package_name != ros1_msg.package_name or \
+                rule.ros1_message_name != ros1_msg.message_name:
+            continue
+        if rule.ros2_package_name != ros2_msg.package_name or \
+                rule.ros2_message_name != ros2_msg.message_name:
+            continue
+
+        for ros1_field_name, ros2_field_name in rule.fields_1_to_2.items():
+            try:
+                ros1_field = \
+                    [f for f in ros1_spec.parsed_fields() if f.name == ros1_field_name][0]
+            except IndexError:
+                print(
+                    "A manual mapping refers to an invalid field '%s' " % ros1_field_name +
+                    "in the ROS 1 message '%s/%s'" %
+                    (rule.ros1_package_name, rule.ros1_message_name),
+                    file=sys.stderr)
+                continue
+            try:
+                ros2_field = \
+                    [f for f in ros2_spec.fields if f.name == ros2_field_name][0]
+            except IndexError:
+                print(
+                    "A manual mapping refers to an invalid field '%s' " % ros2_field_name +
+                    "in the ROS 2 message '%s/%s'" %
+                    (rule.ros2_package_name, rule.ros2_message_name),
+                    file=sys.stderr)
+                continue
+            update_ros1_field_information(ros1_field, ros1_msg.package_name)
+            mapping.add_field_pair(ros1_field, ros2_field)
+        return mapping
+
+    # apply name based mapping of fields
     ros1_field_missing_in_ros2 = False
 
-    mapping = Mapping(ros1_msg, ros2_msg)
     for ros1_field in ros1_spec.parsed_fields():
-        # TODO handle header correctly
-        if ros1_field.is_header:
-            continue
         for ros2_field in ros2_spec.fields:
             if ros1_field.name.lower() == ros2_field.name:
                 # get package name and message name from ROS 1 field type
                 if ros2_field.type.pkg_name:
-                    parts = ros1_field.base_type.split('/')
-                    assert len(parts) in [1, 2]
-                    if len(parts) == 1:
-                        ros1_field.pkg_name = ros1_msg.package_name
-                        ros1_field.msg_name = parts[0]
-                    else:
-                        ros1_field.pkg_name = parts[0]
-                        ros1_field.msg_name = parts[1]
+                    update_ros1_field_information(ros1_field, ros1_msg.package_name)
                 mapping.add_field_pair(ros1_field, ros2_field)
                 break
         else:
