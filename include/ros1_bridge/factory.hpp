@@ -44,7 +44,7 @@ public:
     const std::string & topic_name,
     size_t queue_size)
   {
-    rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_default;
+    rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_sensor_data;
     custom_qos_profile.depth = queue_size;
     return node->create_publisher<ROS2_T>(topic_name, custom_qos_profile);
   }
@@ -77,7 +77,7 @@ public:
     size_t queue_size,
     ros::Publisher ros1_pub)
   {
-    rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_default;
+    rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_sensor_data;
     custom_qos_profile.depth = queue_size;
     // TODO(wjwwood): use a lambda until create_subscription supports std/boost::bind.
     auto callback = [this, ros1_pub](const typename ROS2_T::SharedPtr msg) {
