@@ -12,15 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
+
 // include ROS 1
-#include <ros/ros.h>
+#include "ros/ros.h"
 
 // include ROS 2
-#include <rclcpp/rclcpp.hpp>
+#include "rclcpp/rclcpp.hpp"
 
-#include <ros1_bridge/bridge.hpp>
+#include "ros1_bridge/bridge.hpp"
 
-// TODO hack until rclcpp has been refactored into a library
+// TODO(dirk-thomas) hack until rclcpp has been refactored into a library
 #include "generated_factories.cpp"
 
 

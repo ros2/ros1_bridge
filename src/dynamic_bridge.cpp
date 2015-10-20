@@ -12,16 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <map>
+#include <set>
+#include <string>
+#include <vector>
+
 // include ROS 1
-#include <ros/ros.h>
-#include <ros/this_node.h>
+#include "ros/ros.h"
+#include "ros/this_node.h"
 
 // include ROS 2
-#include <rclcpp/rclcpp.hpp>
+#include "rclcpp/rclcpp.hpp"
 
-#include <ros1_bridge/bridge.hpp>
+#include "ros1_bridge/bridge.hpp"
 
-// TODO hack until rclcpp has been refactored into a library
+// TODO(dirk-thomas) hack until rclcpp has been refactored into a library
 #include "generated_factories.cpp"
 
 
@@ -92,7 +97,8 @@ void update_bridge(
     } catch (std::runtime_error & e) {
       fprintf(
         stderr,
-        "failed to create 1to2 bridge for topic '%s' with ROS 1 type '%s' and ROS 2 type '%s': %s\n",
+        "failed to create 1to2 bridge for topic '%s' "
+        "with ROS 1 type '%s' and ROS 2 type '%s': %s\n",
         topic_name.c_str(), bridge.ros1_type_name.c_str(), bridge.ros2_type_name.c_str(), e.what());
       continue;
     }
@@ -142,7 +148,8 @@ void update_bridge(
     } catch (std::runtime_error & e) {
       fprintf(
         stderr,
-        "failed to create 2to1 bridge for topic '%s' with ROS 2 type '%s' and ROS 1 type '%s': %s\n",
+        "failed to create 2to1 bridge for topic '%s' "
+        "with ROS 2 type '%s' and ROS 1 type '%s': %s\n",
         topic_name.c_str(), bridge.ros2_type_name.c_str(), bridge.ros1_type_name.c_str(), e.what());
       continue;
     }

@@ -12,18 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __ros1_bridge__factory_interface__hpp__
-#define __ros1_bridge__factory_interface__hpp__
+#ifndef  ROS1_BRIDGE__FACTORY_INTERFACE_HPP_
+#define  ROS1_BRIDGE__FACTORY_INTERFACE_HPP_
+
+#include <string>
 
 // include ROS 1
-#include <ros/node_handle.h>
-#include <ros/publisher.h>
-#include <ros/subscriber.h>
+#include "ros/node_handle.h"
+#include "ros/publisher.h"
+#include "ros/subscriber.h"
 
 // include ROS 2
-#include <rclcpp/node.hpp>
-#include <rclcpp/publisher.hpp>
-#include <rclcpp/subscription.hpp>
+#include "rclcpp/node.hpp"
+#include "rclcpp/publisher.hpp"
+#include "rclcpp/subscription.hpp"
 
 namespace ros1_bridge
 {
@@ -64,4 +66,4 @@ public:
 
 }  // namespace ros1_bridge
 
-#endif // __ros1_bridge__factory_interface__hpp__
+#endif  // ROS1_BRIDGE__FACTORY_INTERFACE_HPP_

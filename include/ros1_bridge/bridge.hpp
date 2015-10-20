@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __ros1_bridge__bridge__hpp__
-#define __ros1_bridge__bridge__hpp__
+#ifndef ROS1_BRIDGE__BRIDGE_HPP_
+#define ROS1_BRIDGE__BRIDGE_HPP_
+
+#include <string>
 
 // include ROS 1
-#include <ros/node_handle.h>
+#include "ros/node_handle.h"
 
 // include ROS 2
-#include <rclcpp/node.hpp>
+#include "rclcpp/node.hpp"
 
-#include <ros1_bridge/factory_interface.hpp>
+#include "ros1_bridge/factory_interface.hpp"
 
 namespace ros1_bridge
 {
@@ -109,12 +111,14 @@ create_bidirectional_bridge(
   printf("create bidirectional bridge for topic [%s]\n", topic_name.c_str());
   BridgeHandles handles;
   handles.bridge1to2 = create_bridge_from_1_to_2(
-    ros1_node, ros2_node, ros1_type_name, topic_name, queue_size, ros2_type_name, topic_name, queue_size);
+    ros1_node, ros2_node,
+    ros1_type_name, topic_name, queue_size, ros2_type_name, topic_name, queue_size);
   handles.bridge2to1 = create_bridge_from_2_to_1(
-    ros2_node, ros1_node, ros2_type_name, topic_name, queue_size, ros1_type_name, topic_name, queue_size);
+    ros2_node, ros1_node,
+    ros2_type_name, topic_name, queue_size, ros1_type_name, topic_name, queue_size);
   return handles;
 }
 
 }  // namespace ros1_bridge
 
-#endif // __ros1_bridge__bridge__hpp__
+#endif  // ROS1_BRIDGE__BRIDGE_HPP_

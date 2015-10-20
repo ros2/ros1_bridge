@@ -13,15 +13,16 @@
 // limitations under the License.
 
 #include <iostream>
+#include <string>
 
 // include ROS 1
-#include <ros/message.h>
-#include <ros/ros.h>
-#include <std_msgs/String.h>
+#include "ros/message.h"
+#include "ros/ros.h"
+#include "std_msgs/String.h"
 
 // include ROS 2
-#include <rclcpp/rclcpp.hpp>
-#include <std_msgs/msg/string.hpp>
+#include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/string.hpp"
 
 
 ros::Publisher ros1_pub;
@@ -41,7 +42,8 @@ publisher::Publisher::SharedPtr ros2_pub;
 
 void ros1ChatterCallback(const ros::MessageEvent<std_msgs::String const> & ros1_msg_event)
 {
-  const boost::shared_ptr<ros::M_string>& connection_header = ros1_msg_event.getConnectionHeaderPtr();
+  const boost::shared_ptr<ros::M_string>& connection_header =
+    ros1_msg_event.getConnectionHeaderPtr();
   std::string key = "callerid";
   if (connection_header->find(key) != connection_header->end()) {
     if (connection_header->at(key) == "/ros_bridge") {

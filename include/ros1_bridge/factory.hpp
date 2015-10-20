@@ -12,15 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __ros1_bridge__factory__hpp__
-#define __ros1_bridge__factory__hpp__
+#ifndef  ROS1_BRIDGE__FACTORY_HPP_
+#define  ROS1_BRIDGE__FACTORY_HPP_
 
 #include <functional>
+#include <string>
 
 // include ROS 1 message event
-#include <ros/message.h>
+#include "ros/message.h"
 
-#include <ros1_bridge/factory_interface.hpp>
+#include "ros1_bridge/factory_interface.hpp"
 
 namespace ros1_bridge
 {
@@ -88,14 +89,14 @@ public:
   }
 
 protected:
-
   static
   void ros1_callback(
     const ros::MessageEvent<ROS1_T const> & ros1_msg_event,
     rclcpp::publisher::Publisher::SharedPtr ros2_pub
     )
   {
-    const boost::shared_ptr<ros::M_string> & connection_header = ros1_msg_event.getConnectionHeaderPtr();
+    const boost::shared_ptr<ros::M_string> & connection_header =
+      ros1_msg_event.getConnectionHeaderPtr();
     if (!connection_header) {
       printf("  dropping message without connection header\n");
       return;
@@ -130,7 +131,6 @@ protected:
 
 // since convert functions call each other for sub messages they must be public
 public:
-
   // defined outside of the class
   static
   void
@@ -146,4 +146,4 @@ public:
 
 }  // namespace ros1_bridge
 
-#endif // __ros1_bridge__factory__hpp__
+#endif  // ROS1_BRIDGE__FACTORY_HPP_
