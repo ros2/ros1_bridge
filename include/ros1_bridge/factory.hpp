@@ -98,7 +98,9 @@ protected:
     typename rclcpp::publisher::Publisher<ROS2_T>::SharedPtr typed_ros2_pub;
     typed_ros2_pub = std::dynamic_pointer_cast<typename rclcpp::publisher::Publisher<ROS2_T>>(ros2_pub);
 
-    assert(typed_ros2_pub);
+    if (!typed_ros2_pub) {
+      throw std::runtime_error("Invalid type for publisher");
+    }
 
     const boost::shared_ptr<ros::M_string> & connection_header =
       ros1_msg_event.getConnectionHeaderPtr();
