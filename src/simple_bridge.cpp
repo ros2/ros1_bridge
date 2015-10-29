@@ -82,7 +82,7 @@ int main(int argc, char * argv[])
 
   // ROS 2 subscriber
   auto ros2_sub = ros2_node->create_subscription<std_msgs::msg::String>(
-    "chatter", rmw_qos_profile_default, ros2ChatterCallback, nullptr, true);
+    "chatter", ros2ChatterCallback, rmw_qos_profile_default, nullptr, true);
 
   // ROS 1 asynchronous spinner
   ros::AsyncSpinner async_spinner(1);

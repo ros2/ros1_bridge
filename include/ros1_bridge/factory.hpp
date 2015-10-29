@@ -85,7 +85,7 @@ public:
       return this->ros2_callback(msg, ros1_pub);
     };
     return node->create_subscription<ROS2_T>(
-      topic_name, custom_qos_profile, callback, nullptr, true);
+      topic_name, callback, custom_qos_profile, nullptr, true);
   }
 
 protected:
