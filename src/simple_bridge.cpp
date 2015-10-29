@@ -38,7 +38,7 @@ void ros2ChatterCallback(const std_msgs::msg::String::SharedPtr ros2_msg)
 }
 
 
-publisher::Publisher::SharedPtr ros2_pub;
+publisher::Publisher<std_msgs::msg::String>::SharedPtr ros2_pub;
 
 void ros1ChatterCallback(const ros::MessageEvent<std_msgs::String const> & ros1_msg_event)
 {

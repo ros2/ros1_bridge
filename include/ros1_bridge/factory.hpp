@@ -39,7 +39,7 @@ public:
     return node.advertise<ROS1_T>(topic_name, queue_size);
   }
 
-  rclcpp::publisher::Publisher::SharedPtr
+  rclcpp::publisher::PublisherBase::SharedPtr
   create_ros2_publisher(
     rclcpp::node::Node::SharedPtr node,
     const std::string & topic_name,
@@ -55,7 +55,7 @@ public:
     ros::NodeHandle node,
     const std::string & topic_name,
     size_t queue_size,
-    rclcpp::publisher::Publisher::SharedPtr ros2_pub)
+    rclcpp::publisher::PublisherBase::SharedPtr ros2_pub)
   {
     // workaround for https://github.com/ros/roscpp_core/issues/22 to get the connection header
     ros::SubscribeOptions ops;
@@ -92,9 +92,14 @@ protected:
   static
   void ros1_callback(
     const ros::MessageEvent<ROS1_T const> & ros1_msg_event,
-    rclcpp::publisher::Publisher::SharedPtr ros2_pub
+    rclcpp::publisher::PublisherBase::SharedPtr ros2_pub
     )
   {
+    typename rclcpp::publisher::Publisher<ROS2_T>::SharedPtr typed_ros2_pub;
+    typed_ros2_pub = std::dynamic_pointer_cast<typename rclcpp::publisher::Publisher<ROS2_T>>(ros2_pub);
+
+    assert(typed_ros2_pub);
+
     const boost::shared_ptr<ros::M_string> & connection_header =
       ros1_msg_event.getConnectionHeaderPtr();
     if (!connection_header) {
@@ -114,7 +119,7 @@ protected:
     auto ros2_msg = std::make_shared<ROS2_T>();
     convert_1_to_2(*ros1_msg, *ros2_msg);
     printf("  Passing message from ROS 1 to ROS 2\n");
-    ros2_pub->publish(ros2_msg);
+    typed_ros2_pub->publish(ros2_msg);
   }
 
   static

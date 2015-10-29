@@ -41,7 +41,7 @@ public:
     size_t queue_size) = 0;
 
   virtual
-  rclcpp::publisher::Publisher::SharedPtr
+  rclcpp::publisher::PublisherBase::SharedPtr
   create_ros2_publisher(
     rclcpp::node::Node::SharedPtr node,
     const std::string & topic_name,
@@ -53,7 +53,7 @@ public:
     ros::NodeHandle node,
     const std::string & topic_name,
     size_t queue_size,
-    rclcpp::publisher::Publisher::SharedPtr ros2_pub) = 0;
+    rclcpp::publisher::PublisherBase::SharedPtr ros2_pub) = 0;
 
   virtual
   rclcpp::subscription::SubscriptionBase::SharedPtr

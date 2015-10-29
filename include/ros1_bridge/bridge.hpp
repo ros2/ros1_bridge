@@ -31,7 +31,7 @@ namespace ros1_bridge
 struct Bridge1to2Handles
 {
   ros::Subscriber ros1_subscriber;
-  rclcpp::publisher::Publisher::SharedPtr ros2_publisher;
+  rclcpp::publisher::PublisherBase::SharedPtr ros2_publisher;
 };
 
 struct Bridge2to1Handles
