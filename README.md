@@ -118,11 +118,12 @@ The ROS 1 node will start printing the published messages to the console.
 ---
 
 Now we start the ROS 2 listener.
+It is important to use the listener from the `ros1_bridge` package since it uses different QoS parameters than the "normal" `listener`.
 
 ```
 # Shell D:
 . <install-space-with-ros2>/setup.bash
-listener
+ros1_bridge_listener
 ```
 
 The ROS 2 node will start printing the received messages to the console.

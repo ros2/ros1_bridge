@@ -74,7 +74,7 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
   auto ros2_node = rclcpp::node::Node::make_shared("ros_bridge");
   ros2_pub = ros2_node->create_publisher<std_msgs::msg::String>(
-    "chatter", rmw_qos_profile_default);
+    "chatter", rmw_qos_profile_sensor_data);
 
   // ROS 1 subscriber
   ros::Subscriber ros1_sub = ros1_node.subscribe(
@@ -82,7 +82,7 @@ int main(int argc, char * argv[])
 
   // ROS 2 subscriber
   auto ros2_sub = ros2_node->create_subscription<std_msgs::msg::String>(
-    "chatter", ros2ChatterCallback, rmw_qos_profile_default, nullptr, true);
+    "chatter", ros2ChatterCallback, rmw_qos_profile_sensor_data, nullptr, true);
 
   // ROS 1 asynchronous spinner
   ros::AsyncSpinner async_spinner(1);
