@@ -32,9 +32,15 @@ Before continuing you should have ROS 2 built from source following [these](http
 
 The ROS 1 bridge requires a patched version of `rosbag` (for Python 3 compatibility) that has not yet been released.
 As a quick workaround, we're going to comment out one line in `rosbag`, build the ROS 1 bridge, then revert that change (to make your ROS 1 `rosbag` package work again).
+The next ROS 1 patch release will resolve this problem (https://github.com/ros/ros_comm/pull/642).
 
-Also, building the ROS 1 bridge can consume a tremendous amount of memory to the point that it can easily overwhelm a computer if done with parallel compilation enabled.
+Also, building the ROS 1 bridge can consume a tremendous amount of memory (almost 4 GB of free RAM per thread while compiling) to the point that it can easily overwhelm a computer if done with parallel compilation enabled.
 As such, we recommend first building everything else as usual, then coming back to build the ROS 1 bridge without parallel compilation.
+This will be fixed once `rclcpp` has been [refactored into a library](https://github.com/ros2/rclcpp/issues/48).
+
+The bridge uses `pkg-config` to find ROS 1 packages.
+ROS 2 packages are located in CMake using `find_package()`.
+Therefore the `CMAKE_PREFIX_PATH` must not contain paths from ROS 1 which would overlay ROS 2 packages.
 
 Here are the steps (for Linux and OSX; you probably don't have ROS 1 installed on Windows):
 
