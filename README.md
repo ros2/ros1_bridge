@@ -38,6 +38,11 @@ As such, we recommend first building everything else as usual, then coming back 
 
 Here are the steps (for Linux and OSX; you probably don't have ROS 1 installed on Windows):
 
+    # Get your ROS1 environment setup; comment out (modify as necessary) one line:
+    # Linux:
+    #. /opt/ros/indigo/setup.bash
+    # OSX:
+    #. ~/ros_catkin_ws/install_isolated/setup.bash
     # Patch rosbag to remove non-Python3-compatible line
     sudo sed -i '' 's/import roslz4/#import roslz4/' $ROS_ROOT/../../lib/python2.7/site-packages/rosbag/bag.py
     # Ignore ros1_bridge and build everything else
