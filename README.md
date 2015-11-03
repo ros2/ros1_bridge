@@ -30,38 +30,24 @@ The following ROS 1 packages are required to build and use the bridge:
 
 Before continuing you should have ROS 2 built from source following [these](https://github.com/ros2/ros2/wiki/Installation) instructions.
 
-**Note:** you need almost 4 GB of free RAM per thread to compile the bridge.
-This will be fixed once `rclcpp` has been [refactored into a library](https://github.com/ros2/rclcpp/issues/48).
+The ROS 1 bridge requires a patched version of `rosbag` (for Python 3 compatibility) that has not yet been released.
+As a quick workaround, we're going to comment out one line in `rosbag`, build the ROS 1 bridge, then revert that change (to make your ROS 1 `rosbag` package work again).
 
-The bridge uses `pkg-config` to find ROS 1 packages.
-ROS 2 packages are located in CMake using `find_package()`.
-Therefore the `CMAKE_PREFIX_PATH` must not contain paths from ROS 1 which would overlay ROS 2 packages.
+Also, building the ROS 1 bridge can consume a tremendous amount of memory to the point that it can easily overwhelm a computer if done with parallel compilation enabled.
+As such, we recommend first building everything else as usual, then coming back to build the ROS 1 bridge without parallel compilation.
 
-In order to build this ament package you must first setup the ROS 1 environment:
+Here are the steps (for Linux and OSX; you probably don't have ROS installed on Windows):
 
-```
-. /opt/ros/indigo/setup.bash
-unset CMAKE_PREFIX_PATH
-```
-
-and second source the ROS 2 environment:
-
-```
-. <workspace-with-ros2>/install/setup.bash
-```
-
-Afterwards you can build the ament package as usual.
-Due to the high memory usage you might want to restrict the number of parallel jobs.
-
-**Note:** due to a bug in ROS 1 rosbag you currently must patch an installed file or build ROS 1 `ros_comm` from source.
-Edit the file `/opt/ros/indigo/lib/python2.7/dist-packages/rosbag/bag.py` with root permissions and comment out the line containing `import roslz4`.
-Make sure to revert the change after building the bridge.
-The next ROS 1 patch release will resolve this problem (https://github.com/ros/ros_comm/pull/642).
-
-```
-ament build <workspace-with-bridge> --make-args -j1
-```
-
+    # Patch rosbag to remove non-Python3-compatible line
+    sed -i '' 's/import roslz4/#import roslz4/' $ROS_ROOT/../../lib/python2.7/site-packages/rosbag/bag.py
+    # Ignore ros1_bridge and build everything else
+    touch src/ros2/ros1_bridge/AMENT_IGNORE
+    src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install
+    # Un-ignore ros1_bridge and build it, non-parallel
+    rm src/ros2/ros1_bridge/AMENT_IGNORE
+    src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install --only ros1_bridge --make-flags -j1
+    # Un-patch rosbag to put back the non-Python3-compatible line
+    sed -i '' 's/#import roslz4/import roslz4/' $ROS_ROOT/../../lib/python2.7/site-packages/rosbag/bag.py
 
 ## Example 1: run the bridge and the example talker and listener
 
