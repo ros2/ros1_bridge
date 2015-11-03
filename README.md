@@ -43,11 +43,11 @@ Here are the steps (for Linux and OSX; you probably don't have ROS 1 installed o
     #. /opt/ros/indigo/setup.bash
     # OSX:
     #. ~/ros_catkin_ws/install_isolated/setup.bash
-    # Patch rosbag to remove non-Python3-compatible line; uncomment one line: 
+    # Patch rosbag to remove non-Python3-compatible line; uncomment one line:
+    # Linux:
+    #sudo sed -i 's/import roslz4/#import roslz4/' $ROS_ROOT/../../lib/python2.7/dist-packages/rosbag/bag.py
     # OSX:
     #sudo sed -i '' 's/import roslz4/#import roslz4/' $ROS_ROOT/../../lib/python2.7/site-packages/rosbag/bag.py
-    # Linux:
-    #sudo sed -i 's/import roslz4/#import roslz4/' $ROS_ROOT/../../lib/python2.7/site-packages/rosbag/bag.py
     # Ignore ros1_bridge and build everything else
     touch src/ros2/ros1_bridge/AMENT_IGNORE
     src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install
@@ -56,7 +56,7 @@ Here are the steps (for Linux and OSX; you probably don't have ROS 1 installed o
     src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install --only ros1_bridge --make-flags -j1
     # Un-patch rosbag to put back the non-Python3-compatible line; uncomment one line:
     # Linux:
-    #sudo sed -i 's/#import roslz4/import roslz4/' $ROS_ROOT/../../lib/python2.7/site-packages/rosbag/bag.py
+    #sudo sed -i 's/#import roslz4/import roslz4/' $ROS_ROOT/../../lib/python2.7/dist-packages/rosbag/bag.py
     # OSX:
     #sudo sed -i '' 's/#import roslz4/import roslz4/' $ROS_ROOT/../../lib/python2.7/site-packages/rosbag/bag.py
 
