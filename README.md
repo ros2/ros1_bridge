@@ -36,7 +36,7 @@ As a quick workaround, we're going to comment out one line in `rosbag`, build th
 Also, building the ROS 1 bridge can consume a tremendous amount of memory to the point that it can easily overwhelm a computer if done with parallel compilation enabled.
 As such, we recommend first building everything else as usual, then coming back to build the ROS 1 bridge without parallel compilation.
 
-Here are the steps (for Linux and OSX; you probably don't have ROS installed on Windows):
+Here are the steps (for Linux and OSX; you probably don't have ROS 1 installed on Windows):
 
     # Patch rosbag to remove non-Python3-compatible line
     sed -i '' 's/import roslz4/#import roslz4/' $ROS_ROOT/../../lib/python2.7/site-packages/rosbag/bag.py
