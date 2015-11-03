@@ -39,7 +39,7 @@ As such, we recommend first building everything else as usual, then coming back 
 Here are the steps (for Linux and OSX; you probably don't have ROS 1 installed on Windows):
 
     # Patch rosbag to remove non-Python3-compatible line
-    sed -i '' 's/import roslz4/#import roslz4/' $ROS_ROOT/../../lib/python2.7/site-packages/rosbag/bag.py
+    sudo sed -i '' 's/import roslz4/#import roslz4/' $ROS_ROOT/../../lib/python2.7/site-packages/rosbag/bag.py
     # Ignore ros1_bridge and build everything else
     touch src/ros2/ros1_bridge/AMENT_IGNORE
     src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install
@@ -47,7 +47,7 @@ Here are the steps (for Linux and OSX; you probably don't have ROS 1 installed o
     rm src/ros2/ros1_bridge/AMENT_IGNORE
     src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install --only ros1_bridge --make-flags -j1
     # Un-patch rosbag to put back the non-Python3-compatible line
-    sed -i '' 's/#import roslz4/import roslz4/' $ROS_ROOT/../../lib/python2.7/site-packages/rosbag/bag.py
+    sudo sed -i '' 's/#import roslz4/import roslz4/' $ROS_ROOT/../../lib/python2.7/site-packages/rosbag/bag.py
 
 ## Example 1: run the bridge and the example talker and listener
 
