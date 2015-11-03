@@ -49,6 +49,10 @@ namespace ros1_bridge
 std::shared_ptr<FactoryInterface>
 get_factory(const std::string & ros1_type_name, const std::string & ros2_type_name)
 {
+@[if not mappings]@
+  (void)ros1_type_name;
+  (void)ros2_type_name;
+@[end if]@
   // mapping from string to specialized template
 @[for m in mappings]@
   if (
