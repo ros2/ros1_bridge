@@ -72,12 +72,6 @@ function(build_executable executable)
   endforeach()
 endfunction()
 
-if(NOT WIN32)
-  # ignore warning in ROS 1 message headers
-  # TODO(dirk-thomas) should only be applied to the generated_factories.cpp
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
-endif()
-
 build_executable(ros1_bridge_talker src/talker.cpp
   TARGET_DEPENDENCIES "std_msgs")
 build_executable(ros1_bridge_listener src/listener.cpp
@@ -94,26 +88,33 @@ build_executable(simple_bridge src/simple_bridge.cpp
   ROS1_DEPENDENCIES
   TARGET_DEPENDENCIES "std_msgs")
 
-# TODO(dirk-thomas) until the generated file can be passed to add_executable
-# this must be a custom target instead of a custom command
-add_custom_target(generate_factories
+add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/generated/generated_factories.cpp"
   COMMAND ${PYTHON_EXECUTABLE} bin/ros1_bridge_generate_factories
     --output-file "${CMAKE_BINARY_DIR}/generated/generated_factories.cpp" --template-dir resource
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
-# to find the generated factories
-include_directories(${CMAKE_BINARY_DIR}/generated)
+if(NOT WIN32)
+  # ignore warning in ROS 1 message headers
+  set_source_files_properties("${CMAKE_BINARY_DIR}/generated/generated_factories.cpp"
+    PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter")
+endif()
 
 ament_index_get_resources(message_packages "rosidl_interfaces")
 foreach(message_package ${message_packages})
   find_package(${message_package} REQUIRED)
 endforeach()
 
-build_executable(static_bridge src/static_bridge.cpp ROS1_DEPENDENCIES
+build_executable(static_bridge
+  src/static_bridge.cpp
+  "${CMAKE_BINARY_DIR}/generated/generated_factories.cpp"
+  ROS1_DEPENDENCIES
   DEPENDENCIES generate_factories
   TARGET_DEPENDENCIES ${message_packages})
 
-build_executable(dynamic_bridge src/dynamic_bridge.cpp ROS1_DEPENDENCIES
+build_executable(dynamic_bridge
+  src/dynamic_bridge.cpp
+  "${CMAKE_BINARY_DIR}/generated/generated_factories.cpp"
+  ROS1_DEPENDENCIES
   DEPENDENCIES generate_factories
   TARGET_DEPENDENCIES ${message_packages})
 

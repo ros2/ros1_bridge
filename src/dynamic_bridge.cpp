@@ -26,9 +26,6 @@
 
 #include "ros1_bridge/bridge.hpp"
 
-// TODO(dirk-thomas) hack until rclcpp has been refactored into a library
-#include "generated_factories.cpp"
-
 
 std::mutex g_bridge_mutex;
 
