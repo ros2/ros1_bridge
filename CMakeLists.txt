@@ -60,7 +60,7 @@ include_directories(include)
 
 function(custom_executable target)
   cmake_parse_arguments(
-    ARG "ROS1_DEPENDENCIES" "DEPENDENCIES" "TARGET_DEPENDENCIES" ${ARGN})
+    ARG "ROS1_DEPENDENCIES" "" "TARGET_DEPENDENCIES" ${ARGN})
 
   add_executable(${target}${target_suffix}
     ${ARG_UNPARSED_ARGUMENTS})
@@ -85,35 +85,43 @@ macro(targets)
     get_rclcpp_information("${rmw_implementation}" "rclcpp${target_suffix}")
   endif()
 
-  custom_executable(ros1_bridge_talker src/talker.cpp
+  custom_executable(ros1_bridge_talker "src/talker.cpp"
     TARGET_DEPENDENCIES "std_msgs")
-  custom_executable(ros1_bridge_listener src/listener.cpp
-    TARGET_DEPENDENCIES "std_msgs")
-
-  custom_executable(simple_bridge_1_to_2 src/simple_bridge_1_to_2.cpp
-    ROS1_DEPENDENCIES
-    TARGET_DEPENDENCIES "std_msgs")
-  custom_executable(simple_bridge_2_to_1 src/simple_bridge_2_to_1.cpp
-    ROS1_DEPENDENCIES
+  custom_executable(ros1_bridge_listener "src/listener.cpp"
     TARGET_DEPENDENCIES "std_msgs")
 
-  custom_executable(simple_bridge src/simple_bridge.cpp
+  custom_executable(simple_bridge_1_to_2 "src/simple_bridge_1_to_2.cpp"
     ROS1_DEPENDENCIES
     TARGET_DEPENDENCIES "std_msgs")
+  custom_executable(simple_bridge_2_to_1 "src/simple_bridge_2_to_1.cpp"
+    ROS1_DEPENDENCIES
+    TARGET_DEPENDENCIES "std_msgs")
+
+  custom_executable(simple_bridge "src/simple_bridge.cpp"
+    ROS1_DEPENDENCIES
+    TARGET_DEPENDENCIES "std_msgs")
+
+  add_library(${PROJECT_NAME}${target_suffix} SHARED
+    "${CMAKE_BINARY_DIR}/generated/generated_factories.cpp")
+  ament_target_dependencies(${PROJECT_NAME}${target_suffix}
+    ${message_packages}
+    "rclcpp${target_suffix}"
+    "ros1_roscpp"
+    "ros1_std_msgs")
 
   custom_executable(static_bridge
-    src/static_bridge.cpp
-    "${CMAKE_BINARY_DIR}/generated/generated_factories.cpp"
+    "src/static_bridge.cpp"
     ROS1_DEPENDENCIES
-    DEPENDENCIES generate_factories
     TARGET_DEPENDENCIES ${message_packages})
+  target_link_libraries(static_bridge${target_suffix}
+    ${PROJECT_NAME}${target_suffix})
 
   custom_executable(dynamic_bridge
-    src/dynamic_bridge.cpp
-    "${CMAKE_BINARY_DIR}/generated/generated_factories.cpp"
+    "src/dynamic_bridge.cpp"
     ROS1_DEPENDENCIES
-    DEPENDENCIES generate_factories
     TARGET_DEPENDENCIES ${message_packages})
+  target_link_libraries(dynamic_bridge${target_suffix}
+    ${PROJECT_NAME}${target_suffix})
 endmacro()
 
 call_for_each_rmw_implementation(targets GENERATE_DEFAULT)
