@@ -18,7 +18,14 @@
 #include <vector>
 
 // include ROS 1
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wunused-parameter"
+#endif
 #include "ros/ros.h"
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 #include "ros/this_node.h"
 
 // include ROS 2

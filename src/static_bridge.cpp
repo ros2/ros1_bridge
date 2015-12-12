@@ -15,7 +15,14 @@
 #include <string>
 
 // include ROS 1
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wunused-parameter"
+#endif
 #include "ros/ros.h"
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 
 // include ROS 2
 #include "rclcpp/rclcpp.hpp"
