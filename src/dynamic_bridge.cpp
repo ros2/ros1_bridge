@@ -18,16 +18,20 @@
 #include <vector>
 
 // include ROS 1
+#ifdef __clang__
+# pragma clang diagnostic push
+# pragma clang diagnostic ignored "-Wunused-parameter"
+#endif
 #include "ros/ros.h"
+#ifdef __clang__
+# pragma clang diagnostic pop
+#endif
 #include "ros/this_node.h"
 
 // include ROS 2
 #include "rclcpp/rclcpp.hpp"
 
 #include "ros1_bridge/bridge.hpp"
-
-// TODO(dirk-thomas) hack until rclcpp has been refactored into a library
-#include "generated_factories.cpp"
 
 
 std::mutex g_bridge_mutex;
