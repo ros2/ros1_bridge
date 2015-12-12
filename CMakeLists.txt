@@ -109,6 +109,11 @@ macro(targets)
     "ros1_roscpp"
     "ros1_std_msgs")
 
+  install(TARGETS ${PROJECT_NAME}${target_suffix}
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin)
+
   custom_executable(static_bridge
     "src/static_bridge.cpp"
     ROS1_DEPENDENCIES
