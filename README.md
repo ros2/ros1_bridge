@@ -30,41 +30,35 @@ The following ROS 1 packages are required to build and use the bridge:
 
 Before continuing you should have ROS 2 built from source following [these](https://github.com/ros2/ros2/wiki/Installation) instructions.
 
-The ROS 1 bridge requires a patched version of `rosbag` (for Python 3 compatibility) that has not yet been released.
-As a quick workaround, we're going to comment out one line in `rosbag`, build the ROS 1 bridge, then revert that change (to make your ROS 1 `rosbag` package work again).
-The next ROS 1 patch release will resolve this problem (https://github.com/ros/ros_comm/pull/642).
+In the past, building this package required patches to ROS 1, but in the latest releases that is no longer the case.
+If you run into trouble first make sure you have at least version `1.11.16` of `ros_comm` and `rosbag`.
 
 Also, building the ROS 1 bridge can consume a tremendous amount of memory (almost 4 GB of free RAM per thread while compiling) to the point that it can easily overwhelm a computer if done with parallel compilation enabled.
 As such, we recommend first building everything else as usual, then coming back to build the ROS 1 bridge without parallel compilation.
-This will be fixed once `rclcpp` has been [refactored into a library](https://github.com/ros2/rclcpp/issues/48).
 
 The bridge uses `pkg-config` to find ROS 1 packages.
 ROS 2 packages are located in CMake using `find_package()`.
 Therefore the `CMAKE_PREFIX_PATH` must not contain paths from ROS 1 which would overlay ROS 2 packages.
 
-Here are the steps (for Linux and OSX; you probably don't have ROS 1 installed on Windows):
+Here are the steps (for Linux and OSX; you probably don't have ROS 1 installed on Windows).
 
-    # Get your ROS1 environment setup; uncomment (modify as necessary) one line:
-    # Linux:
-    #. /opt/ros/indigo/setup.bash
-    # OSX:
-    #. ~/ros_catkin_ws/install_isolated/setup.bash
-    # Patch rosbag to remove non-Python3-compatible line; uncomment one line:
-    # Linux:
-    #sudo sed -i 's/import roslz4/#import roslz4/' $ROS_ROOT/../../lib/python2.7/dist-packages/rosbag/bag.py
-    # OSX:
-    #sudo sed -i '' 's/import roslz4/#import roslz4/' $ROS_ROOT/../../lib/python2.7/site-packages/rosbag/bag.py
-    # Ignore ros1_bridge and build everything else
-    touch src/ros2/ros1_bridge/AMENT_IGNORE
-    src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install
-    # Un-ignore ros1_bridge and build it, non-parallel
-    rm src/ros2/ros1_bridge/AMENT_IGNORE
-    src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install --only ros1_bridge --make-flags -j1
-    # Un-patch rosbag to put back the non-Python3-compatible line; uncomment one line:
-    # Linux:
-    #sudo sed -i 's/#import roslz4/import roslz4/' $ROS_ROOT/../../lib/python2.7/dist-packages/rosbag/bag.py
-    # OSX:
-    #sudo sed -i '' 's/#import roslz4/import roslz4/' $ROS_ROOT/../../lib/python2.7/site-packages/rosbag/bag.py
+First you need to source the ROS 1 environment, for Linux and ROS Indigo that would be (it might be different on OS X):
+
+```
+source /opt/ros/indigo/setup.bash
+```
+
+You should first build everything but the ROS 1 bridge with normal make arguments:
+
+```
+src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install --skip-packages ros1_bridge
+```
+
+Then build just the ROS 1 bridge with `-j1`:
+
+```
+src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install -j1 --only ros1_bridge
+```
 
 ## Example 1: run the bridge and the example talker and listener
 
