@@ -30,6 +30,9 @@ The following ROS 1 packages are required to build and use the bridge:
 
 Before continuing you should have ROS 2 built from source following [these](https://github.com/ros2/ros2/wiki/Installation) instructions.
 
+In the past, building this package required patches to ROS 1, but in the latest releases that is no longer the case.
+If you run into trouble first make sure you have at least version `1.11.16` of `ros_comm` and `rosbag`.
+
 Also, building the ROS 1 bridge can consume a tremendous amount of memory (almost 4 GB of free RAM per thread while compiling) to the point that it can easily overwhelm a computer if done with parallel compilation enabled.
 As such, we recommend first building everything else as usual, then coming back to build the ROS 1 bridge without parallel compilation.
 
