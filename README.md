@@ -65,6 +65,9 @@ src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install -j1
 The talker and listener can be either a ROS 1 or a ROS 2 node.
 The bridge will pass the message along transparently.
 
+*Note:* When you are running these demos make sure to only source the indicated workspaces.
+You will get errors from most tools if they have both workspaces in their environment.
+
 
 ### Example 1a: ROS 1 talker and ROS 2 listener
 
