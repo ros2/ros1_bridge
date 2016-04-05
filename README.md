@@ -25,6 +25,8 @@ The following ROS 1 packages are required to build and use the bridge:
 * `std_msgs`
 * as well as the Python package `rospkg`
 
+**WARNING**: The ROS 1 bridge currently does not work if ROS 2 is built with the FastRTPS middleware.
+If you installed ROS 2 from source, make sure you installed it with another supported middleware (Opensplice or Connext).
 
 ### Build the bridge from source
 
