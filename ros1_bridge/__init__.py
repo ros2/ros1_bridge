@@ -52,6 +52,18 @@ except ImportError:
         raise
 
 # more ROS 1 imports
+# since ROS 2 should be sourced after ROS 1 it will overlay
+# e.g. the message packages, to prevent that from happening (and ROS 1 code to
+# fail) ROS 1 paths are moved to the front of the search path
+rpp = os.environ.get('ROS_PACKAGE_PATH', '').split(os.pathsep)
+for package_path in reversed([p for p in rpp if p]):
+    if not package_path.endswith(os.sep + 'share'):
+        continue
+    ros1_basepath = os.path.dirname(package_path)
+    for sys_path in sys.path:
+        if sys_path.startswith(os.path.join(ros1_basepath, '')):
+            sys.path.remove(sys_path)
+            sys.path.insert(0, sys_path)
 import rosmsg
 
 
