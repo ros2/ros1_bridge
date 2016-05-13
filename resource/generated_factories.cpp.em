@@ -1,4 +1,4 @@
-// generated from ros1_bridge/resource/generated_factories.cpp.template
+// generated from ros1_bridge/resource/generated_factories.cpp.em
 
 @###############################################
 @#

@@ -116,7 +116,7 @@ def generate_cpp(output_file, template_dir):
         'mappings': ordered_mappings,
     }
 
-    template_file = os.path.join(template_dir, 'generated_factories.cpp.template')
+    template_file = os.path.join(template_dir, 'generated_factories.cpp.em')
     expand_template(template_file, data, output_file)
 
 
