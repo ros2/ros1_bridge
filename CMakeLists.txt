@@ -65,8 +65,8 @@ function(custom_executable target)
   add_executable(${target}${target_suffix}
     ${ARG_UNPARSED_ARGUMENTS})
   ament_target_dependencies(${target}${target_suffix}
-    ${ARG_TARGET_DEPENDENCIES}
-    "rclcpp${target_suffix}")
+    "rclcpp${target_suffix}"
+    ${ARG_TARGET_DEPENDENCIES})
   if(ARG_ROS1_DEPENDENCIES)
     ament_target_dependencies(${target}${target_suffix}
       "ros1_roscpp"
@@ -104,8 +104,8 @@ macro(targets)
   add_library(${PROJECT_NAME}${target_suffix} SHARED
     "${CMAKE_BINARY_DIR}/generated/generated_factories.cpp")
   ament_target_dependencies(${PROJECT_NAME}${target_suffix}
-    ${message_packages}
     "rclcpp${target_suffix}"
+    ${message_packages}
     "ros1_roscpp"
     "ros1_std_msgs")
 
