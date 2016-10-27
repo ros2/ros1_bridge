@@ -25,6 +25,7 @@ The following ROS 1 packages are required to build and use the bridge:
 * `std_msgs`
 * as well as the Python package `rospkg`
 
+**Note:** Bridge will connect only services with the same package name and service name so make sure that they are available when you build ros1_bridge.
 
 ### Build the bridge from source
 
@@ -274,3 +275,54 @@ rostopic pub -r 1 /flip_image std_msgs/Bool "{data: false}"
 The screenshot shows all the shell windows and their expected content:
 
 ![ROS 2 camera and ROS 1 rqt](doc/ros2_camera_ros1_rqt.png)
+
+## Example 3: run the bridge for AddTwoInts service
+
+example_interfaces/AddTwoInts service is already available in ROS2, so you should be able to run it after sourcing the setup script:
+
+```
+# Shell A:
+. <workspace-with-ros2>/install/setup.bash
+# Run client
+add_two_ints_client
+# Run server
+add_two_ints_server
+```
+
+For ROS you need to create that service by yourself using this tutorial:
+[Writing a Simple Service and Client](http://wiki.ros.org/ROS/Tutorials/WritingServiceClient(c%2B%2B)).
+The only change you need to do is to replace the package name from _beginner_tutorials_ to _example_interfaces_.
+When you are done you should be able to list this package using rossrv tool:
+
+```
+# Shell B:
+rossrv list
+# One of listed services will be example_interfaces/AddTwoInts
+```
+
+If it is not listed, make sure that you:
+* Created an _example_interfaces_ package
+* Created a service description file AddTwoInts.srv
+* Added and edited source files for client and server
+* Compiled and installed the package
+* Sourced its setup file - setup.bash
+
+When the service is listed correctly, build ros1_bridge package.
+Now you can make a request from ROS to ROS2:
+
+```
+# Shell C:
+. <workspace-with-ros2>/install/setup.bash
+dynamic_bridge
+```
+
+```
+# Shell D:
+. <workspace-with-ros2>/install/setup.bash
+add_two_ints_server
+```
+
+```
+# Shell E:
+<path-to-your-add-two-ints-client> 7 4
+```
