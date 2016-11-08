@@ -138,7 +138,7 @@ def get_ros2_messages():
     resource_type = 'rosidl_interfaces'
     resources = ament_index_python.get_resources(resource_type)
     for package_name, prefix_path in resources.items():
-        resource = ament_index_python.get_resource(resource_type, package_name)
+        resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
         message_names = [i[:-4] for i in interfaces if i.endswith('.msg')]
         for message_name in message_names:
