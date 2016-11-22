@@ -31,9 +31,19 @@ from ros1_bridge import camel_case_to_lower_case_underscore
 #include <@(ros1_msg.package_name)/@(ros1_msg.message_name).h>
 @[end for]@
 
+// include ROS 1 services
+@[for ros1_srv in ros1_srvs]@
+#include <@(ros1_srv.package_name)/@(ros1_srv.service_name).h>
+@[end for]@
+
 // include ROS 2 messages
 @[for ros2_msg in ros2_msgs]@
 #include <@(ros2_msg.package_name)/msg/@(camel_case_to_lower_case_underscore(ros2_msg.message_name)).hpp>
+@[end for]@
+
+// include ROS 2 services
+@[for ros2_srv in ros2_srvs]@
+#include <@(ros2_srv.package_name)/srv/@(camel_case_to_lower_case_underscore(ros2_srv.service_name)).hpp>
 @[end for]@
 
 namespace ros1_bridge
