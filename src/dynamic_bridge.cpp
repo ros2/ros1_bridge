@@ -238,8 +238,8 @@ void update_bridge(
   // remove obsolete ros1 services
   for (auto it = service_bridges_2_to_1.begin(); it != service_bridges_2_to_1.end();) {
     if (ros1_services.find(it->first) == ros1_services.end()) {
+      // printf("Removed 2 to 1 bridge for service %s\n", it->first.data());
       it = service_bridges_2_to_1.erase(it);
-      // printf("Removed 2 to 1 bridge for service %s\n", service.first.data());
     }
     else {
       ++it;
@@ -249,9 +249,9 @@ void update_bridge(
   // remove obsolete ros2 services
   for (auto it = service_bridges_1_to_2.begin(); it != service_bridges_1_to_2.end();) {
     if (ros2_services.find(it->first) == ros2_services.end()) {
+      // printf("Removed 1 to 2 bridge for service %s\n", it->first.data());
       it->second.server.shutdown();
       it = service_bridges_1_to_2.erase(it);
-      // printf("Removed 1 to 2 bridge for service %s\n", service.first.data());
     }
     else {
       ++it;
@@ -262,6 +262,7 @@ void update_bridge(
 void get_ros1_service_info(
   const std::string name, std::map<std::string, std::map<std::string,std::string>>& ros1_services)
 {
+  // NOTE(rkozik):
   // I tried to use Connection class but could not make it work
   // auto callback = [](const ros::ConnectionPtr&, const ros::Header&)
   //                 { printf("Callback\n"); return true; };
@@ -272,12 +273,12 @@ void get_ros1_service_info(
   std::string host;
   std::uint32_t port;
   if (!manager.lookupService(name, host, port)) {
-    printf("Failed to look up %s", name.data());
+    fprintf(stderr, "Failed to look up %s", name.data());
     return;
   }
   ros::TransportTCPPtr transport(new ros::TransportTCP(nullptr, ros::TransportTCP::SYNCHRONOUS));
   if (!transport->connect(host, port)) {
-    printf("Failed to connect to %s:%d", host.data(), port);
+    fprintf(stderr, "Failed to connect to %s:%d", host.data(), port);
     return;
   }
   ros::M_string header_out;
@@ -295,13 +296,13 @@ void get_ros1_service_info(
   uint32_t length;
   auto read = transport->read(reinterpret_cast<uint8_t*>(&length), 4);
   if (read != 4) {
-    printf("Failed to read a response from a service server\n");
+    fprintf(stderr, "Failed to read a response from a service server\n");
     return;
   }
   std::vector<uint8_t> response(length);
   read = transport->read(response.data(), length);
   if (read < 0 || static_cast<uint32_t>(read) != length) {
-    printf("Failed to read a response from a service server\n");
+    fprintf(stderr, "Failed to read a response from a service server\n");
     return;
   }
   std::string key(name.begin() + 1, name.end());
@@ -310,7 +311,7 @@ void get_ros1_service_info(
   std::string error;
   auto success = header_in.parse(response.data(), length, error);
   if (!success) {
-    printf("%s", error.data());
+    fprintf(stderr, "%s", error.data());
     return;
   }
   for (std::string field : { "type", "request_type", "response_type" }) {
@@ -318,7 +319,7 @@ void get_ros1_service_info(
     auto success = header_in.getValue(field, value);
     if (!success)
     {
-      printf("Failed to read %s from a header", field.data());
+      fprintf(stderr, "Failed to read %s from a header", field.data());
       return;
     }
     ros1_services[key][field] = value;

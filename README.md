@@ -25,8 +25,6 @@ The following ROS 1 packages are required to build and use the bridge:
 * `std_msgs`
 * as well as the Python package `rospkg`
 
-**Note:** Bridge will connect only services with the same package name and service name so make sure that they are available when you build ros1_bridge.
-
 ### Build the bridge from source
 
 Before continuing you should have ROS 2 built from source following [these](https://github.com/ros2/ros2/wiki/Installation) instructions.
@@ -278,51 +276,51 @@ The screenshot shows all the shell windows and their expected content:
 
 ## Example 3: run the bridge for AddTwoInts service
 
-example_interfaces/AddTwoInts service is already available in ROS2, so you should be able to run it after sourcing the setup script:
+In this example we will bridge a service TwoInts from
+[ros/roscpp_tutorials](https://github.com/ros/ros_tutorials) and AddTwoInts from
+[ros2/roscpp_examples](https://github.com/ros2/examples).
+
+While building, ros1_bridge looks for all installed ROS and ROS2 services.
+Found services are matched by comparing package name, service name and fields
+in a request and a response. If all names are the same in ROS and ROS2 service,
+the bridge will be created. It is also possible to pair services manually by
+creating a yaml file that will include names of corresponding services.
+You can find more information [here](doc/index.rst).
+
+So to make this example work, please make sure that the roscpp_tutorials package
+is installed on your system and the environment is set up correctly while you build ros1_bridge.
+
+Launch ROS master
 
 ```
 # Shell A:
-. <workspace-with-ros2>/install/setup.bash
-# Run client
-add_two_ints_client
-# Run server
-add_two_ints_server
+. <ros-install-dir>/setup.bash
+roscore -p 11311
 ```
 
-For ROS you need to create that service by yourself using this tutorial:
-[Writing a Simple Service and Client](http://wiki.ros.org/ROS/Tutorials/WritingServiceClient(c%2B%2B)).
-The only change you need to do is to replace the package name from _beginner_tutorials_ to _example_interfaces_.
-When you are done you should be able to list this package using rossrv tool:
+Launch dynamic_bridge:
 
 ```
 # Shell B:
-rossrv list
-# One of listed services will be example_interfaces/AddTwoInts
-```
-
-If it is not listed, make sure that you:
-* Created an _example_interfaces_ package
-* Created a service description file AddTwoInts.srv
-* Added and edited source files for client and server
-* Compiled and installed the package
-* Sourced its setup file - setup.bash
-
-When the service is listed correctly, build ros1_bridge package.
-Now you can make a request from ROS to ROS2:
-
-```
-# Shell C:
-. <workspace-with-ros2>/install/setup.bash
+. <ros-install-dir>/setup.bash
+. <ros2-install-dir>/setup.bash
+export ROS_MASTER_URI=http://localhost:11311
 dynamic_bridge
 ```
 
-```
-# Shell D:
-. <workspace-with-ros2>/install/setup.bash
-add_two_ints_server
-```
+Launch TwoInts server:
 
 ```
-# Shell E:
-<path-to-your-add-two-ints-client> 7 4
+# Shell C:
+. <ros-install-dir>/setup.bash
+export ROS_MASTER_URI=http://localhost:11311
+<ros-install-dir>/lib/roscpp_tutorials/add_two_ints_server
+```
+
+Launch AddTwoInts client:
+
+```
+# Shell D:
+. <ros2-install-dir>/setup.bash
+add_two_ints_client
 ```

@@ -145,8 +145,8 @@ def generate_messages():
 
 def generate_services():
     ros1_srvs = get_ros1_services()
-    ros2_srvs = get_ros2_services()
-    services = determine_common_services(ros1_srvs, ros2_srvs)
+    ros2_srvs, mapping_rules = get_ros2_services()
+    services = determine_common_services(ros1_srvs, ros2_srvs, mapping_rules)
     return { "services": services }
 
 
@@ -201,6 +201,7 @@ def get_ros1_services(rospack=None):
 
 def get_ros2_services():
     srvs = []
+    rules = []
     resource_type = 'rosidl_interfaces'
     resources = ament_index_python.get_resources(resource_type)
     for package_name, prefix_path in resources.items():
@@ -209,7 +210,17 @@ def get_ros2_services():
         service_names = [i[:-4] for i in interfaces if i.endswith('.srv')]
         for service_name in service_names:
             srvs.append(Message(package_name, service_name, prefix_path))
-    return srvs
+        # check package manifest for mapping rules
+        package_path = os.path.join(prefix_path, 'share', package_name)
+        pkg = parse_package(package_path)
+        for export in pkg.exports:
+            if export.tagname != 'ros1_bridge':
+                continue
+            if 'service_mapping_rules' not in export.attributes:
+                continue
+            rule_file = os.path.join(package_path, export.attributes['service_mapping_rules'])
+            rules += read_mapping_rules(rule_file, package_name)
+    return srvs, rules
 
 
 def read_mapping_rules(rule_file, package_name):
@@ -261,8 +272,10 @@ class MappingRule(object):
     __slots__ = [
         'ros1_package_name',
         'ros1_message_name',
+        'ros1_service_name',
         'ros2_package_name',
         'ros2_message_name',
+        'ros2_service_name',
         'fields_1_to_2',
     ]
 
@@ -271,7 +284,12 @@ class MappingRule(object):
         self.ros2_package_name = data['ros2_package_name']
         self.ros1_message_name = None
         self.ros2_message_name = None
+        self.ros1_service_name = None
+        self.ros2_service_name = None
         self.fields_1_to_2 = None
+        if 'ros1_service_name' in data:
+            self.ros1_service_name = data['ros1_service_name']
+            self.ros2_service_name = data['ros2_service_name']
         if 'ros1_message_name' in data:
             self.ros1_message_name = data['ros1_message_name']
             self.ros2_message_name = data['ros2_message_name']
@@ -289,6 +307,11 @@ class MappingRule(object):
     def is_field_mapping(self):
         return self.fields_1_to_2 is not None
 
+    def __str__(self):
+        return "MappingRule(" + self.ros1_package_name + " <--> " + self.ros2_package_name + ")"
+
+    def __repr__(self):
+        return self.__str__()
 
 def determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules):
     pairs = []
@@ -366,7 +389,7 @@ def determine_message_pairs(ros1_msgs, ros2_msgs, package_pairs, mapping_rules):
     return pairs
 
 
-def determine_common_services(ros1_srvs, ros2_srvs):
+def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
     pairs = []
     services = []
     for ros1_srv in ros1_srvs:
@@ -374,6 +397,20 @@ def determine_common_services(ros1_srvs, ros2_srvs):
             if (ros1_srv.package_name == ros2_srv.package_name):
                 if (ros1_srv.message_name == ros2_srv.message_name):
                     pairs.append((ros1_srv, ros2_srv))
+
+    for rule in mapping_rules:
+        for ros1_srv in ros1_srvs:
+            for ros2_srv in ros2_srvs:
+                if rule.ros1_package_name == ros1_srv.package_name and \
+                   rule.ros2_package_name == ros2_srv.package_name:
+                    if rule.ros1_service_name == None and rule.ros2_service_name == None:
+                        if (ros1_srv.message_name == ros2_srv.message_name):
+                            pairs.append((ros1_srv, ros2_srv))
+                    else:
+                        if rule.ros1_service_name == ros1_srv.message_name and \
+                           rule.ros2_service_name == ros2_srv.message_name:
+                            pairs.append((ros1_srv, ros2_srv))
+
     for pair in pairs:
         ros1_spec = load_ros1_service(pair[0])
         ros2_spec = load_ros2_service(pair[1])
@@ -394,10 +431,10 @@ def determine_common_services(ros1_srvs, ros2_srvs):
             if len(ros1_fields[direction]) != len(ros2_fields[direction]):
                 match = False
                 break
-            for i in range(0, len(ros1_fields[direction])):
-                ros1_type = ros1_fields[direction][i][0]
+            for i, ros1_field in enumerate(ros1_fields[direction]):
+                ros1_type = ros1_field[0]
                 ros2_type = str(ros2_fields[direction][i].type)
-                ros1_name = ros1_fields[direction][i][1]
+                ros1_name = ros1_field[1]
                 ros2_name = ros2_fields[direction][i].name
                 if (ros1_type != ros2_type or ros1_name != ros2_name):
                     match = False

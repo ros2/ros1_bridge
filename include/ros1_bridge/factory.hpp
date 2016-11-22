@@ -175,7 +175,7 @@ public:
     }
     else
     {
-      throw std::runtime_error("Failed to get response from ROS2 service");
+      throw std::runtime_error("Failed to get response from ROS service");
     }
   }
 
@@ -185,7 +185,7 @@ public:
     auto client = std::dynamic_pointer_cast<rclcpp::client::Client<R2_TYPE>>(cli);
     if (!client)
     {
-      printf("Failed to get the client.\n");
+      fprintf(stderr, "Failed to get the client.\n");
       return false;
     }
     auto request2 = std::make_shared<R2_REQ>();
@@ -194,7 +194,7 @@ public:
     {
       if (!rclcpp::ok())
       {
-        printf("Client was interrupted while waiting for the service. Exiting.\n");
+        fprintf(stderr, "Client was interrupted while waiting for the service. Exiting.\n");
         return false;
       }
     }
@@ -208,7 +208,7 @@ public:
     }
     else
     {
-        printf("Failed to get response from ROS2 service.\n");
+        fprintf(stderr, "Failed to get response from ROS2 service.\n");
         return false;
     }
     return true;
@@ -231,8 +231,8 @@ public:
     ServiceBridge2to1 bridge;
     bridge.client = ros1_node.serviceClient<R1_TYPE>(name);
     auto m = &ServiceFactory<R1_TYPE,R1_REQ,R1_RES,R2_TYPE,R2_REQ,R2_RES>::forward_2_to_1;
-    boost::function<void(const std::shared_ptr<rmw_request_id_t>,const std::shared_ptr<R2_REQ>,std::shared_ptr<R2_RES>)> f;
-    f = boost::bind(m, this, bridge.client, _1, _2, _3);
+    std::function<void(const std::shared_ptr<rmw_request_id_t>,const std::shared_ptr<R2_REQ>,std::shared_ptr<R2_RES>)> f;
+    f = std::bind(m, this, bridge.client, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
     bridge.server = ros2_node->create_service<R2_TYPE>(name, f);
     return bridge;
   }

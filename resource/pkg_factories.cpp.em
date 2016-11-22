@@ -17,6 +17,10 @@
 @#    Mapping between messages as well as their fields
 @###############################################
 @
+@{
+from ros1_bridge import camel_case_to_lower_case_underscore
+}@
+#include "rclcpp/rclcpp.hpp"
 #include "@(ros2_package_name)_factories.hpp"
 
 // include builtin interfaces
@@ -214,82 +218,83 @@ Factory<
 @[end for]@
 
 @[for service in services]@
-  @[for frm, to in [("1", "2"), ("2", "1")]]@
-    @[for type in ["Request", "Response"]]@
-      template <>
-      void ServiceFactory<
-        @(service["ros1_package"])::@(service["ros1_name"]),
-        @(service["ros1_package"])::@(service["ros1_name"])::Request,
-        @(service["ros1_package"])::@(service["ros1_name"])::Response,
-        @(service["ros2_package"])::srv::@(service["ros2_name"]),
-        @(service["ros2_package"])::srv::@(service["ros2_name"])::Request,
-        @(service["ros2_package"])::srv::@(service["ros2_name"])::Response
-      >::translate_@(frm)_to_@(to)(
-        @[if frm == "1"]const @[end if]@ @(service["ros1_package"])::@(service["ros1_name"])::@(type)& req1,
-        @[if frm == "2"]const @[end if]@ @(service["ros2_package"])::srv::@(service["ros2_name"])::@(type)& req2
-      ) {
-        @[for field in service["fields"][type.lower()]]@
-          @[if field["array"]]
-            req@(to).@(field["ros" + to]["name"]).resize(req@(frm).@(field["ros" + frm]["name"]).size());
-            auto @(field["ros1"]["name"])1_it = req1.@(field["ros1"]["name"]).begin();
-            auto @(field["ros2"]["name"])2_it = req2.@(field["ros2"]["name"]).begin();
-            while (
-              @(field["ros1"]["name"])1_it != req1.@(field["ros1"]["name"]).end() &&
-              @(field["ros2"]["name"])2_it != req2.@(field["ros2"]["name"]).end())
-            {
-            auto& @(field["ros1"]["name"])1 = *(@(field["ros1"]["name"])1_it++);
-            auto& @(field["ros2"]["name"])2 = *(@(field["ros2"]["name"])2_it++);
-          @[else]@
-            auto& @(field["ros1"]["name"])1 = req1.@(field["ros1"]["name"]);
-            auto& @(field["ros2"]["name"])2 = req2.@(field["ros2"]["name"]);
-          @[end if]@
-          @[if field["basic"]]@
-            @(field["ros2"]["name"])@(to) = @(field["ros1"]["name"])@(frm);
-          @[else]@
-            @[for m in mappings]@
-              @[if field["ros1"]["type"] == m.ros1_msg.package_name + "/" + m.ros1_msg.message_name]@
-                @[if field["ros2"]["type"] == m.ros2_msg.package_name + "/" + m.ros2_msg.message_name]@
-                  Factory<
-                    @(m.ros1_msg.package_name)::@(m.ros1_msg.message_name),
-                    @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name)
-                  >::convert_@(frm)_to_@(to)(@(field["ros2"]["name"])@(frm), @(field["ros1"]["name"])@(to));
-                @[end if]@
-              @[end if]@
-            @[end for]@
-          @[end if]@
-          @[if field["array"]]
-            }
-          @[end if]@
-        @[end for]@
-      }
-    @[end for]@
-  @[end for]@
+@[  for frm, to in [("1", "2"), ("2", "1")]]@
+@[    for type in ["Request", "Response"]]@
+template <>
+void ServiceFactory<
+  @(service["ros1_package"])::@(service["ros1_name"]),
+  @(service["ros1_package"])::@(service["ros1_name"])::Request,
+  @(service["ros1_package"])::@(service["ros1_name"])::Response,
+  @(service["ros2_package"])::srv::@(service["ros2_name"]),
+  @(service["ros2_package"])::srv::@(service["ros2_name"])::Request,
+  @(service["ros2_package"])::srv::@(service["ros2_name"])::Response
+>::translate_@(frm)_to_@(to)(
+  @[    if frm == "1"]const @[end if]@ @(service["ros1_package"])::@(service["ros1_name"])::@(type)& req1,
+  @[    if frm == "2"]const @[end if]@ @(service["ros2_package"])::srv::@(service["ros2_name"])::@(type)& req2
+) {
+@[      for field in service["fields"][type.lower()]]@
+@[        if field["array"]]@
+  req@(to).@(field["ros" + to]["name"]).resize(req@(frm).@(field["ros" + frm]["name"]).size());
+  auto @(field["ros1"]["name"])1_it = req1.@(field["ros1"]["name"]).begin();
+  auto @(field["ros2"]["name"])2_it = req2.@(field["ros2"]["name"]).begin();
+  while (
+    @(field["ros1"]["name"])1_it != req1.@(field["ros1"]["name"]).end() &&
+    @(field["ros2"]["name"])2_it != req2.@(field["ros2"]["name"]).end()
+  ) {
+    auto& @(field["ros1"]["name"])1 = *(@(field["ros1"]["name"])1_it++);
+    auto& @(field["ros2"]["name"])2 = *(@(field["ros2"]["name"])2_it++);
+@[        else]@
+  auto& @(field["ros1"]["name"])1 = req1.@(field["ros1"]["name"]);
+  auto& @(field["ros2"]["name"])2 = req2.@(field["ros2"]["name"]);
+@[        end if]@
+@[        if field["basic"]]@
+  @(field["ros2"]["name"])@(to) = @(field["ros1"]["name"])@(frm);
+@[        else]@
+@[          for m in mappings]@
+@[            if field["ros1"]["type"] == m.ros1_msg.package_name + "/" + m.ros1_msg.message_name]@
+@[              if field["ros2"]["type"] == m.ros2_msg.package_name + "/" + m.ros2_msg.message_name]@
+  Factory<
+    @(m.ros1_msg.package_name)::@(m.ros1_msg.message_name),
+    @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name)
+  >::convert_@(frm)_to_@(to)(@(field["ros2"]["name"])@(frm), @(field["ros1"]["name"])@(to));
+@[              end if]@
+@[            end if]@
+@[          end for]@
+@[        end if]@
+@[        if field["array"]]@
+  }
+@[        end if]@
+@[      end for]@
+}
+
+@[    end for]@
+@[  end for]@
 @[end for]@
 
 std::unique_ptr<ServiceFactoryInterface> get_service_factory(std::string ros, std::string package, std::string name)
 {
-  @[for service in services]@
-    if (
-        (
-          ros == "ros1" &&
-          package == "@(service["ros1_package"])" &&
-          name == "@(service["ros1_name"])"
-        ) || (
-          ros == "ros2" &&
-          package == "@(service["ros2_package"])" &&
-          name == "@(service["ros2_name"])"
-        )
-    ) {
-        return std::unique_ptr<ServiceFactoryInterface>(new ServiceFactory<
-          @(service["ros1_package"])::@(service["ros1_name"]),
-          @(service["ros1_package"])::@(service["ros1_name"])::Request,
-          @(service["ros1_package"])::@(service["ros1_name"])::Response,
-          @(service["ros2_package"])::srv::@(service["ros2_name"]),
-          @(service["ros2_package"])::srv::@(service["ros2_name"])::Request,
-          @(service["ros2_package"])::srv::@(service["ros2_name"])::Response
-        >);
-    }
-  @[end for]@
+@[for service in services]@
+  if (
+    (
+      ros == "ros1" &&
+      package == "@(service["ros1_package"])" &&
+      name == "@(service["ros1_name"])"
+    ) || (
+      ros == "ros2" &&
+      package == "@(service["ros2_package"])" &&
+      name == "@(service["ros2_name"])"
+    )
+  ) {
+    return std::unique_ptr<ServiceFactoryInterface>(new ServiceFactory<
+      @(service["ros1_package"])::@(service["ros1_name"]),
+      @(service["ros1_package"])::@(service["ros1_name"])::Request,
+      @(service["ros1_package"])::@(service["ros1_name"])::Response,
+      @(service["ros2_package"])::srv::@(service["ros2_name"]),
+      @(service["ros2_package"])::srv::@(service["ros2_name"])::Request,
+      @(service["ros2_package"])::srv::@(service["ros2_name"])::Response
+    >);
+  }
+@[end for]@
   std::string args(ros + ":" + package + "/" + name);
   throw std::runtime_error("No template specialization for the service: " + args);
 }

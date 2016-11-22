@@ -22,8 +22,12 @@ In the third step fields are associated with each other.
 If one of the two associated messages has fields which is are not part of the other message they are being ignored.
 If both messages have fields the other message does not contain it is assumed that the mapping is incomplete and no association is established.
 
+How are ROS 1 and 2 services associated with each other?
+--------------------------------------------------------
 
-How can I specify custom mapping rule?
+For automatic mapping, ROS and ROS2 services need to have the same package name, service name and exactly the same fields.
+
+How can I specify custom mapping rule for messages?
 --------------------------------------
 
 Additional mapping rules can be provided by a ROS 2 package using a `yaml` file.
@@ -45,29 +49,48 @@ Each mapping rule can have one of three types:
 
 Each mapping rule file contains a list of mapping rules.
 
-The mapping rule file must be exported in the ``package.xml`` in order to be processed by this package::
+How can I specify custom mapping rule for services?
+--------------------------------------
+
+In case of services, each mapping rule can have one of two types:
+
+1. A package mapping rule is defined by:
+
+   - a ``ros1_package_name``
+   - a ``ros2_package_name`` (which must be the same as the ROS 2 package this mapping rule is defined in)
+
+2. A service name mapping rule is defined by the attributes of a package mapping rule and:
+
+   - a ``ros1_service_name``
+   - a ``ros2_service_name``
+
+How can I install mapping rule files?
+--------------------------------------
+
+The mapping rule files must be exported in the ``package.xml`` in order to be processed by this package::
 
     <export>
       <ros1_bridge mapping_rules="my_mapping_rules.yaml"/>
+      <ros1_bridge service_mapping_rules="my_service_mapping_rules.yaml"/>
     </export>
 
-The yaml file must also be installed in the ``CMakeLists.txt``::
+The yaml files must also be installed in the ``CMakeLists.txt``::
 
     install(
-      FILES my_mapping_rules.yaml
+      FILES my_mapping_rules.yaml my_service_mapping_rules.yaml
       DESTINATION share/${PROJECT_NAME})
 
 
 Example mapping rules file
 --------------------------
 
-Example package mapping rule::
+Example package mapping rule:
 
     -
       ros1_package_name: 'ros1_pkg_name'
       ros2_package_name: 'ros2_pkg_name'
 
-Example message mapping rule::
+Example message mapping rule:
 
     -
       ros1_package_name: 'pkg_name'
@@ -75,7 +98,15 @@ Example message mapping rule::
       ros2_package_name: 'pkg_name'
       ros2_message_name: 'ros2_msg_name'
 
-Example field mapping rule::
+Example service mapping rule:
+
+    -
+      ros1_package_name: 'pkg_name'
+      ros1_service_name: 'ros1_srv_name'
+      ros2_package_name: 'pkg_name'
+      ros2_service_name: 'ros2_srv_name'
+
+Example message field mapping rule:
 
     -
       ros1_package_name: 'pkg_name'
