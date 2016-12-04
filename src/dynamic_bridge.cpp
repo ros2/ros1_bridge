@@ -118,11 +118,13 @@ void update_bridge(
         bridge.ros1_type_name, topic_name, 10,
         bridge.ros2_type_name, topic_name, 10);
     } catch (std::runtime_error & e) {
+      if (bridge.ros2_type_name != "") {
       fprintf(
         stderr,
         "failed to create 1to2 bridge for topic '%s' "
         "with ROS 1 type '%s' and ROS 2 type '%s': %s\n",
         topic_name.c_str(), bridge.ros1_type_name.c_str(), bridge.ros2_type_name.c_str(), e.what());
+      }
       continue;
     }
 
@@ -176,11 +178,13 @@ void update_bridge(
         bridge.ros2_type_name, topic_name, 10,
         bridge.ros1_type_name, topic_name, 10);
     } catch (std::runtime_error & e) {
+      if (bridge.ros1_type_name != "") {
       fprintf(
         stderr,
         "failed to create 2to1 bridge for topic '%s' "
         "with ROS 2 type '%s' and ROS 1 type '%s': %s\n",
         topic_name.c_str(), bridge.ros2_type_name.c_str(), bridge.ros1_type_name.c_str(), e.what());
+      }
       continue;
     }
 
