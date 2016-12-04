@@ -2,8 +2,9 @@
 
 This package provides a network bridge which enables to exchange messages between ROS 1 and ROS 2.
 
-The bridge is currently implemented in C++, therefore it is limited to all the message types available at compile time of the bridge.
-The bridge included with the prebuilt ROS 2 binaries supports the message packages listed in the [ros2/common_interfaces repository.](https://github.com/ros2/common_interfaces)
+The bridge has currently only been implemented in C++ as at the time the Python API for ROS 2 had not been developed.
+Because of this its support is limited to only the message/service types available at compile time of the bridge.
+The bridge included with the prebuilt ROS 2 binaries supports the interface packages listed in the [ros2/common_interfaces repository.](https://github.com/ros2/common_interfaces)
 
 
 ## Prerequisites
@@ -205,7 +206,7 @@ The second example will demonstrate the bridge passing along bigger and more com
 A ROS 2 node is publishing images retrieved from a camera and on the ROS 1 side we use `rqt_image_view` to render the images in a GUI.
 And a ROS 1 publisher can send a message to toggle an option in the ROS 2 node.
 
-First we start a ROS 1 `roscore` and the bridge.
+First we start a ROS 1 `roscore` and the bridge:
 
 ```
 # Shell A:
