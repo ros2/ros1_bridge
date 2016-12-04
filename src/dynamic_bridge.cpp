@@ -57,6 +57,50 @@ struct Bridge2to1HandlesAndMessageTypes
   std::string ros2_type_name;
 };
 
+bool find_command_option(const std::vector<std::string> & args, const std::string & option)
+{
+  return std::find(args.begin(), args.end(), option) != args.end();
+}
+
+bool get_flag_option(const std::vector<std::string> & args, const std::string & option)
+{
+  auto it = std::find(args.begin(), args.end(), option);
+  if (it != args.end()) {
+    return true;
+  }
+  return false;
+}
+
+bool parse_command_options(
+  int argc, char ** argv, bool & output_topic_introspection,
+  bool & bridge_all_1to2_topics, bool & bridge_all_2to1_topics)
+{
+  std::vector<std::string> args(argv, argv + argc);
+
+  if (find_command_option(args, "-h") || find_command_option(args, "--help")) {
+    std::stringstream ss;
+    ss << "Usage:" << std::endl;
+    ss << " -h, --help: This message." << std::endl;
+    ss << " --show-introspection: Print output of introspection of both sides of the bridge.";
+    ss << std::endl;
+    ss << " --bridge-all-topics: Bridge all topics in both directions, whether or not there is ";
+    ss << "a matching subscriber." << std::endl;
+    ss << " --bridge-all-1to2-topics: Bridge all ROS 1 topics to ROS 2, whether or not there is ";
+    ss << "a matching subscriber." << std::endl;
+    ss << " --bridge-all-2to1-topics: Bridge all ROS 2 topics to ROS 1, whether or not there is ";
+    ss << "a matching subscriber." << std::endl;
+    std::cout << ss.str();
+    return false;
+  }
+
+  output_topic_introspection = get_flag_option(args, "--show-introspection");
+
+  bool bridge_all_topics = get_flag_option(args, "--bridge-all-topics");
+  bridge_all_1to2_topics = bridge_all_topics || get_flag_option(args, "--bridge-all-1to2-topics");
+  bridge_all_2to1_topics = bridge_all_topics || get_flag_option(args, "--bridge-all-2to1-topics");
+
+  return true;
+}
 
 void update_bridge(
   ros::NodeHandle & ros1_node,
@@ -371,6 +415,14 @@ void get_ros1_service_info(
 
 int main(int argc, char * argv[])
 {
+  bool output_topic_introspection;
+  bool bridge_all_1to2_topics;
+  bool bridge_all_2to1_topics;
+  if(!parse_command_options(argc, argv,
+    output_topic_introspection, bridge_all_1to2_topics, bridge_all_2to1_topics)) {
+      return 0;
+  }
+
   // ROS 1 node
   ros::init(argc, argv, "ros_bridge");
   ros::NodeHandle ros1_node;
@@ -378,10 +430,6 @@ int main(int argc, char * argv[])
   // ROS 2 node
   rclcpp::init(argc, argv);
   auto ros2_node = rclcpp::node::Node::make_shared("ros_bridge");
-
-  bool output_topic_introspection = (2 == argc && std::string("--show-introspection") == argv[1]);
-  bool bridge_all_1to2_topics = true;
-  bool bridge_all_2to1_topics = true;
 
   // mapping of available topic names to type names
   std::map<std::string, std::string> ros1_publishers;
