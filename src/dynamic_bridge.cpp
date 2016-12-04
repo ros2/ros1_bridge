@@ -124,16 +124,16 @@ void update_bridge(
   }
 
   // create 2to1 bridges
-  for (auto ros1_subscriber : ros1_subscribers) {
+  for (auto ros2_publisher : ros2_publishers) {
     // identify topics available as ROS 1 subscribers as well as ROS 2 publishers
-    auto topic_name = ros1_subscriber.first;
-    auto ros2_publisher = ros2_publishers.find(topic_name);
-    if (ros2_publisher == ros2_publishers.end()) {
+    auto topic_name = ros2_publisher.first;
+    auto ros1_subscriber = ros1_subscribers.find(topic_name);
+    if (ros1_subscriber == ros1_subscribers.end()) {
       continue;
     }
 
-    std::string ros1_type_name = ros1_subscriber.second;
-    std::string ros2_type_name = ros2_publisher->second;
+    std::string ros1_type_name = ros1_subscriber->second;
+    std::string ros2_type_name = ros2_publisher.second;
     // printf("topic name '%s' has ROS 1 subscribers and ROS 2 publishers\n", topic_name.c_str());
 
     // check if 2to1 bridge for the topic exists
