@@ -2,8 +2,8 @@
 
 This package provides a network bridge which enables to exchange messages between ROS 1 and ROS 2.
 
-The bridge is currently implemented in C++ simply because there is no Python API for ROS 2 yet.
-Therefore it is limited to all the message types available at compile time.
+The bridge is currently implemented in C++, therefore it is limited to all the message types available at compile time of the bridge.
+The bridge included with the prebuilt ROS 2 binaries supports the message packages listed in the [ros2/common_interfaces repository.](https://github.com/ros2/common_interfaces)
 
 
 ## Prerequisites
@@ -15,7 +15,7 @@ In order to run the bridge you need to either:
 
 After that you can run both examples described below.
 
-For all examples you need to source the environment of the ament install space where the bridge was built in or unpacked to.
+For all examples you need to source the environment of the ament install space where the bridge was built or unpacked to.
 Additionally you will need to either source the ROS 1 environment or at least set the `ROS_MASTER_URI` and run a `roscore`.
 
 The following ROS 1 packages are required to build and use the bridge:
@@ -26,7 +26,7 @@ The following ROS 1 packages are required to build and use the bridge:
 * as well as the Python package `rospkg`
 
 
-### Build the bridge from source
+### Building the bridge from source
 
 Before continuing you should have ROS 2 built from source following [these](https://github.com/ros2/ros2/wiki/Installation) instructions.
 
@@ -37,21 +37,25 @@ Also, building the ROS 1 bridge can consume a tremendous amount of memory (almos
 As such, we recommend first building everything else as usual, then coming back to build the ROS 1 bridge without parallel compilation.
 
 The bridge uses `pkg-config` to find ROS 1 packages.
-ROS 2 packages are located in CMake using `find_package()`.
+ROS 2 packages are found through CMake using `find_package()`.
 Therefore the `CMAKE_PREFIX_PATH` must not contain paths from ROS 1 which would overlay ROS 2 packages.
 
 Here are the steps (for Linux and OSX; you probably don't have ROS 1 installed on Windows).
 
-First you need to source the ROS 1 environment, for Linux and ROS Indigo that would be (it might be different on OS X):
-
-```
-source /opt/ros/indigo/setup.bash
-```
-
-You should first build everything but the ROS 1 bridge with normal make arguments:
+You should first build everything but the ROS 1 bridge with normal make arguments.
+We don't recommend having your ROS 1 environment sourced during this step as it can add OpenCV 3 to your path.
+The ROS 2 image demos you build in this step would then use OpenCV 3 and require it to be on your path when you run them, while the standard installation on Ubuntu Xenial is OpenCV 2.
 
 ```
 src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install --skip-packages ros1_bridge
+```
+
+Next you need to source the ROS 1 environment, for Linux and ROS Kinetic that would be:
+
+```
+source /opt/ros/kinetic/setup.bash
+# Or, on OSX, something like:
+# . ~/ros_catkin_ws/install_isolated/setup.bash
 ```
 
 Then build just the ROS 1 bridge with `-j1`:
@@ -59,6 +63,8 @@ Then build just the ROS 1 bridge with `-j1`:
 ```
 src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install -j1 --only ros1_bridge
 ```
+
+*Note:* if you have built your ROS 2 workspace using `--isolated`, you will need to add the message/service packages you want to bridge to your path before building the bridge, e.g. by sourcing `local_setup.*`.
 
 ## Example 1: run the bridge and the example talker and listener
 
@@ -75,7 +81,7 @@ First we start a ROS 1 `roscore`:
 
 ```
 # Shell A:
-. /opt/ros/indigo/setup.bash
+. /opt/ros/kinetic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 roscore
@@ -88,7 +94,7 @@ Once a *matching* topic has been detected it starts to bridge the messages on th
 
 ```
 # Shell B:
-. /opt/ros/indigo/setup.bash
+. /opt/ros/kinetic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 . <install-space-with-bridge>/setup.bash
@@ -104,7 +110,7 @@ Now we start the ROS 1 talker.
 
 ```
 # Shell C:
-. /opt/ros/indigo/setup.bash
+. /opt/ros/kinetic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 rosrun rospy_tutorials talker
@@ -132,11 +138,14 @@ created 1to2 bridge for topic 'chatter' with ROS 1 type 'std_msgs/String' and RO
 ```
 
 At the end stop all programs with `Ctrl-C`.
-Once you stop either the talker or the listener in *shell B* a line will be stating that the bridge has been teared down:
+Once you stop either the talker or the listener in *shell B* a line will be stating that the bridge has been torn down:
 
 ```
 removed 1to2 bridge for topic 'chatter'
 ```
+
+*Note:* when the bridge is run using the default ROS 2 middleware implementation, which uses Fast RTPS, it does not always remove bridges instantly.
+See [https://github.com/ros2/ros1_bridge/issues/38](https://github.com/ros2/ros1_bridge/issues/38).
 
 The screenshot shows all the shell windows and their expected content:
 
@@ -149,7 +158,7 @@ The steps are very similar to the previous example and therefore only the comman
 
 ```
 # Shell A:
-. /opt/ros/indigo/setup.bash
+. /opt/ros/kinetic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 roscore
@@ -159,7 +168,7 @@ roscore
 
 ```
 # Shell B:
-. /opt/ros/indigo/setup.bash
+. /opt/ros/kinetic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 . <install-space-with-bridge>/setup.bash
@@ -183,7 +192,7 @@ Now we start the ROS 1 listener.
 
 ```
 # Shell D:
-. /opt/ros/indigo/setup.bash
+. /opt/ros/kinetic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 rosrun roscpp_tutorials listener
@@ -196,11 +205,11 @@ The second example will demonstrate the bridge passing along bigger and more com
 A ROS 2 node is publishing images retrieved from a camera and on the ROS 1 side we use `rqt_image_view` to render the images in a GUI.
 And a ROS 1 publisher can send a message to toggle an option in the ROS 2 node.
 
-First we start a ROS 1 `roscore` and the bridge:
+First we start a ROS 1 `roscore` and the bridge.
 
 ```
 # Shell A:
-. /opt/ros/indigo/setup.bash
+. /opt/ros/kinetic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 roscore
@@ -208,7 +217,7 @@ roscore
 
 ```
 # Shell B:
-. /opt/ros/indigo/setup.bash
+. /opt/ros/kinetic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 . <workspace-with-bridge>/install/setup.bash
@@ -222,26 +231,11 @@ Now we start the ROS 1 GUI:
 
 ```
 # Shell C:
-. /opt/ros/indigo/setup.bash
+. /opt/ros/kinetic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
-rqt_image_view
+rqt_image_view /image
 ```
-
-**Note:** The currently released version of `rqt_image_view` does not allow to specify the topic name on the command line.
-And since the GUI only shows available ROS 1 topics and for resource reasons the bridge only starts bridging messages once publishers and subscribers are available on both sides the ROS 2 topic won't be listed.
-Therefore we have to briefly start a ROS 1 publisher to workaround the limitation of `rqt_image_view`.
-
-```
-# Shell D:
-. /opt/ros/indigo/setup.bash
-# Or, on OSX, something like:
-# . ~/ros_catkin_ws/install_isolated/setup.bash
-rosrun usb_cam usb_cam_node usb_cam/image_raw:=image
-```
-
-While the `usb_cam_node` process is running you should be able to select the `/image` topic in `rqt_image_view` and see the current images.
-Now we can stop the `usb_cam_node` process in *shell D* with Ctrl+C
 
 --
 
@@ -256,15 +250,13 @@ You should see the current images in `rqt_image_view` which are coming from the 
 
 --
 
-To exercide the bridge in the opposite direction at the same time you can publish.
-You can either use the `Message Publisher` plugin in `rqt` to publish a `std_msgs/Bool` message on the topic `flip_image`.
-By publishing either `true` or `false` the camera node with conditionally flip the image before sending it.
-
-As an alternative you can also run one of the two following `rostopic` commands:
+To exercise the bridge in the opposite direction at the same time you can publish a message to the ROS 2 node from ROS 1.
+By publishing either `true` or `false` to the `flip_image` topic, the camera node will conditionally flip the image before sending it.
+You can either use the `Message Publisher` plugin in `rqt` to publish a `std_msgs/Bool` message on the topic `flip_image`, or run one of the two following `rostopic` commands:
 
 ```
 # Shell F:
-. /opt/ros/indigo/setup.bash
+. /opt/ros/kinetic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 rostopic pub -r 1 /flip_image std_msgs/Bool "{data: true}"
