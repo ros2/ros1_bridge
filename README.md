@@ -5,6 +5,7 @@ This package provides a network bridge which enables to exchange messages betwee
 The bridge has currently only been implemented in C++ as at the time the Python API for ROS 2 had not been developed.
 Because of this its support is limited to only the message/service types available at compile time of the bridge.
 The bridge included with the prebuilt ROS 2 binaries supports the interface packages listed in the [ros2/common_interfaces repository.](https://github.com/ros2/common_interfaces)
+*Note:* For binary releases up to and including `release-alpha8`, some of the aforemention interfaces are skipped - check the git tag of the release in question to know which packages were built.
 
 
 ## Prerequisites
@@ -65,7 +66,7 @@ Then build just the ROS 1 bridge with `-j1`:
 src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install -j1 --only ros1_bridge
 ```
 
-*Note:* if you have built your ROS 2 workspace using `--isolated`, you will need to add the message/service packages you want to bridge to your path before building the bridge, e.g. by sourcing `local_setup.*`.
+*Note:* If you have built your ROS 2 workspace using `--isolated`, you will need to add the message/service packages you want to bridge to your path before building the bridge, e.g. by sourcing `local_setup.*`.
 
 ## Example 1: run the bridge and the example talker and listener
 
@@ -145,7 +146,7 @@ Once you stop either the talker or the listener in *shell B* a line will be stat
 removed 1to2 bridge for topic 'chatter'
 ```
 
-*Note:* when the bridge is run using the default ROS 2 middleware implementation, which uses Fast RTPS, it does not always remove bridges instantly.
+*Note:* When the bridge is run using the default ROS 2 middleware implementation, which uses Fast RTPS, it does not always remove bridges instantly.
 See [https://github.com/ros2/ros1_bridge/issues/38](https://github.com/ros2/ros1_bridge/issues/38).
 
 The screenshot shows all the shell windows and their expected content:
