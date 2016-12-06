@@ -129,7 +129,12 @@ void update_bridge(
     auto ros2_subscriber = ros2_subscribers.find(topic_name);
     if (ros2_subscriber == ros2_subscribers.end()) {
       if (bridge_all_1to2_topics) {
-        ros2_type_name = "";
+        // update the ROS 2 type name to be the anticipate the bridged type
+        bool mapping_found = ros1_bridge::get_1to2_mapping(ros1_type_name, ros2_type_name);
+        if (!mapping_found) {
+          // printf("No known mapping for ROS 1 type '%s'\n", ros1_type_name.c_str());
+          continue;
+        }
         // printf("topic name '%s' has ROS 2 publishers\n", topic_name.c_str());
       } else {
         continue;
@@ -185,7 +190,13 @@ void update_bridge(
     auto ros1_subscriber = ros1_subscribers.find(topic_name);
     if (ros1_subscriber == ros1_subscribers.end()) {
       if (bridge_all_2to1_topics) {
-        ros1_type_name = "";
+        // update the ROS 1 type name to be the anticipate the bridged type
+        bool mapping_found = ros1_bridge::get_2to1_mapping(ros2_type_name, ros1_type_name);
+        if (!mapping_found)
+        {
+          // printf("No known mapping for ROS 2 type '%s'\n", ros2_type_name.c_str());
+          continue;
+        }
         // printf("topic name '%s' has ROS 2 publishers\n", topic_name.c_str());
       } else {
         continue;
