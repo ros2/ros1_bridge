@@ -1,11 +1,14 @@
 # Bridge communication between ROS 1 and ROS 2
 
-This package provides a network bridge which enables to exchange messages between ROS 1 and ROS 2.
+This package provides a network bridge which enables the exchange of messages between ROS 1 and ROS 2.
 
-The bridge has currently only been implemented in C++ as at the time the Python API for ROS 2 had not been developed.
+The bridge is currently implemented in C++ as at the time the Python API for ROS 2 had not been developed.
 Because of this its support is limited to only the message/service types available at compile time of the bridge.
-The bridge included with the prebuilt ROS 2 binaries supports the interface packages listed in the [ros2/common_interfaces repository.](https://github.com/ros2/common_interfaces)
-*Note:* For binary releases up to and including `release-alpha8`, some of the aforemention interfaces are skipped - check the git tag of the release in question to know which packages were built.
+The bridge provided with the prebuilt ROS 2 binaries includes support for common ROS interfaces (messages/services), such as the interface packages listed in the [ros2/common_interfaces repository.](https://github.com/ros2/common_interfaces)
+See [the documentation](doc/index.rst) for more details on how ROS 1 and ROS 2 interfaces are associated with each other.
+If you would like to use a bridge with other interfaces (including your own custom types), you will have to build the bridge from source (instructions below).
+
+*Note:* For binary releases up to and including `release-alpha8`, some of the interfaces in `common_interfaces` are skipped - check the git tag of the release in question to see which interfaces were built.
 
 
 ## Prerequisites
@@ -30,7 +33,7 @@ The following ROS 1 packages are required to build and use the bridge:
 
 ### Building the bridge from source
 
-Before continuing you should have ROS 2 built from source following [these](https://github.com/ros2/ros2/wiki/Installation) instructions.
+Before continuing you should have the prerequisites for building ROS 2 from source installed following [these instructions](https://github.com/ros2/ros2/wiki/Installation).
 
 In the past, building this package required patches to ROS 1, but in the latest releases that is no longer the case.
 If you run into trouble first make sure you have at least version `1.11.16` of `ros_comm` and `rosbag`.
@@ -58,6 +61,14 @@ Next you need to source the ROS 1 environment, for Linux and ROS Kinetic that wo
 source /opt/ros/kinetic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
+```
+
+Next source any ROS 2 workspaces that have message/service packages you want to bridge so that they are added to your path, e.g.:
+
+```
+. <install-space-with-ros2>/local_setup.bash
+# And if you have an overlay workspace, something like:
+# . ~/overlay_ws/install/local_setup.bash
 ```
 
 Then build just the ROS 1 bridge with `-j1`:
