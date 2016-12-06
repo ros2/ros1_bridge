@@ -128,8 +128,7 @@ void update_bridge(
 
     auto ros2_subscriber = ros2_subscribers.find(topic_name);
     if (ros2_subscriber == ros2_subscribers.end()) {
-      if (bridge_all_1to2_topics)
-      {
+      if (bridge_all_1to2_topics) {
         ros2_type_name = "";
         // printf("topic name '%s' has ROS 2 publishers\n", topic_name.c_str());
       } else {
@@ -414,9 +413,10 @@ int main(int argc, char * argv[])
   bool output_topic_introspection;
   bool bridge_all_1to2_topics;
   bool bridge_all_2to1_topics;
-  if(!parse_command_options(argc, argv,
-    output_topic_introspection, bridge_all_1to2_topics, bridge_all_2to1_topics)) {
-      return 0;
+  if (!parse_command_options(argc, argv,
+    output_topic_introspection, bridge_all_1to2_topics, bridge_all_2to1_topics))
+  {
+    return 0;
   }
 
   // ROS 1 node
