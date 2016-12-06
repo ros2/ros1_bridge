@@ -40,23 +40,29 @@ ament_python_install_package(${PROJECT_NAME})
 
 ament_package()
 
-add_custom_command(OUTPUT "${CMAKE_BINARY_DIR}/generated/generated_factories.cpp"
+set(generated_path "${CMAKE_BINARY_DIR}/generated")
+set(generated_files "${generated_path}/get_factory.cpp")
+
+# generate per package compilation units to keep the memory usage low
+ament_index_get_resources(message_packages "rosidl_interfaces")
+foreach(message_package ${message_packages})
+  find_package(${message_package} REQUIRED)
+  list(APPEND generated_files "${generated_path}/${message_package}_factories.cpp")
+endforeach()
+
+add_custom_command(
+  OUTPUT ${generated_files}
   COMMAND ${PYTHON_EXECUTABLE} bin/ros1_bridge_generate_factories
-    --output-file "${CMAKE_BINARY_DIR}/generated/generated_factories.cpp" --template-dir resource
+    --output-path "${generated_path}" --template-dir resource
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 if(NOT WIN32)
   # ignore warning in ROS 1 message headers
-  set_source_files_properties("${CMAKE_BINARY_DIR}/generated/generated_factories.cpp"
+  set_source_files_properties(${generated_files}
     PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter")
 endif()
 
-ament_index_get_resources(message_packages "rosidl_interfaces")
-foreach(message_package ${message_packages})
-  find_package(${message_package} REQUIRED)
-endforeach()
-
-include_directories(include)
+include_directories(include ${generated_path})
 
 function(custom_executable target)
   cmake_parse_arguments(
@@ -102,7 +108,8 @@ macro(targets)
     TARGET_DEPENDENCIES "std_msgs")
 
   add_library(${PROJECT_NAME}${target_suffix} SHARED
-    "${CMAKE_BINARY_DIR}/generated/generated_factories.cpp")
+    "src/convert_builtin_interfaces.cpp"
+    ${generated_files})
   ament_target_dependencies(${PROJECT_NAME}${target_suffix}
     "rclcpp${target_suffix}"
     ${message_packages}

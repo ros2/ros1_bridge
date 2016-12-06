@@ -16,9 +16,9 @@ def main(argv=sys.argv[1:]):
         description='Generate C++ template specializations for all ROS message types.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
-        '--output-file',
+        '--output-path',
         required=True,
-        help='The path of the generated C++ file')
+        help='The basepath of the generated C++ files')
     parser.add_argument(
         '--template-dir',
         required=True,
@@ -27,7 +27,7 @@ def main(argv=sys.argv[1:]):
 
     try:
         return generate_cpp(
-            args.output_file,
+            args.output_path,
             args.template_dir,
         )
     except RuntimeError as e:
