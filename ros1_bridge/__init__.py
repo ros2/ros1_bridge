@@ -67,10 +67,10 @@ for package_path in reversed([p for p in rpp if p]):
 import rosmsg
 
 
-def generate_cpp(output_file, template_dir):
+def generate_cpp(output_path, template_dir):
     rospack = rospkg.RosPack()
     ros1_msgs = get_ros1_messages(rospack=rospack)
-    ros2_msgs, mapping_rules = get_ros2_messages()
+    ros2_package_names, ros2_msgs, mapping_rules = get_ros2_messages()
 
     package_pairs = determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules)
     message_pairs = determine_message_pairs(ros1_msgs, ros2_msgs, package_pairs, mapping_rules)
@@ -110,14 +110,31 @@ def generate_cpp(output_file, template_dir):
                 print('  -', '%s/%s' % (d.package_name, d.message_name), file=sys.stderr)
         print(file=sys.stderr)
 
-    data = {
-        'ros1_msgs': [m.ros1_msg for m in ordered_mappings],
-        'ros2_msgs': [m.ros2_msg for m in ordered_mappings],
-        'mappings': ordered_mappings,
-    }
+    data = {'ros2_package_names': ros2_package_names}
+    template_file = os.path.join(template_dir, 'get_factory.cpp.em')
+    expand_template(template_file, data, os.path.join(output_path, 'get_factory.cpp'))
 
-    template_file = os.path.join(template_dir, 'generated_factories.cpp.em')
-    expand_template(template_file, data, output_file)
+    for ros2_package_name in ros2_package_names:
+        for extension in ['cpp', 'hpp']:
+            data = {
+                'ros2_package_name': ros2_package_name,
+                'mappings': [
+                    m for m in ordered_mappings
+                    if m.ros2_msg.package_name == ros2_package_name],
+            }
+            if extension == 'hpp':
+                data.update({
+                    'ros1_msgs': [
+                        m.ros1_msg for m in ordered_mappings
+                        if m.ros2_msg.package_name == ros2_package_name],
+                    'ros2_msgs': [
+                        m.ros2_msg for m in ordered_mappings
+                        if m.ros2_msg.package_name == ros2_package_name],
+                })
+            template_file = os.path.join(template_dir, 'pkg_factories.%s.em' % extension)
+            expand_template(
+                template_file, data, os.path.join(
+                    output_path, '%s_factories.%s' % (ros2_package_name, extension)))
 
 
 def get_ros1_messages(rospack=None):
@@ -132,12 +149,14 @@ def get_ros1_messages(rospack=None):
 
 
 def get_ros2_messages():
+    pkgs = []
     msgs = []
     rules = []
     # get messages from packages
     resource_type = 'rosidl_interfaces'
     resources = ament_index_python.get_resources(resource_type)
     for package_name, prefix_path in resources.items():
+        pkgs.append(package_name)
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
         message_names = [i[:-4] for i in interfaces if i.endswith('.msg')]
@@ -153,7 +172,7 @@ def get_ros2_messages():
                 continue
             rule_file = os.path.join(package_path, export.attributes['mapping_rules'])
             rules += read_mapping_rules(rule_file, package_name)
-    return msgs, rules
+    return pkgs, msgs, rules
 
 
 def read_mapping_rules(rule_file, package_name):

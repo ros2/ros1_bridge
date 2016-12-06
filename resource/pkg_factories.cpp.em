@@ -1,53 +1,32 @@
-// generated from ros1_bridge/resource/generated_factories.cpp.em
+// generated from ros1_bridge/resource/pkg_factories.cpp.em
 
 @###############################################
 @#
-@# Factory for creating publisher / subscribers
-@# based on message names
+@# Factory template specializations based on
+@# message types of a single ROS 2 package
 @#
-@# EmPy template for generating generated_factories.cpp
+@# EmPy template for generating <pkgname>_factories.cpp
 @#
 @###############################################
 @# Start of Template
 @#
 @# Context:
-@#  - ros1_msgs (list of ros1_bridge.Message)
-@#    ROS 1 messages
-@#  - ros2_msgs (list of ros1_bridge.Message)
-@#    ROS 2 messages
+@#  - ros2_package_name (str)
+@#    The ROS 2 package name of this file
 @#  - mappings (list of ros1_bridge.Mapping)
 @#    Mapping between messages as well as their fields
 @###############################################
 @
-@{
-from ros1_bridge import camel_case_to_lower_case_underscore
-}@
-#include <ros1_bridge/factory.hpp>
+#include "@(ros2_package_name)_factories.hpp"
 
-// include ROS 1 builtin messages
-#include <ros/duration.h>
-#include <ros/time.h>
-
-// include ROS 2 builtin messages
-#include <builtin_interfaces/msg/duration.hpp>
-#include <builtin_interfaces/msg/time.hpp>
-
-// include ROS 1 messages
-@[for ros1_msg in ros1_msgs]@
-#include <@(ros1_msg.package_name)/@(ros1_msg.message_name).h>
-@[end for]@
-
-// include ROS 2 messages
-@[for ros2_msg in ros2_msgs]@
-#include <@(ros2_msg.package_name)/msg/@(camel_case_to_lower_case_underscore(ros2_msg.message_name)).hpp>
-@[end for]@
-
+// include builtin interfaces
+#include <ros1_bridge/convert_builtin_interfaces.hpp>
 
 namespace ros1_bridge
 {
 
 std::shared_ptr<FactoryInterface>
-get_factory(const std::string & ros1_type_name, const std::string & ros2_type_name)
+get_factory_@(ros2_package_name)(const std::string & ros1_type_name, const std::string & ros2_type_name)
 {
 @[if not mappings]@
   (void)ros1_type_name;
@@ -68,66 +47,8 @@ get_factory(const std::string & ros1_type_name, const std::string & ros2_type_na
     >();
   }
 @[end for]@
-  throw std::runtime_error("No template specialization for the pair");
+  return std::shared_ptr<FactoryInterface>();
 }
-
-
-// conversion functions for builtin interfaces
-
-template<typename ROS1_T, typename ROS2_T>
-void
-convert_1_to_2(
-  const ROS1_T & ros1_msg,
-  ROS2_T & ros2_msg);
-
-template<typename ROS1_T, typename ROS2_T>
-void
-convert_2_to_1(
-  const ROS2_T & ros2_msg,
-  ROS1_T & ros1_msg);
-
-
-template<>
-void
-convert_1_to_2(
-  const ros::Duration & ros1_msg,
-  builtin_interfaces::msg::Duration & ros2_msg)
-{
-  ros2_msg.sec = ros1_msg.sec;
-  ros2_msg.nanosec = ros1_msg.nsec;
-}
-
-template<>
-void
-convert_2_to_1(
-  const builtin_interfaces::msg::Duration & ros2_msg,
-  ros::Duration & ros1_msg)
-{
-  ros1_msg.sec = ros2_msg.sec;
-  ros1_msg.nsec = ros2_msg.nanosec;
-}
-
-
-template<>
-void
-convert_1_to_2(
-  const ros::Time & ros1_msg,
-  builtin_interfaces::msg::Time & ros2_msg)
-{
-  ros2_msg.sec = ros1_msg.sec;
-  ros2_msg.nanosec = ros1_msg.nsec;
-}
-
-template<>
-void
-convert_2_to_1(
-  const builtin_interfaces::msg::Time & ros2_msg,
-  ros::Time & ros1_msg)
-{
-  ros1_msg.sec = ros2_msg.sec;
-  ros1_msg.nsec = ros2_msg.nanosec;
-}
-
 
 // conversion functions for available interfaces
 @[for m in mappings]@
