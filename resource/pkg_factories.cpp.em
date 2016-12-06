@@ -85,15 +85,12 @@ get_factory_@(ros2_package_name)(const std::string & ros1_type_name, const std::
   (void)ros2_type_name;
 @[end if]@
   // mapping from string to specialized template
-  if (ros1_type_name == "" && ros2_type_name == "") {
-    throw std::runtime_error("ros1_type_name and ros2_type_name cannot both be \"\"");
-  }
 @[for m in mappings]@
   if (
     (ros1_type_name == "@(m.ros1_msg.package_name)/@(m.ros1_msg.message_name)" ||
      ros1_type_name == "") &&
-    (ros2_type_name == "@(m.ros2_msg.package_name)/@(m.ros2_msg.message_name)" ||
-     ros2_type_name == "") )
+    ros2_type_name == "@(m.ros2_msg.package_name)/@(m.ros2_msg.message_name)"
+  )
   {
     return std::make_shared<
       Factory<
