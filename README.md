@@ -243,7 +243,7 @@ rqt_image_view /image
 
 Now we start the ROS 2 image publisher:
 ```
-# Shell E:
+# Shell D:
 . <workspace-with-ros2>/install/setup.bash
 cam2image
 ```
@@ -257,7 +257,7 @@ By publishing either `true` or `false` to the `flip_image` topic, the camera nod
 You can either use the `Message Publisher` plugin in `rqt` to publish a `std_msgs/Bool` message on the topic `flip_image`, or run one of the two following `rostopic` commands:
 
 ```
-# Shell F:
+# Shell E:
 . /opt/ros/kinetic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
@@ -265,6 +265,6 @@ rostopic pub -r 1 /flip_image std_msgs/Bool "{data: true}"
 rostopic pub -r 1 /flip_image std_msgs/Bool "{data: false}"
 ```
 
-The screenshot shows all the shell windows and their expected content:
+The screenshot shows all the shell windows and their expected content (it was taken when Indigo was supported - you should use Kinetic):
 
 ![ROS 2 camera and ROS 1 rqt](doc/ros2_camera_ros1_rqt.png)
