@@ -114,7 +114,7 @@ The ROS 1 node will start printing the published messages to the console.
 
 ---
 
-Now we start the ROS 2 listener.
+Now we start the ROS 2 listener from the `rclcpp_examples` ROS 2 package.
 
 ```
 # Shell D:
@@ -168,7 +168,7 @@ dynamic_bridge
 
 ---
 
-Now we start the ROS 2 talker.
+Now we start the ROS 2 talker from the `rclcpp_examples` ROS 2 package.
 
 ```
 # Shell C:
@@ -244,7 +244,7 @@ Now we can stop the `usb_cam_node` process in *shell D* with Ctrl+C
 
 --
 
-Now we start the ROS 2 image publisher:
+Now we start the ROS 2 image publisher from the `image_tools` ROS 2 package:
 ```
 # Shell E:
 . <workspace-with-ros2>/install/setup.bash
