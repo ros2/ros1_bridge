@@ -45,4 +45,22 @@ get_factory(const std::string & ros1_type_name, const std::string & ros2_type_na
   throw std::runtime_error("No template specialization for the pair");
 }
 
+std::unique_ptr<ServiceFactoryInterface>
+get_service_factory(std::string ros, std::string package, std::string name)
+{
+@[if not ros2_package_names]@
+  (void)ros1_type_name;
+  (void)ros2_type_name;
+@[else]@
+  std::unique_ptr<ServiceFactoryInterface> factory;
+@[end if]@
+@[for ros2_package_name in sorted(ros2_package_names)]@
+  factory = get_service_factory_@(ros2_package_name)(ros, package, name);
+  if (factory) {
+    return factory;
+  }
+@[end for]@
+  throw std::runtime_error("No template specialization for the pair");
+}
+
 }  // namespace ros1_bridge

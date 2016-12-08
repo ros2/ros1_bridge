@@ -51,6 +51,10 @@ get_factory(
   const std::string & ros1_type_name,
   const std::string & ros2_type_name);
 
+std::unique_ptr<ros1_bridge::ServiceFactoryInterface>
+get_service_factory(
+  std::string, std::string, std::string);
+
 Bridge1to2Handles
 create_bridge_from_1_to_2(
   ros::NodeHandle ros1_node,

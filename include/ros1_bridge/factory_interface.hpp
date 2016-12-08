@@ -25,10 +25,23 @@
 // include ROS 2
 #include "rclcpp/node.hpp"
 #include "rclcpp/publisher.hpp"
+#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/subscription.hpp"
 
 namespace ros1_bridge
 {
+
+struct ServiceBridge1to2
+{
+  ros::ServiceServer server;
+  rclcpp::client::ClientBase::SharedPtr client;
+};
+
+struct ServiceBridge2to1
+{
+  rclcpp::service::ServiceBase::SharedPtr server;
+  ros::ServiceClient client;
+};
 
 class FactoryInterface
 {
@@ -62,6 +75,20 @@ public:
     const std::string & topic_name,
     size_t queue_size,
     ros::Publisher ros1_pub) = 0;
+};
+
+class ServiceFactoryInterface
+{
+public:
+  virtual
+  ServiceBridge1to2
+  service_bridge_1_to_2(
+    ros::NodeHandle &, rclcpp::Node::SharedPtr, const std::string &) = 0;
+
+  virtual
+  ServiceBridge2to1
+  service_bridge_2_to_1(
+    ros::NodeHandle &, rclcpp::Node::SharedPtr, const std::string &) = 0;
 };
 
 }  // namespace ros1_bridge
