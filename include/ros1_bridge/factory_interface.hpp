@@ -25,6 +25,7 @@
 // include ROS 2
 #include "rclcpp/node.hpp"
 #include "rclcpp/publisher.hpp"
+#include "rclcpp/rclcpp.hpp"
 #include "rclcpp/subscription.hpp"
 
 namespace ros1_bridge
@@ -79,11 +80,15 @@ public:
 class ServiceFactoryInterface
 {
 public:
-  virtual ServiceBridge1to2 service_bridge_1_to_2(
-    ros::NodeHandle&, rclcpp::Node::SharedPtr, std::string) = 0;
+  virtual
+  ServiceBridge1to2
+  service_bridge_1_to_2(
+    ros::NodeHandle &, rclcpp::Node::SharedPtr, const std::string &) = 0;
 
-  virtual ServiceBridge2to1 service_bridge_2_to_1(
-    ros::NodeHandle&, rclcpp::Node::SharedPtr, std::string) = 0;
+  virtual
+  ServiceBridge2to1
+  service_bridge_2_to_1(
+    ros::NodeHandle &, rclcpp::Node::SharedPtr, const std::string &) = 0;
 };
 
 }  // namespace ros1_bridge

@@ -76,6 +76,7 @@ def generate_cpp(output_path, template_dir):
     package_pairs = determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules)
     message_pairs = determine_message_pairs(ros1_msgs, ros2_msgs, package_pairs, mapping_rules)
     service_pairs = determine_service_pairs(ros1_srvs, ros2_srvs, package_pairs, mapping_rules)
+    services = determine_services(service_pairs)
 
     mappings = []
     for ros1_msg, ros2_msg in message_pairs:
@@ -112,6 +113,8 @@ def generate_cpp(output_path, template_dir):
                 print('  -', '%s/%s' % (d.package_name, d.message_name), file=sys.stderr)
         print(file=sys.stderr)
 
+    # TODO(dirk-thomas) support field mappings for services
+
     data = {'ros2_package_names': ros2_package_names}
     template_file = os.path.join(template_dir, 'get_factory.cpp.em')
     expand_template(template_file, data, os.path.join(output_path, 'get_factory.cpp'))
@@ -123,7 +126,9 @@ def generate_cpp(output_path, template_dir):
                 'mappings': [
                     m for m in ordered_mappings
                     if m.ros2_msg.package_name == ros2_package_name],
-                'services': service_pairs,
+                'services': [
+                    s for s in services
+                    if s['ros2_package'] == ros2_package_name],
             }
             if extension == 'hpp':
                 data.update({
@@ -133,6 +138,12 @@ def generate_cpp(output_path, template_dir):
                     'ros2_msgs': [
                         m.ros2_msg for m in ordered_mappings
                         if m.ros2_msg.package_name == ros2_package_name],
+                    'ros1_srvs': [
+                        p[0] for p in service_pairs
+                        if p[1].package_name == ros2_package_name],
+                    'ros2_srvs': [
+                        p[1] for p in service_pairs
+                        if p[1].package_name == ros2_package_name],
                 })
             template_file = os.path.join(template_dir, 'pkg_factories.%s.em' % extension)
             expand_template(
@@ -350,14 +361,46 @@ def determine_message_pairs(ros1_msgs, ros2_msgs, package_pairs, mapping_rules):
     return pairs
 
 
-def determine_service_pairs(ros1_srvs, ros2_srvs):
+def determine_service_pairs(ros1_srvs, ros2_srvs, package_pairs, mapping_rules):
     pairs = []
-    services = []
+    # determine service names considered equal between ROS 1 and ROS 2
     for ros1_srv in ros1_srvs:
         for ros2_srv in ros2_srvs:
-            if (ros1_srv.package_name == ros2_srv.package_name):
-                if (ros1_srv.message_name == ros2_srv.message_name):
-                    pairs.append((ros1_srv, ros2_srv))
+            package_pair = (ros1_srv.package_name, ros2_srv.package_name)
+            if package_pair not in package_pairs:
+                continue
+            if ros1_srv.message_name != ros2_srv.message_name:
+                continue
+            pairs.append((ros1_srv, ros2_srv))
+
+    # add manual message mapping rules
+    for rule in mapping_rules:
+        if not rule.is_message_mapping:
+            continue
+        for ros1_srv in ros1_srvs:
+            if rule.ros1_package_name == ros1_srv.package_name and \
+                    rule.ros1_message_name == ros1_srv.message_name:
+                break
+        else:
+            # skip unknown messages
+            continue
+        for ros2_srv in ros2_srvs:
+            if rule.ros2_package_name == ros2_srv.package_name and \
+                    rule.ros2_message_name == ros2_srv.message_name:
+                break
+        else:
+            # skip unknown messages
+            continue
+
+        pair = (ros1_srv, ros2_srv)
+        if pair not in pairs:
+            pairs.append(pair)
+
+    return pairs
+
+
+def determine_services(pairs):
+    services = []
     for pair in pairs:
         ros1_spec = load_ros1_service(pair[0])
         ros2_spec = load_ros2_service(pair[1])
@@ -375,6 +418,8 @@ def determine_service_pairs(ros1_srvs, ros2_srvs):
         }
         match = True
         for direction in ['request', 'response']:
+            # TODO(dirk-thomas) request / response and "normal" messages
+            # this should reuse the message specific code instead
             if len(ros1_fields[direction]) != len(ros2_fields[direction]):
                 match = False
                 break
@@ -516,9 +561,9 @@ def load_ros1_service(ros1_srv, rospack=None):
 
     srv_context = genmsg.MsgContext.create_default()
     srv_path = os.path.join(ros1_srv.prefix_path, ros1_srv.message_name + '.srv')
-    srv_name = '%s/%s' % (ros1_srv.package_name, ros1_srv.message_name)
     try:
-        spec = genmsg.msg_loader.load_srv_from_file(srv_context, srv_path, srv_name)
+        spec = genmsg.msg_loader.load_srv_from_file(
+            srv_context, srv_path, '%s/%s' % (ros1_srv.package_name, ros1_srv.message_name))
     except genmsg.InvalidMsgSpec:
         return None
     return spec

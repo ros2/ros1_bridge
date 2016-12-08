@@ -33,7 +33,7 @@ from ros1_bridge import camel_case_to_lower_case_underscore
 
 // include ROS 1 services
 @[for ros1_srv in ros1_srvs]@
-#include <@(ros1_srv.package_name)/@(ros1_srv.service_name).h>
+#include <@(ros1_srv.package_name)/@(ros1_srv.message_name).h>
 @[end for]@
 
 // include ROS 2 messages
@@ -43,7 +43,7 @@ from ros1_bridge import camel_case_to_lower_case_underscore
 
 // include ROS 2 services
 @[for ros2_srv in ros2_srvs]@
-#include <@(ros2_srv.package_name)/srv/@(camel_case_to_lower_case_underscore(ros2_srv.service_name)).hpp>
+#include <@(ros2_srv.package_name)/srv/@(camel_case_to_lower_case_underscore(ros2_srv.message_name)).hpp>
 @[end for]@
 
 namespace ros1_bridge
@@ -51,6 +51,9 @@ namespace ros1_bridge
 
 std::shared_ptr<FactoryInterface>
 get_factory_@(ros2_package_name)(const std::string & ros1_type_name, const std::string & ros2_type_name);
+
+std::unique_ptr<ServiceFactoryInterface>
+get_service_factory_@(ros2_package_name)(std::string ros, std::string package, std::string name);
 
 // conversion functions for available interfaces
 @[for m in mappings]@

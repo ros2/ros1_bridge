@@ -39,10 +39,6 @@
 
 std::mutex g_bridge_mutex;
 
-namespace ros1_bridge {
-std::unique_ptr<ros1_bridge::ServiceFactoryInterface> get_service_factory(std::string, std::string, std::string);
-}
-
 struct Bridge1to2HandlesAndMessageTypes
 {
   ros1_bridge::Bridge1to2Handles bridge_handles;

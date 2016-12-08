@@ -25,8 +25,6 @@ The following ROS 1 packages are required to build and use the bridge:
 * `std_msgs`
 * as well as the Python package `rospkg`
 
-**Note:** Bridge will connect only services with the same package name and service name so make sure that they are available when you build ros1_bridge.
-
 ### Build the bridge from source
 
 Before continuing you should have ROS 2 built from source following [these](https://github.com/ros2/ros2/wiki/Installation) instructions.
@@ -277,6 +275,11 @@ The screenshot shows all the shell windows and their expected content:
 ![ROS 2 camera and ROS 1 rqt](doc/ros2_camera_ros1_rqt.png)
 
 ## Example 3: run the bridge for AddTwoInts service
+
+<div class="alert alert-info" markdown="1">
+  <b>TODO(dirk-thomas):</b> This should use a mapping between <code>rospy_tutorials</code> and <code>example_interfaces</code> instead.
+  That allows to run the example without the need to write custom code.
+</div>
 
 example_interfaces/AddTwoInts service is already available in ROS2, so you should be able to run it after sourcing the setup script:
 
