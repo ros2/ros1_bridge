@@ -216,8 +216,14 @@ void update_bridge(
       service_bridges_1_to_2.find(name) == service_bridges_1_to_2.end())
     {
       auto factory = ros1_bridge::get_service_factory("ros1", details.at("package"), details.at("name"));
-      service_bridges_2_to_1[name] = factory->service_bridge_2_to_1(ros1_node, ros2_node, name);
-      // printf("Created 2 to 1 bridge for service %s\n", name.data());
+      if (factory) {
+        try {
+          service_bridges_2_to_1[name] = factory->service_bridge_2_to_1(ros1_node, ros2_node, name);
+          // printf("Created 2 to 1 bridge for service %s\n", name.data());
+        } catch (std::runtime_error& e) {
+          fprintf(stderr, "Failed to created a bridge: %s\n", e.what());
+        }
+      }
     }
   }
 
@@ -230,8 +236,14 @@ void update_bridge(
       service_bridges_2_to_1.find(name) == service_bridges_2_to_1.end())
     {
       auto factory = ros1_bridge::get_service_factory("ros2", details.at("package"), details.at("name"));
-      service_bridges_1_to_2[name] = factory->service_bridge_1_to_2(ros1_node, ros2_node, name);
-      // printf("Created 1 to 2 bridge for service %s\n", name.data());
+      if (factory) {
+        try {
+          service_bridges_1_to_2[name] = factory->service_bridge_1_to_2(ros1_node, ros2_node, name);
+          // printf("Created 1 to 2 bridge for service %s\n", name.data());
+        } catch (std::runtime_error& e) {
+          fprintf(stderr, "Failed to created a bridge: %s\n", e.what());
+        }
+      }
     }
   }
 
@@ -239,7 +251,11 @@ void update_bridge(
   for (auto it = service_bridges_2_to_1.begin(); it != service_bridges_2_to_1.end();) {
     if (ros1_services.find(it->first) == ros1_services.end()) {
       // printf("Removed 2 to 1 bridge for service %s\n", it->first.data());
-      it = service_bridges_2_to_1.erase(it);
+      try {
+        it = service_bridges_2_to_1.erase(it);
+      } catch (std::runtime_error& e) {
+        fprintf(stderr, "There was an error while removing 2 to 1 bridge: %s\n", e.what());
+      }
     }
     else {
       ++it;
@@ -250,8 +266,12 @@ void update_bridge(
   for (auto it = service_bridges_1_to_2.begin(); it != service_bridges_1_to_2.end();) {
     if (ros2_services.find(it->first) == ros2_services.end()) {
       // printf("Removed 1 to 2 bridge for service %s\n", it->first.data());
-      it->second.server.shutdown();
-      it = service_bridges_1_to_2.erase(it);
+      try {
+        it->second.server.shutdown();
+        it = service_bridges_1_to_2.erase(it);
+      } catch (std::runtime_error& e) {
+        fprintf(stderr, "There was an error while removing 1 to 2 bridge: %s\n", e.what());
+      }
     }
     else {
       ++it;

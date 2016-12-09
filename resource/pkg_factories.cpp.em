@@ -295,7 +295,7 @@ std::unique_ptr<ServiceFactoryInterface> get_service_factory(std::string ros, st
     >);
   }
 @[end for]@
-  std::string args(ros + ":" + package + "/" + name);
-  throw std::runtime_error("No template specialization for the service: " + args);
+  // fprintf(stderr, "No template specialization for the service %s:%s/%s\n", ros.data(), package.data(), name.data());
+  return std::unique_ptr<ServiceFactoryInterface>(nullptr);
 }
 }  // namespace ros1_bridge

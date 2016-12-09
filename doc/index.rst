@@ -84,13 +84,13 @@ The yaml files must also be installed in the ``CMakeLists.txt``::
 Example mapping rules file
 --------------------------
 
-Example package mapping rule:
+Example package mapping rule::
 
     -
       ros1_package_name: 'ros1_pkg_name'
       ros2_package_name: 'ros2_pkg_name'
 
-Example message mapping rule:
+Example message mapping rule::
 
     -
       ros1_package_name: 'pkg_name'
@@ -98,7 +98,7 @@ Example message mapping rule:
       ros2_package_name: 'pkg_name'
       ros2_message_name: 'ros2_msg_name'
 
-Example service mapping rule:
+Example service mapping rule::
 
     -
       ros1_package_name: 'pkg_name'
@@ -106,7 +106,7 @@ Example service mapping rule:
       ros2_package_name: 'pkg_name'
       ros2_service_name: 'ros2_srv_name'
 
-Example message field mapping rule:
+Example message field mapping rule::
 
     -
       ros1_package_name: 'pkg_name'
