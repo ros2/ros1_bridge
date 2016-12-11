@@ -54,6 +54,7 @@ ament_package()
 
 set(generated_path "${CMAKE_BINARY_DIR}/generated")
 set(generated_files "${generated_path}/get_factory.cpp")
+list(APPEND generated_files "${generated_path}/get_mappings.cpp")
 
 # generate per package compilation units to keep the memory usage low
 ament_index_get_resources(message_packages "rosidl_interfaces")

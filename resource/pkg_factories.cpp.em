@@ -39,44 +39,6 @@ from ros1_bridge import camel_case_to_lower_case_underscore
 namespace ros1_bridge
 {
 
-bool
-get_1to2_mapping(const std::string & ros1_type_name, std::string & ros2_type_name)
-{
-@[if not mappings]@
-  (void)ros1_type_name;
-  (void)ros2_type_name;
-@[end if]@
-
-@[for m in mappings]@
-  if (ros1_type_name == "@(m.ros1_msg.package_name)/@(m.ros1_msg.message_name)")
-  {
-    ros2_type_name = "@(m.ros2_msg.package_name)/@(m.ros2_msg.message_name)";
-    return true;
-  }
-@[end for]@
-
-  return false;
-}
-
-bool
-get_2to1_mapping(const std::string & ros2_type_name, std::string & ros1_type_name)
-{
-@[if not mappings]@
-  (void)ros1_type_name;
-  (void)ros2_type_name;
-@[end if]@
-
-@[for m in mappings]@
-  if (ros2_type_name == "@(m.ros2_msg.package_name)/@(m.ros2_msg.message_name)")
-  {
-    ros1_type_name = "@(m.ros1_msg.package_name)/@(m.ros1_msg.message_name)";
-    return true;
-  }
-@[end for]@
-
-  return false;
-}
-
 std::shared_ptr<FactoryInterface>
 get_factory_@(ros2_package_name)(const std::string & ros1_type_name, const std::string & ros2_type_name)
 {
