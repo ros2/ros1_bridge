@@ -84,7 +84,6 @@ Then build just the ROS 1 bridge with `-j1`:
 src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install -j1 --only ros1_bridge
 ```
 
-*Note:* If you have built your ROS 2 workspace using `--isolated`, you will need to add the message/service packages you want to bridge to your path before building the bridge, e.g. by sourcing `local_setup.*`.
 
 ## Example 1: run the bridge and the example talker and listener
 
