@@ -51,8 +51,7 @@ get_factory_@(ros2_package_name)(const std::string & ros1_type_name, const std::
   if (
     (ros1_type_name == "@(m.ros1_msg.package_name)/@(m.ros1_msg.message_name)" ||
      ros1_type_name == "") &&
-    ros2_type_name == "@(m.ros2_msg.package_name)/@(m.ros2_msg.message_name)"
-  )
+    ros2_type_name == "@(m.ros2_msg.package_name)/@(m.ros2_msg.message_name)")
   {
     return std::make_shared<
       Factory<
