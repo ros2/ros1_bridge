@@ -190,9 +190,9 @@ public:
     }
     auto request2 = std::make_shared<R2_REQ>();
     translate_1_to_2(request1, *request2);
-    while (!client->wait_for_service(1_s))
+    while (!client->wait_for_service(std::chrono::seconds(1)))
     {
-      if (!rclcpp::ok())
+      if (!rclcpp::utilities::ok())
       {
         fprintf(stderr, "Client was interrupted while waiting for the service. Exiting.\n");
         return false;
@@ -215,7 +215,7 @@ public:
   }
 
   ServiceBridge1to2 service_bridge_1_to_2(
-    ros::NodeHandle& ros1_node, rclcpp::Node::SharedPtr ros2_node, const std::string name)
+    ros::NodeHandle& ros1_node, rclcpp::node::Node::SharedPtr ros2_node, const std::string name)
   {
     ServiceBridge1to2 bridge;
     bridge.client = ros2_node->create_client<R2_TYPE>(name);
@@ -226,7 +226,7 @@ public:
   }
 
   ServiceBridge2to1 service_bridge_2_to_1(
-     ros::NodeHandle& ros1_node, rclcpp::Node::SharedPtr ros2_node, const std::string name)
+     ros::NodeHandle& ros1_node, rclcpp::node::Node::SharedPtr ros2_node, const std::string name)
   {
     ServiceBridge2to1 bridge;
     bridge.client = ros1_node.serviceClient<R1_TYPE>(name);

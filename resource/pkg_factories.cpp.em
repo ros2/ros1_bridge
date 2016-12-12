@@ -271,8 +271,13 @@ void ServiceFactory<
 @[  end for]@
 @[end for]@
 
-std::unique_ptr<ServiceFactoryInterface> get_service_factory(std::string ros, std::string package, std::string name)
+std::unique_ptr<ServiceFactoryInterface> get_service_factory_@(ros2_package_name)(std::string ros, std::string package, std::string name)
 {
+@[if not services]@
+  (void)ros;
+  (void)package;
+  (void)name;
+@[end if]@
 @[for service in services]@
   if (
     (
@@ -295,7 +300,6 @@ std::unique_ptr<ServiceFactoryInterface> get_service_factory(std::string ros, st
     >);
   }
 @[end for]@
-  // fprintf(stderr, "No template specialization for the service %s:%s/%s\n", ros.data(), package.data(), name.data());
-  return std::unique_ptr<ServiceFactoryInterface>(nullptr);
+  return nullptr;
 }
 }  // namespace ros1_bridge

@@ -68,11 +68,37 @@ import rosmsg
 
 
 def generate_cpp(output_path, template_dir):
-    data1 = generate_messages()
-    data2 = generate_services()
-    data1.update(data2);
+    data = generate_messages()
+    data.update(generate_services())
+    unique_package_names = set(data["ros2_package_names_msg"] + data["ros2_package_names_srv"])
+    data["ros2_package_names"] = list(unique_package_names)
     template_file = os.path.join(template_dir, 'get_factory.cpp.em')
-    expand_template(template_file, data1, output_path)
+    output_file = os.path.join(output_path, 'get_factory.cpp')
+    expand_template(template_file, data, output_file)
+    for ros2_package_name in data["ros2_package_names"]:
+        for extension in ['cpp', 'hpp']:
+            data_pkg = {
+                'ros2_package_name': ros2_package_name,
+                'mappings': [
+                    m for m in data["mappings"]
+                    if m.ros2_msg.package_name == ros2_package_name],
+                'services': [
+                    s for s in data["services"]
+                    if s["ros2_package"] == ros2_package_name]
+            }
+            if extension == 'hpp':
+                data_pkg.update({
+                    'ros1_msgs': [
+                        m.ros1_msg for m in data["mappings"]
+                        if m.ros2_msg.package_name == ros2_package_name],
+                    'ros2_msgs': [
+                        m.ros2_msg for m in data["mappings"]
+                        if m.ros2_msg.package_name == ros2_package_name],
+                })
+            print(data_pkg)
+            template_file = os.path.join(template_dir, 'pkg_factories.%s.em' % extension)
+            output_file = os.path.join(output_path, '%s_factories.%s' % (ros2_package_name, extension))
+            expand_template(template_file, data_pkg, output_file)
 
 
 def generate_messages():
@@ -118,36 +144,21 @@ def generate_messages():
                 print('  -', '%s/%s' % (d.package_name, d.message_name), file=sys.stderr)
         print(file=sys.stderr)
 
-    data1 = {'ros2_package_names': ros2_package_names}
-
-    for ros2_package_name in ros2_package_names:
-        for extension in ['cpp', 'hpp']:
-            data = {
-                'ros2_package_name': ros2_package_name,
-                'mappings': [
-                    m for m in ordered_mappings
-                    if m.ros2_msg.package_name == ros2_package_name],
-            }
-            if extension == 'hpp':
-                data.update({
-                    'ros1_msgs': [
-                        m.ros1_msg for m in ordered_mappings
-                        if m.ros2_msg.package_name == ros2_package_name],
-                    'ros2_msgs': [
-                        m.ros2_msg for m in ordered_mappings
-                        if m.ros2_msg.package_name == ros2_package_name],
-                })
-            template_file = os.path.join(template_dir, 'pkg_factories.%s.em' % extension)
-            expand_template(
-                template_file, data, os.path.join(
-                    output_path, '%s_factories.%s' % (ros2_package_name, extension)))
-    return data1
+    return {
+        'ros1_msgs': [m.ros1_msg for m in ordered_mappings],
+        'ros2_msgs': [m.ros2_msg for m in ordered_mappings],
+        'mappings': ordered_mappings,
+        'ros2_package_names_msg': ros2_package_names
+    }
 
 def generate_services():
     ros1_srvs = get_ros1_services()
-    ros2_srvs, mapping_rules = get_ros2_services()
+    ros2_pkgs, ros2_srvs, mapping_rules = get_ros2_services()
     services = determine_common_services(ros1_srvs, ros2_srvs, mapping_rules)
-    return { "services": services }
+    return {
+        'services': services,
+        'ros2_package_names_srv': ros2_pkgs
+    }
 
 
 def get_ros1_messages(rospack=None):
@@ -200,12 +211,14 @@ def get_ros1_services(rospack=None):
 
 
 def get_ros2_services():
+    pkgs = []
     srvs = []
     rules = []
     resource_type = 'rosidl_interfaces'
     resources = ament_index_python.get_resources(resource_type)
     for package_name, prefix_path in resources.items():
-        resource = ament_index_python.get_resource(resource_type, package_name)
+        pkgs.append(package_name)
+        resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
         service_names = [i[:-4] for i in interfaces if i.endswith('.srv')]
         for service_name in service_names:
@@ -220,7 +233,7 @@ def get_ros2_services():
                 continue
             rule_file = os.path.join(package_path, export.attributes['service_mapping_rules'])
             rules += read_mapping_rules(rule_file, package_name)
-    return srvs, rules
+    return pkgs, srvs, rules
 
 
 def read_mapping_rules(rule_file, package_name):
