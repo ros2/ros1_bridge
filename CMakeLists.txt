@@ -103,11 +103,6 @@ macro(targets)
     get_rclcpp_information("${rmw_implementation}" "rclcpp${target_suffix}")
   endif()
 
-  custom_executable(ros1_bridge_talker "src/talker.cpp"
-    TARGET_DEPENDENCIES "std_msgs")
-  custom_executable(ros1_bridge_listener "src/listener.cpp"
-    TARGET_DEPENDENCIES "std_msgs")
-
   custom_executable(simple_bridge_1_to_2 "src/simple_bridge_1_to_2.cpp"
     ROS1_DEPENDENCIES
     TARGET_DEPENDENCIES "std_msgs")

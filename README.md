@@ -139,13 +139,12 @@ The ROS 1 node will start printing the published messages to the console.
 
 ---
 
-Now we start the ROS 2 listener.
-It is important to use the listener from the `ros1_bridge` package since it uses different QoS parameters than the "normal" `listener`.
+Now we start the ROS 2 listener from the `rclcpp_tutorials` ROS 2 package.
 
 ```
 # Shell D:
 . <install-space-with-ros2>/setup.bash
-ros1_bridge_listener
+listener
 ```
 
 The ROS 2 node will start printing the received messages to the console.
@@ -197,7 +196,7 @@ dynamic_bridge
 
 ---
 
-Now we start the ROS 2 talker.
+Now we start the ROS 2 talker from the `rclcpp_tutorials` ROS 2 package.
 
 ```
 # Shell C:
@@ -258,7 +257,7 @@ rqt_image_view /image
 
 --
 
-Now we start the ROS 2 image publisher:
+Now we start the ROS 2 image publisher from the `image_tools` ROS 2 package:
 ```
 # Shell D:
 . <workspace-with-ros2>/install/setup.bash
