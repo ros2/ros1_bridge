@@ -129,7 +129,7 @@ void update_bridge(
         continue;
       }
       // update the ROS 2 type name to be that of the anticipated bridged type
-      //TODO(dhood): support non 1-1 "bridge-all" mappings
+      // TODO(dhood): support non 1-1 "bridge-all" mappings
       bool mapping_found = ros1_bridge::get_1to2_mapping(ros1_type_name, ros2_type_name);
       if (!mapping_found) {
         // printf("No known mapping for ROS 1 type '%s'\n", ros1_type_name.c_str());
@@ -190,9 +190,9 @@ void update_bridge(
         continue;
       }
       // update the ROS 1 type name to be that of the anticipated bridged type
+      // TODO(dhood): support non 1-1 "bridge-all" mappings
       bool mapping_found = ros1_bridge::get_2to1_mapping(ros2_type_name, ros1_type_name);
-      if (!mapping_found)
-      {
+      if (!mapping_found) {
         // printf("No known mapping for ROS 2 type '%s'\n", ros2_type_name.c_str());
         continue;
       }
@@ -421,7 +421,7 @@ int main(int argc, char * argv[])
   bool bridge_all_1to2_topics;
   bool bridge_all_2to1_topics;
   if (!parse_command_options(
-    argc, argv, output_topic_introspection, bridge_all_1to2_topics, bridge_all_2to1_topics))
+      argc, argv, output_topic_introspection, bridge_all_1to2_topics, bridge_all_2to1_topics))
   {
     return 0;
   }
