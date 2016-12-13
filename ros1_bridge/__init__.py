@@ -68,6 +68,40 @@ import rosmsg
 
 
 def generate_cpp(output_path, template_dir):
+    data = generate_messages()
+    data.update(generate_services())
+    unique_package_names = set(data["ros2_package_names_msg"] + data["ros2_package_names_srv"])
+    data["ros2_package_names"] = list(unique_package_names)
+    template_file = os.path.join(template_dir, 'get_factory.cpp.em')
+    output_file = os.path.join(output_path, 'get_factory.cpp')
+    expand_template(template_file, data, output_file)
+    for ros2_package_name in data["ros2_package_names"]:
+        for extension in ['cpp', 'hpp']:
+            data_pkg = {
+                'ros2_package_name': ros2_package_name,
+                'mappings': [
+                    m for m in data["mappings"]
+                    if m.ros2_msg.package_name == ros2_package_name],
+                'services': [
+                    s for s in data["services"]
+                    if s["ros2_package"] == ros2_package_name]
+            }
+            if extension == 'hpp':
+                data_pkg.update({
+                    'ros1_msgs': [
+                        m.ros1_msg for m in data["mappings"]
+                        if m.ros2_msg.package_name == ros2_package_name],
+                    'ros2_msgs': [
+                        m.ros2_msg for m in data["mappings"]
+                        if m.ros2_msg.package_name == ros2_package_name],
+                })
+            print(data_pkg)
+            template_file = os.path.join(template_dir, 'pkg_factories.%s.em' % extension)
+            output_file = os.path.join(output_path, '%s_factories.%s' % (ros2_package_name, extension))
+            expand_template(template_file, data_pkg, output_file)
+
+
+def generate_messages():
     rospack = rospkg.RosPack()
     ros1_msgs = get_ros1_messages(rospack=rospack)
     ros2_package_names, ros2_msgs, mapping_rules = get_ros2_messages()
@@ -110,31 +144,21 @@ def generate_cpp(output_path, template_dir):
                 print('  -', '%s/%s' % (d.package_name, d.message_name), file=sys.stderr)
         print(file=sys.stderr)
 
-    data = {'ros2_package_names': ros2_package_names}
-    template_file = os.path.join(template_dir, 'get_factory.cpp.em')
-    expand_template(template_file, data, os.path.join(output_path, 'get_factory.cpp'))
+    return {
+        'ros1_msgs': [m.ros1_msg for m in ordered_mappings],
+        'ros2_msgs': [m.ros2_msg for m in ordered_mappings],
+        'mappings': ordered_mappings,
+        'ros2_package_names_msg': ros2_package_names
+    }
 
-    for ros2_package_name in ros2_package_names:
-        for extension in ['cpp', 'hpp']:
-            data = {
-                'ros2_package_name': ros2_package_name,
-                'mappings': [
-                    m for m in ordered_mappings
-                    if m.ros2_msg.package_name == ros2_package_name],
-            }
-            if extension == 'hpp':
-                data.update({
-                    'ros1_msgs': [
-                        m.ros1_msg for m in ordered_mappings
-                        if m.ros2_msg.package_name == ros2_package_name],
-                    'ros2_msgs': [
-                        m.ros2_msg for m in ordered_mappings
-                        if m.ros2_msg.package_name == ros2_package_name],
-                })
-            template_file = os.path.join(template_dir, 'pkg_factories.%s.em' % extension)
-            expand_template(
-                template_file, data, os.path.join(
-                    output_path, '%s_factories.%s' % (ros2_package_name, extension)))
+def generate_services():
+    ros1_srvs = get_ros1_services()
+    ros2_pkgs, ros2_srvs, mapping_rules = get_ros2_services()
+    services = determine_common_services(ros1_srvs, ros2_srvs, mapping_rules)
+    return {
+        'services': services,
+        'ros2_package_names_srv': ros2_pkgs
+    }
 
 
 def get_ros1_messages(rospack=None):
@@ -175,6 +199,43 @@ def get_ros2_messages():
     return pkgs, msgs, rules
 
 
+def get_ros1_services(rospack=None):
+    if not rospack:
+        rospack = rospkg.RosPack()
+    srvs = []
+    pkgs = sorted([x for x in rosmsg.iterate_packages(rospack, rosmsg.MODE_SRV)])
+    for package_name, path in pkgs:
+        for message_name in rosmsg._list_types(path, 'srv', rosmsg.MODE_SRV):
+            srvs.append(Message(package_name, message_name, path))
+    return srvs
+
+
+def get_ros2_services():
+    pkgs = []
+    srvs = []
+    rules = []
+    resource_type = 'rosidl_interfaces'
+    resources = ament_index_python.get_resources(resource_type)
+    for package_name, prefix_path in resources.items():
+        pkgs.append(package_name)
+        resource, _ = ament_index_python.get_resource(resource_type, package_name)
+        interfaces = resource.splitlines()
+        service_names = [i[:-4] for i in interfaces if i.endswith('.srv')]
+        for service_name in service_names:
+            srvs.append(Message(package_name, service_name, prefix_path))
+        # check package manifest for mapping rules
+        package_path = os.path.join(prefix_path, 'share', package_name)
+        pkg = parse_package(package_path)
+        for export in pkg.exports:
+            if export.tagname != 'ros1_bridge':
+                continue
+            if 'service_mapping_rules' not in export.attributes:
+                continue
+            rule_file = os.path.join(package_path, export.attributes['service_mapping_rules'])
+            rules += read_mapping_rules(rule_file, package_name)
+    return pkgs, srvs, rules
+
+
 def read_mapping_rules(rule_file, package_name):
     rules = []
     with open(rule_file, 'r') as h:
@@ -213,13 +274,21 @@ class Message(object):
     def __hash__(self):
         return hash('%s/%s' % (self.package_name, self.message_name))
 
+    def __str__(self):
+        return self.prefix_path + ":" + self.package_name + ":" + self.message_name
+
+    def __repr__(self):
+        return self.__str__()
+
 
 class MappingRule(object):
     __slots__ = [
         'ros1_package_name',
         'ros1_message_name',
+        'ros1_service_name',
         'ros2_package_name',
         'ros2_message_name',
+        'ros2_service_name',
         'fields_1_to_2',
     ]
 
@@ -228,7 +297,12 @@ class MappingRule(object):
         self.ros2_package_name = data['ros2_package_name']
         self.ros1_message_name = None
         self.ros2_message_name = None
+        self.ros1_service_name = None
+        self.ros2_service_name = None
         self.fields_1_to_2 = None
+        if 'ros1_service_name' in data:
+            self.ros1_service_name = data['ros1_service_name']
+            self.ros2_service_name = data['ros2_service_name']
         if 'ros1_message_name' in data:
             self.ros1_message_name = data['ros1_message_name']
             self.ros2_message_name = data['ros2_message_name']
@@ -246,6 +320,11 @@ class MappingRule(object):
     def is_field_mapping(self):
         return self.fields_1_to_2 is not None
 
+    def __str__(self):
+        return "MappingRule(" + self.ros1_package_name + " <--> " + self.ros2_package_name + ")"
+
+    def __repr__(self):
+        return self.__str__()
 
 def determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules):
     pairs = []
@@ -321,6 +400,79 @@ def determine_message_pairs(ros1_msgs, ros2_msgs, package_pairs, mapping_rules):
             pairs.append(pair)
 
     return pairs
+
+
+def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
+    pairs = []
+    services = []
+    for ros1_srv in ros1_srvs:
+        for ros2_srv in ros2_srvs:
+            if (ros1_srv.package_name == ros2_srv.package_name):
+                if (ros1_srv.message_name == ros2_srv.message_name):
+                    pairs.append((ros1_srv, ros2_srv))
+
+    for rule in mapping_rules:
+        for ros1_srv in ros1_srvs:
+            for ros2_srv in ros2_srvs:
+                if rule.ros1_package_name == ros1_srv.package_name and \
+                   rule.ros2_package_name == ros2_srv.package_name:
+                    if rule.ros1_service_name == None and rule.ros2_service_name == None:
+                        if (ros1_srv.message_name == ros2_srv.message_name):
+                            pairs.append((ros1_srv, ros2_srv))
+                    else:
+                        if rule.ros1_service_name == ros1_srv.message_name and \
+                           rule.ros2_service_name == ros2_srv.message_name:
+                            pairs.append((ros1_srv, ros2_srv))
+
+    for pair in pairs:
+        ros1_spec = load_ros1_service(pair[0])
+        ros2_spec = load_ros2_service(pair[1])
+        ros1_fields = {
+            "request": ros1_spec.request.fields(),
+            "response": ros1_spec.response.fields()
+        }
+        ros2_fields = {
+            "request": ros2_spec.request.fields,
+            "response": ros2_spec.response.fields
+        }
+        output = {
+            "request": [],
+            "response": []
+        }
+        match = True
+        for direction in ["request", "response"]:
+            if len(ros1_fields[direction]) != len(ros2_fields[direction]):
+                match = False
+                break
+            for i, ros1_field in enumerate(ros1_fields[direction]):
+                ros1_type = ros1_field[0]
+                ros2_type = str(ros2_fields[direction][i].type)
+                ros1_name = ros1_field[1]
+                ros2_name = ros2_fields[direction][i].name
+                if (ros1_type != ros2_type or ros1_name != ros2_name):
+                    match = False
+                    break
+                output[direction].append({
+                    "basic": False if "/" in ros1_type else True,
+                    "array": True if "[]" in ros1_type else False,
+                    "ros1": {
+                        "type": ros1_type.rstrip("[]"),
+                        "name": ros1_name,
+                    },
+                    "ros2": {
+                        "type": ros2_type.rstrip("[]"),
+                        "name": ros2_name,
+                    }
+                })
+        if match:
+            services.append({
+                "ros1_name": pair[0].message_name,
+                "ros2_name": pair[1].message_name,
+                "ros1_package": pair[0].package_name,
+                "ros2_package": pair[1].package_name,
+                "fields": output
+            })
+    return services
 
 
 def update_ros1_field_information(ros1_field, package_name):
@@ -424,12 +576,37 @@ def load_ros1_message(ros1_msg, rospack=None):
     return spec
 
 
+def load_ros1_service(ros1_srv, rospack=None):
+    if not rospack:
+        rospack = rospkg.RosPack()
+
+    srv_context = genmsg.MsgContext.create_default()
+    srv_path = os.path.join(ros1_srv.prefix_path, ros1_srv.message_name + '.srv')
+    srv_name = '%s/%s' % (ros1_srv.package_name, ros1_srv.message_name)
+    try:
+        spec = genmsg.msg_loader.load_srv_from_file(srv_context, srv_path, srv_name)
+    except genmsg.InvalidMsgSpec:
+        return None
+    return spec
+
+
 def load_ros2_message(ros2_msg):
     message_path = os.path.join(
         ros2_msg.prefix_path, 'share', ros2_msg.package_name, 'msg',
         ros2_msg.message_name + '.msg')
     try:
         spec = rosidl_parser.parse_message_file(ros2_msg.package_name, message_path)
+    except rosidl_parser.InvalidSpecification:
+        return None
+    return spec
+
+
+def load_ros2_service(ros2_srv):
+    srv_path = os.path.join(
+        ros2_srv.prefix_path, 'share', ros2_srv.package_name, 'srv',
+        ros2_srv.message_name + '.srv')
+    try:
+        spec = rosidl_parser.parse_service_file(ros2_srv.package_name, srv_path)
     except rosidl_parser.InvalidSpecification:
         return None
     return spec

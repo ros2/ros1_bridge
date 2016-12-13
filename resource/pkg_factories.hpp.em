@@ -42,6 +42,9 @@ namespace ros1_bridge
 std::shared_ptr<FactoryInterface>
 get_factory_@(ros2_package_name)(const std::string & ros1_type_name, const std::string & ros2_type_name);
 
+std::unique_ptr<ServiceFactoryInterface>
+get_service_factory_@(ros2_package_name)(std::string ros, std::string package, std::string name);
+
 // conversion functions for available interfaces
 @[for m in mappings]@
 
