@@ -114,7 +114,7 @@ The ROS 1 node will start printing the published messages to the console.
 
 ---
 
-Now we start the ROS 2 listener from the `rclcpp_examples` ROS 2 package.
+Now we start the ROS 2 listener from the `rclcpp_tutorials` ROS 2 package.
 
 ```
 # Shell D:
@@ -168,7 +168,7 @@ dynamic_bridge
 
 ---
 
-Now we start the ROS 2 talker from the `rclcpp_examples` ROS 2 package.
+Now we start the ROS 2 talker from the `rclcpp_tutorials` ROS 2 package.
 
 ```
 # Shell C:
