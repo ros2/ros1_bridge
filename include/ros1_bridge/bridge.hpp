@@ -46,6 +46,16 @@ struct BridgeHandles
   Bridge2to1Handles bridge2to1;
 };
 
+bool
+get_1to2_mapping(
+  const std::string & ros1_type_name,
+  std::string & ros2_type_name);
+
+bool
+get_2to1_mapping(
+  const std::string & ros2_type_name,
+  std::string & ros1_type_name);
+
 std::shared_ptr<FactoryInterface>
 get_factory(
   const std::string & ros1_type_name,

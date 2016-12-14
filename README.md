@@ -10,6 +10,9 @@ If you would like to use a bridge with other interfaces (including your own cust
 
 *Note:* For binary releases up to and including `release-alpha8`, some of the interfaces in `common_interfaces` are skipped - check the git tag of the release in question to see which interfaces were built.
 
+For efficiency reasons, topics will only be bridged when matching publisher-subscriber pairs are active for a topic on either side of the bridge.
+You can use the `--bridge-all-2to1-topics` option to bridge all ROS 2 topics to ROS 1 so that tools such as `rostopic list` and `rqt` will see the topics even if there are no matching ROS 1 subscribers.
+Run `dynamic_bridge --help` for more options.
 
 ## Prerequisites
 

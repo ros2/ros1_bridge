@@ -57,6 +57,47 @@ struct Bridge2to1HandlesAndMessageTypes
   std::string ros2_type_name;
 };
 
+bool find_command_option(const std::vector<std::string> & args, const std::string & option)
+{
+  return std::find(args.begin(), args.end(), option) != args.end();
+}
+
+bool get_flag_option(const std::vector<std::string> & args, const std::string & option)
+{
+  auto it = std::find(args.begin(), args.end(), option);
+  return it != args.end();
+}
+
+bool parse_command_options(
+  int argc, char ** argv, bool & output_topic_introspection,
+  bool & bridge_all_1to2_topics, bool & bridge_all_2to1_topics)
+{
+  std::vector<std::string> args(argv, argv + argc);
+
+  if (find_command_option(args, "-h") || find_command_option(args, "--help")) {
+    std::stringstream ss;
+    ss << "Usage:" << std::endl;
+    ss << " -h, --help: This message." << std::endl;
+    ss << " --show-introspection: Print output of introspection of both sides of the bridge.";
+    ss << std::endl;
+    ss << " --bridge-all-topics: Bridge all topics in both directions, whether or not there is ";
+    ss << "a matching subscriber." << std::endl;
+    ss << " --bridge-all-1to2-topics: Bridge all ROS 1 topics to ROS 2, whether or not there is ";
+    ss << "a matching subscriber." << std::endl;
+    ss << " --bridge-all-2to1-topics: Bridge all ROS 2 topics to ROS 1, whether or not there is ";
+    ss << "a matching subscriber." << std::endl;
+    std::cout << ss.str();
+    return false;
+  }
+
+  output_topic_introspection = get_flag_option(args, "--show-introspection");
+
+  bool bridge_all_topics = get_flag_option(args, "--bridge-all-topics");
+  bridge_all_1to2_topics = bridge_all_topics || get_flag_option(args, "--bridge-all-1to2-topics");
+  bridge_all_2to1_topics = bridge_all_topics || get_flag_option(args, "--bridge-all-2to1-topics");
+
+  return true;
+}
 
 void update_bridge(
   ros::NodeHandle & ros1_node,
@@ -70,7 +111,8 @@ void update_bridge(
   std::map<std::string, Bridge1to2HandlesAndMessageTypes> & bridges_1to2,
   std::map<std::string, Bridge2to1HandlesAndMessageTypes> & bridges_2to1,
   std::map<std::string, ros1_bridge::ServiceBridge1to2>& service_bridges_1_to_2,
-  std::map<std::string, ros1_bridge::ServiceBridge2to1>& service_bridges_2_to_1)
+  std::map<std::string, ros1_bridge::ServiceBridge2to1>& service_bridges_2_to_1,
+  bool bridge_all_1to2_topics, bool bridge_all_2to1_topics)
 {
   std::lock_guard<std::mutex> lock(g_bridge_mutex);
 
@@ -78,14 +120,26 @@ void update_bridge(
   for (auto ros1_publisher : ros1_publishers) {
     // identify topics available as ROS 1 publishers as well as ROS 2 subscribers
     auto topic_name = ros1_publisher.first;
+    std::string ros1_type_name = ros1_publisher.second;
+    std::string ros2_type_name;
+
     auto ros2_subscriber = ros2_subscribers.find(topic_name);
     if (ros2_subscriber == ros2_subscribers.end()) {
-      continue;
+      if (!bridge_all_1to2_topics) {
+        continue;
+      }
+      // update the ROS 2 type name to be that of the anticipated bridged type
+      // TODO(dhood): support non 1-1 "bridge-all" mappings
+      bool mapping_found = ros1_bridge::get_1to2_mapping(ros1_type_name, ros2_type_name);
+      if (!mapping_found) {
+        // printf("No known mapping for ROS 1 type '%s'\n", ros1_type_name.c_str());
+        continue;
+      }
+      // printf("topic name '%s' has ROS 2 publishers\n", topic_name.c_str());
+    } else {
+      ros2_type_name = ros2_subscriber->second;
+      // printf("topic name '%s' has ROS 1 publishers and ROS 2 subscribers\n", topic_name.c_str());
     }
-
-    std::string ros1_type_name = ros1_publisher.second;
-    std::string ros2_type_name = ros2_subscriber->second;
-    // printf("topic name '%s' has ROS 1 publishers and ROS 2 subscribers\n", topic_name.c_str());
 
     // check if 1to2 bridge for the topic exists
     if (bridges_1to2.find(topic_name) != bridges_1to2.end()) {
@@ -124,17 +178,29 @@ void update_bridge(
   }
 
   // create 2to1 bridges
-  for (auto ros1_subscriber : ros1_subscribers) {
+  for (auto ros2_publisher : ros2_publishers) {
     // identify topics available as ROS 1 subscribers as well as ROS 2 publishers
-    auto topic_name = ros1_subscriber.first;
-    auto ros2_publisher = ros2_publishers.find(topic_name);
-    if (ros2_publisher == ros2_publishers.end()) {
-      continue;
-    }
+    auto topic_name = ros2_publisher.first;
+    std::string ros2_type_name = ros2_publisher.second;
+    std::string ros1_type_name;
 
-    std::string ros1_type_name = ros1_subscriber.second;
-    std::string ros2_type_name = ros2_publisher->second;
-    // printf("topic name '%s' has ROS 1 subscribers and ROS 2 publishers\n", topic_name.c_str());
+    auto ros1_subscriber = ros1_subscribers.find(topic_name);
+    if (ros1_subscriber == ros1_subscribers.end()) {
+      if (!bridge_all_2to1_topics) {
+        continue;
+      }
+      // update the ROS 1 type name to be that of the anticipated bridged type
+      // TODO(dhood): support non 1-1 "bridge-all" mappings
+      bool mapping_found = ros1_bridge::get_2to1_mapping(ros2_type_name, ros1_type_name);
+      if (!mapping_found) {
+        // printf("No known mapping for ROS 2 type '%s'\n", ros2_type_name.c_str());
+        continue;
+      }
+      // printf("topic name '%s' has ROS 2 publishers\n", topic_name.c_str());
+    } else {
+      ros1_type_name = ros1_subscriber->second;
+      // printf("topic name '%s' has ROS 1 subscribers and ROS 2 publishers\n", topic_name.c_str());
+    }
 
     // check if 2to1 bridge for the topic exists
     if (bridges_2to1.find(topic_name) != bridges_2to1.end()) {
@@ -180,7 +246,7 @@ void update_bridge(
     std::string topic_name = it.first;
     if (
       ros1_publishers.find(topic_name) == ros1_publishers.end() ||
-      ros2_subscribers.find(topic_name) == ros2_subscribers.end()
+      (!bridge_all_1to2_topics && ros2_subscribers.find(topic_name) == ros2_subscribers.end())
     )
     {
       to_be_removed_1to2.push_back(topic_name);
@@ -195,7 +261,7 @@ void update_bridge(
   for (auto it : bridges_2to1) {
     std::string topic_name = it.first;
     if (
-      ros1_subscribers.find(topic_name) == ros1_subscribers.end() ||
+      (!bridge_all_2to1_topics && ros1_subscribers.find(topic_name) == ros1_subscribers.end()) ||
       ros2_publishers.find(topic_name) == ros2_publishers.end()
     )
     {
@@ -351,6 +417,15 @@ void get_ros1_service_info(
 
 int main(int argc, char * argv[])
 {
+  bool output_topic_introspection;
+  bool bridge_all_1to2_topics;
+  bool bridge_all_2to1_topics;
+  if (!parse_command_options(
+      argc, argv, output_topic_introspection, bridge_all_1to2_topics, bridge_all_2to1_topics))
+  {
+    return 0;
+  }
+
   // ROS 1 node
   ros::init(argc, argv, "ros_bridge");
   ros::NodeHandle ros1_node;
@@ -358,8 +433,6 @@ int main(int argc, char * argv[])
   // ROS 2 node
   rclcpp::init(argc, argv);
   auto ros2_node = rclcpp::node::Node::make_shared("ros_bridge");
-
-  bool output_topic_introspection = (2 == argc && std::string("--show-introspection") == argv[1]);
 
   // mapping of available topic names to type names
   std::map<std::string, std::string> ros1_publishers;
@@ -382,7 +455,8 @@ int main(int argc, char * argv[])
     &bridges_1to2, &bridges_2to1,
     &ros1_services, &ros2_services,
     &service_bridges_1_to_2, &service_bridges_2_to_1,
-    &output_topic_introspection
+    &output_topic_introspection,
+    &bridge_all_1to2_topics, &bridge_all_2to1_topics
     ](const ros::TimerEvent &) -> void
     {
       // collect all topics names which have at least one publisher or subscriber beside this bridge
@@ -503,7 +577,8 @@ int main(int argc, char * argv[])
         ros2_publishers, ros2_subscribers,
         ros1_services, ros2_services,
         bridges_1to2, bridges_2to1,
-        service_bridges_1_to_2, service_bridges_2_to_1);
+        service_bridges_1_to_2, service_bridges_2_to_1,
+        bridge_all_1to2_topics, bridge_all_2to1_topics);
     };
 
   auto ros1_poll_timer = ros1_node.createTimer(ros::Duration(1.0), ros1_poll);
@@ -518,7 +593,8 @@ int main(int argc, char * argv[])
     &ros1_services, &ros2_services,
     &bridges_1to2, &bridges_2to1,
     &service_bridges_1_to_2, &service_bridges_2_to_1,
-    &output_topic_introspection
+    &output_topic_introspection,
+    &bridge_all_1to2_topics, &bridge_all_2to1_topics
     ]() -> void
     {
       auto ros2_topics = ros2_node->get_topic_names_and_types();
@@ -631,7 +707,8 @@ int main(int argc, char * argv[])
         ros2_publishers, ros2_subscribers,
         ros1_services, ros2_services,
         bridges_1to2, bridges_2to1,
-        service_bridges_1_to_2, service_bridges_2_to_1);
+        service_bridges_1_to_2, service_bridges_2_to_1,
+        bridge_all_1to2_topics, bridge_all_2to1_topics);
     };
 
   auto ros2_poll_timer = ros2_node->create_wall_timer(

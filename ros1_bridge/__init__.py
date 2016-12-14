@@ -69,12 +69,20 @@ import rosmsg
 
 def generate_cpp(output_path, template_dir):
     data = generate_messages()
+
+    template_file = os.path.join(template_dir, 'get_mappings.cpp.em')
+    output_file = os.path.join(output_path, 'get_mappings.cpp')
+    data_for_template = {'mappings': data['mappings']}
+    expand_template(template_file, data_for_template, output_file)
+
     data.update(generate_services())
     unique_package_names = set(data["ros2_package_names_msg"] + data["ros2_package_names_srv"])
     data["ros2_package_names"] = list(unique_package_names)
+
     template_file = os.path.join(template_dir, 'get_factory.cpp.em')
     output_file = os.path.join(output_path, 'get_factory.cpp')
     expand_template(template_file, data, output_file)
+
     for ros2_package_name in data["ros2_package_names"]:
         for extension in ['cpp', 'hpp']:
             data_pkg = {
@@ -150,6 +158,7 @@ def generate_messages():
         'mappings': ordered_mappings,
         'ros2_package_names_msg': ros2_package_names
     }
+
 
 def generate_services():
     ros1_srvs = get_ros1_services()
