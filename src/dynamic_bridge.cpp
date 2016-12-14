@@ -40,7 +40,8 @@
 std::mutex g_bridge_mutex;
 
 namespace ros1_bridge {
-std::unique_ptr<ros1_bridge::ServiceFactoryInterface> get_service_factory(std::string, std::string, std::string);
+std::unique_ptr<ros1_bridge::ServiceFactoryInterface>
+get_service_factory(const std::string &, const std::string &, const std::string &);
 }
 
 struct Bridge1to2HandlesAndMessageTypes
@@ -274,9 +275,9 @@ void update_bridge(
   }
 
   // create bridges for ros1 services
-  for (auto& service : ros1_services) {
-    auto& name = service.first;
-    auto& details = service.second;
+  for (auto & service : ros1_services) {
+    auto & name = service.first;
+    auto & details = service.second;
     if (
       service_bridges_2_to_1.find(name) == service_bridges_2_to_1.end() &&
       service_bridges_1_to_2.find(name) == service_bridges_1_to_2.end())
@@ -285,7 +286,7 @@ void update_bridge(
       if (factory) {
         try {
           service_bridges_2_to_1[name] = factory->service_bridge_2_to_1(ros1_node, ros2_node, name);
-          // printf("Created 2 to 1 bridge for service %s\n", name.data());
+          printf("Created 2 to 1 bridge for service %s\n", name.data());
         } catch (std::runtime_error& e) {
           fprintf(stderr, "Failed to created a bridge: %s\n", e.what());
         }
@@ -294,9 +295,9 @@ void update_bridge(
   }
 
   // create bridges for ros2 services
-  for (auto& service : ros2_services) {
-    auto& name = service.first;
-    auto& details = service.second;
+  for (auto & service : ros2_services) {
+    auto & name = service.first;
+    auto & details = service.second;
     if (
       service_bridges_1_to_2.find(name) == service_bridges_1_to_2.end() &&
       service_bridges_2_to_1.find(name) == service_bridges_2_to_1.end())
@@ -305,7 +306,7 @@ void update_bridge(
       if (factory) {
         try {
           service_bridges_1_to_2[name] = factory->service_bridge_1_to_2(ros1_node, ros2_node, name);
-          // printf("Created 1 to 2 bridge for service %s\n", name.data());
+          printf("Created 1 to 2 bridge for service %s\n", name.data());
         } catch (std::runtime_error& e) {
           fprintf(stderr, "Failed to created a bridge: %s\n", e.what());
         }
@@ -316,7 +317,7 @@ void update_bridge(
   // remove obsolete ros1 services
   for (auto it = service_bridges_2_to_1.begin(); it != service_bridges_2_to_1.end();) {
     if (ros1_services.find(it->first) == ros1_services.end()) {
-      // printf("Removed 2 to 1 bridge for service %s\n", it->first.data());
+      printf("Removed 2 to 1 bridge for service %s\n", it->first.data());
       try {
         it = service_bridges_2_to_1.erase(it);
       } catch (std::runtime_error& e) {
@@ -331,7 +332,7 @@ void update_bridge(
   // remove obsolete ros2 services
   for (auto it = service_bridges_1_to_2.begin(); it != service_bridges_1_to_2.end();) {
     if (ros2_services.find(it->first) == ros2_services.end()) {
-      // printf("Removed 1 to 2 bridge for service %s\n", it->first.data());
+      printf("Removed 1 to 2 bridge for service %s\n", it->first.data());
       try {
         it->second.server.shutdown();
         it = service_bridges_1_to_2.erase(it);

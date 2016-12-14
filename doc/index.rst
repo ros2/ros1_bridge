@@ -71,13 +71,12 @@ The mapping rule files must be exported in the ``package.xml`` in order to be pr
 
     <export>
       <ros1_bridge mapping_rules="my_mapping_rules.yaml"/>
-      <ros1_bridge service_mapping_rules="my_service_mapping_rules.yaml"/>
     </export>
 
 The yaml files must also be installed in the ``CMakeLists.txt``::
 
     install(
-      FILES my_mapping_rules.yaml my_service_mapping_rules.yaml
+      FILES my_mapping_rules.yaml
       DESTINATION share/${PROJECT_NAME})
 
 

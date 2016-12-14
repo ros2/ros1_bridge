@@ -295,10 +295,9 @@ In this example we will bridge a service TwoInts from
 [ros2/roscpp_examples](https://github.com/ros2/examples).
 
 While building, ros1_bridge looks for all installed ROS and ROS2 services.
-Found services are matched by comparing package name, service name and fields
-in a request and a response. If all names are the same in ROS and ROS2 service,
-the bridge will be created. It is also possible to pair services manually by
-creating a yaml file that will include names of corresponding services.
+Found services are matched by comparing package name, service name and fields in a request and a response.
+If all names are the same in ROS and ROS2 service, the bridge will be created.
+It is also possible to pair services manually by creating a yaml file that will include names of corresponding services.
 You can find more information [here](doc/index.rst).
 
 So to make this example work, please make sure that the roscpp_tutorials package
@@ -328,7 +327,7 @@ Launch TwoInts server:
 # Shell C:
 . <ros-install-dir>/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
-<ros-install-dir>/lib/roscpp_tutorials/add_two_ints_server
+rosrun roscpp_tutorials add_two_ints_server
 ```
 
 Launch AddTwoInts client:

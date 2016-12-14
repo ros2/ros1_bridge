@@ -76,34 +76,33 @@ def generate_cpp(output_path, template_dir):
     expand_template(template_file, data_for_template, output_file)
 
     data.update(generate_services())
-    unique_package_names = set(data["ros2_package_names_msg"] + data["ros2_package_names_srv"])
-    data["ros2_package_names"] = list(unique_package_names)
-
+    unique_package_names = set(data['ros2_package_names_msg'] + data['ros2_package_names_srv'])
+    data['ros2_package_names'] = list(unique_package_names)
+    
     template_file = os.path.join(template_dir, 'get_factory.cpp.em')
     output_file = os.path.join(output_path, 'get_factory.cpp')
     expand_template(template_file, data, output_file)
 
-    for ros2_package_name in data["ros2_package_names"]:
+    for ros2_package_name in data['ros2_package_names']:
         for extension in ['cpp', 'hpp']:
             data_pkg = {
                 'ros2_package_name': ros2_package_name,
                 'mappings': [
-                    m for m in data["mappings"]
+                    m for m in data['mappings']
                     if m.ros2_msg.package_name == ros2_package_name],
                 'services': [
-                    s for s in data["services"]
-                    if s["ros2_package"] == ros2_package_name]
+                    s for s in data['services']
+                    if s['ros2_package'] == ros2_package_name]
             }
             if extension == 'hpp':
                 data_pkg.update({
                     'ros1_msgs': [
-                        m.ros1_msg for m in data["mappings"]
+                        m.ros1_msg for m in data['mappings']
                         if m.ros2_msg.package_name == ros2_package_name],
                     'ros2_msgs': [
-                        m.ros2_msg for m in data["mappings"]
+                        m.ros2_msg for m in data['mappings']
                         if m.ros2_msg.package_name == ros2_package_name],
                 })
-            print(data_pkg)
             template_file = os.path.join(template_dir, 'pkg_factories.%s.em' % extension)
             output_file = os.path.join(output_path, '%s_factories.%s' % (ros2_package_name, extension))
             expand_template(template_file, data_pkg, output_file)
@@ -204,7 +203,13 @@ def get_ros2_messages():
             if 'mapping_rules' not in export.attributes:
                 continue
             rule_file = os.path.join(package_path, export.attributes['mapping_rules'])
-            rules += read_mapping_rules(rule_file, package_name)
+            with open(rule_file, 'r') as h:
+                for data in yaml.load(h):
+                    if all(n not in data for n in ('ros1_service_name', 'ros2_service_name')):
+                        try:
+                            rules.append(MessageMappingRule(data, package_name))
+                        except Exception as e:
+                            print('%s' % str(e), file=sys.stderr)
     return pkgs, msgs, rules
 
 
@@ -238,30 +243,17 @@ def get_ros2_services():
         for export in pkg.exports:
             if export.tagname != 'ros1_bridge':
                 continue
-            if 'service_mapping_rules' not in export.attributes:
+            if 'mapping_rules' not in export.attributes:
                 continue
-            rule_file = os.path.join(package_path, export.attributes['service_mapping_rules'])
-            rules += read_mapping_rules(rule_file, package_name)
+            rule_file = os.path.join(package_path, export.attributes['mapping_rules'])
+            with open(rule_file, 'r') as h:
+                for data in yaml.load(h):
+                    if all(n not in data for n in ('ros1_message_name', 'ros2_message_name')):
+                        try:
+                            rules.append(ServiceMappingRule(data, package_name))
+                        except Exception as e:
+                            print('%s' % str(e), file=sys.stderr)
     return pkgs, srvs, rules
-
-
-def read_mapping_rules(rule_file, package_name):
-    rules = []
-    with open(rule_file, 'r') as h:
-        rules_data = yaml.load(h)
-        for rule_data in rules_data:
-            for field_name in ['ros1_package_name', 'ros2_package_name']:
-                if field_name not in rule_data:
-                    print("Ignoring rule without a '%s'" % field_name, file=sys.stderr)
-                    continue
-            if rule_data['ros2_package_name'] != package_name:
-                print(
-                    ("Ignoring rule in '%s' which affects a different ROS 2 package (%s) "
-                     'then the one it is defined in (%s)') %
-                    (rule_file, rule_data['ros2_package_name'], package_name), file=sys.stderr)
-                continue
-            rules.append(MappingRule(rule_data))
-    return rules
 
 
 class Message(object):
@@ -293,35 +285,55 @@ class Message(object):
 class MappingRule(object):
     __slots__ = [
         'ros1_package_name',
-        'ros1_message_name',
-        'ros1_service_name',
         'ros2_package_name',
+        'package_mapping'
+    ]
+
+    def __init__(self, data, expected_package_name):
+        if all(n in data for n in ('ros1_package_name', 'ros2_package_name')):
+            if data['ros2_package_name'] != expected_package_name:
+                raise Exception(
+                    ('Ignoring rule which affects a different ROS 2 package (%s) '
+                     'then the one it is defined in (%s)') %
+                    (data['ros2_package_name'], expected_package_name))
+            self.ros1_package_name = data['ros1_package_name']
+            self.ros2_package_name = data['ros2_package_name']
+            if (len(data) == 2):
+                self.package_mapping = True
+            else:
+                self.package_mapping = False
+        else:
+            raise Exception('Ignoring a rule without a ros1_package_name and/or ros2_package_name')
+
+    def is_package_mapping(self):
+        return self.package_mapping
+
+    def __repr__(self):
+        return self.__str__()
+
+class MessageMappingRule(MappingRule):
+    __slots__ = [
+        'ros1_message_name',
         'ros2_message_name',
-        'ros2_service_name',
         'fields_1_to_2',
     ]
 
-    def __init__(self, data):
-        self.ros1_package_name = data['ros1_package_name']
-        self.ros2_package_name = data['ros2_package_name']
+    def __init__(self, data, expected_package_name):
+        super().__init__(data, expected_package_name)
         self.ros1_message_name = None
         self.ros2_message_name = None
-        self.ros1_service_name = None
-        self.ros2_service_name = None
         self.fields_1_to_2 = None
-        if 'ros1_service_name' in data:
-            self.ros1_service_name = data['ros1_service_name']
-            self.ros2_service_name = data['ros2_service_name']
-        if 'ros1_message_name' in data:
+        if all(n in data for n in ('ros1_message_name', 'ros2_message_name')):
             self.ros1_message_name = data['ros1_message_name']
             self.ros2_message_name = data['ros2_message_name']
             if 'fields_1_to_2' in data:
                 self.fields_1_to_2 = OrderedDict()
                 for ros1_field_name, ros2_field_name in data['fields_1_to_2'].items():
                     self.fields_1_to_2[ros1_field_name] = ros2_field_name
-
-    def is_package_mapping(self):
-        return self.ros1_message_name is None
+            elif (len(data) > 4):
+                raise Exception('Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
+        elif (len(data) > 2):
+            raise Exception('Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
 
     def is_message_mapping(self):
         return self.ros1_message_name is not None and self.fields_1_to_2 is None
@@ -330,10 +342,26 @@ class MappingRule(object):
         return self.fields_1_to_2 is not None
 
     def __str__(self):
-        return "MappingRule(" + self.ros1_package_name + " <--> " + self.ros2_package_name + ")"
+        return "MessageMappingRule(" + self.ros1_package_name + " <-> " + self.ros2_package_name + ")"
 
-    def __repr__(self):
-        return self.__str__()
+class ServiceMappingRule(MappingRule):
+    __slots__ = [
+        'ros1_service_name',
+        'ros2_service_name',
+    ]
+
+    def __init__(self, data, expected_package_name):
+        super().__init__(data, expected_package_name)
+        self.ros1_service_name = None
+        self.ros2_service_name = None
+        if all(n in data for n in ('ros1_service_name', 'ros2_service_name')):
+            self.ros1_service_name = data['ros1_service_name']
+            self.ros2_service_name = data['ros2_service_name']
+        elif (len(data) > 2):
+            raise Exception('Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
+
+    def __str__(self):
+        return "ServiceMappingRule(" + self.ros1_package_name + " <-> " + self.ros2_package_name + ")"
 
 def determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules):
     pairs = []
@@ -437,19 +465,19 @@ def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
         ros1_spec = load_ros1_service(pair[0])
         ros2_spec = load_ros2_service(pair[1])
         ros1_fields = {
-            "request": ros1_spec.request.fields(),
-            "response": ros1_spec.response.fields()
+            'request': ros1_spec.request.fields(),
+            'response': ros1_spec.response.fields()
         }
         ros2_fields = {
-            "request": ros2_spec.request.fields,
-            "response": ros2_spec.response.fields
+            'request': ros2_spec.request.fields,
+            'response': ros2_spec.response.fields
         }
         output = {
-            "request": [],
-            "response": []
+            'request': [],
+            'response': []
         }
         match = True
-        for direction in ["request", "response"]:
+        for direction in ['request', 'response']:
             if len(ros1_fields[direction]) != len(ros2_fields[direction]):
                 match = False
                 break
@@ -462,24 +490,26 @@ def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
                     match = False
                     break
                 output[direction].append({
-                    "basic": False if "/" in ros1_type else True,
-                    "array": True if "[]" in ros1_type else False,
-                    "ros1": {
-                        "type": ros1_type.rstrip("[]"),
-                        "name": ros1_name,
+                    'basic': False if "/" in ros1_type else True,
+                    'array': True if "[]" in ros1_type else False,
+                    'ros1': {
+                        'name': ros1_name,
+                        'type': ros1_type.rstrip("[]"),
+                        'cpptype': ros1_type.rstrip("[]").replace("/", "::")
                     },
-                    "ros2": {
-                        "type": ros2_type.rstrip("[]"),
-                        "name": ros2_name,
+                    'ros2': {
+                        'name': ros2_name,
+                        'type': ros2_type.rstrip("[]"),
+                        'cpptype': ros2_type.rstrip("[]").replace("/", "::msg::")
                     }
                 })
         if match:
             services.append({
-                "ros1_name": pair[0].message_name,
-                "ros2_name": pair[1].message_name,
-                "ros1_package": pair[0].package_name,
-                "ros2_package": pair[1].package_name,
-                "fields": output
+                'ros1_name': pair[0].message_name,
+                'ros2_name': pair[1].message_name,
+                'ros1_package': pair[0].package_name,
+                'ros2_package': pair[1].package_name,
+                'fields': output
             })
     return services
 

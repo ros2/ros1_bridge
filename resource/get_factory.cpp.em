@@ -45,22 +45,22 @@ get_factory(const std::string & ros1_type_name, const std::string & ros2_type_na
   throw std::runtime_error("No template specialization for the pair");
 }
 
-std::unique_ptr<ServiceFactoryInterface> get_service_factory(std::string ros, std::string package, std::string name)
+std::unique_ptr<ServiceFactoryInterface> get_service_factory(const std::string & ros_id, const std::string & package_name, const std::string & service_name)
 {
 @[if not ros2_package_names]@
-  (void)ros;
-  (void)package;
-  (void)name;
+  (void)ros_id;
+  (void)package_name;
+  (void)service_name;
 @[else]@
   std::unique_ptr<ServiceFactoryInterface> factory;
 @[end if]@
 @[for ros2_package_name in sorted(ros2_package_names)]@
-  factory = get_service_factory_@(ros2_package_name)(ros, package, name);
+  factory = get_service_factory_@(ros2_package_name)(ros_id, package_name, service_name);
   if (factory) {
     return factory;
   }
 @[end for]@
-  // fprintf(stderr, "No template specialization for the service %s:%s/%s\n", ros.data(), package.data(), name.data());
+  // fprintf(stderr, "No template specialization for the service %s:%s/%s\n", ros_id.data(), package_name.data(), service_name.data());
   return factory;
 }
 
