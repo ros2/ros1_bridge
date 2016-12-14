@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <iostream>
+#include <memory>
 #include <string>
 
 // include ROS 1
@@ -49,7 +50,7 @@ rclcpp::publisher::Publisher<std_msgs::msg::String>::SharedPtr ros2_pub;
 
 void ros1ChatterCallback(const ros::MessageEvent<std_msgs::String const> & ros1_msg_event)
 {
-  const boost::shared_ptr<ros::M_string>& connection_header =
+  const boost::shared_ptr<ros::M_string> & connection_header =
     ros1_msg_event.getConnectionHeaderPtr();
   std::string key = "callerid";
   if (connection_header->find(key) != connection_header->end()) {

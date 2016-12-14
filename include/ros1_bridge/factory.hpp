@@ -16,6 +16,7 @@
 #define  ROS1_BRIDGE__FACTORY_HPP_
 
 #include <functional>
+#include <memory>
 #include <string>
 
 // include ROS 1 message event
@@ -64,10 +65,8 @@ public:
     ops.md5sum = ros::message_traits::md5sum<ROS1_T>();
     ops.datatype = ros::message_traits::datatype<ROS1_T>();
     ops.helper = ros::SubscriptionCallbackHelperPtr(
-      new ros::SubscriptionCallbackHelperT<const ros::MessageEvent<ROS1_T const>&>(
-        boost::bind(&Factory<ROS1_T, ROS2_T>::ros1_callback, _1, ros2_pub)
-      )
-    );
+      new ros::SubscriptionCallbackHelperT<const ros::MessageEvent<ROS1_T const> &>(
+        boost::bind(&Factory<ROS1_T, ROS2_T>::ros1_callback, _1, ros2_pub)));
     return node.subscribe(ops);
   }
 
@@ -81,9 +80,10 @@ public:
     rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_sensor_data;
     custom_qos_profile.depth = queue_size;
     // TODO(wjwwood): use a lambda until create_subscription supports std/boost::bind.
-    auto callback = [this, ros1_pub](const typename ROS2_T::SharedPtr msg) {
-      return this->ros2_callback(msg, ros1_pub);
-    };
+    auto callback =
+      [this, ros1_pub](const typename ROS2_T::SharedPtr msg) {
+        return this->ros2_callback(msg, ros1_pub);
+      };
     return node->create_subscription<ROS2_T>(
       topic_name, callback, custom_qos_profile, nullptr, true);
   }
@@ -92,8 +92,7 @@ protected:
   static
   void ros1_callback(
     const ros::MessageEvent<ROS1_T const> & ros1_msg_event,
-    rclcpp::publisher::PublisherBase::SharedPtr ros2_pub
-    )
+    rclcpp::publisher::PublisherBase::SharedPtr ros2_pub)
   {
     typename rclcpp::publisher::Publisher<ROS2_T>::SharedPtr typed_ros2_pub;
     typed_ros2_pub =
@@ -128,8 +127,7 @@ protected:
   static
   void ros2_callback(
     typename ROS2_T::SharedPtr ros2_msg,
-    ros::Publisher ros1_pub
-    )
+    ros::Publisher ros1_pub)
   {
     ROS1_T ros1_msg;
     convert_2_to_1(*ros2_msg, ros1_msg);
@@ -137,8 +135,8 @@ protected:
     ros1_pub.publish(ros1_msg);
   }
 
-// since convert functions call each other for sub messages they must be public
 public:
+  // since convert functions call each other for sub messages they must be public
   // defined outside of the class
   static
   void
@@ -152,11 +150,10 @@ public:
     ROS1_T & ros1_msg);
 };
 
-template <class ROS1_T, class ROS2_T>
+template<class ROS1_T, class ROS2_T>
 class ServiceFactory : public ServiceFactoryInterface
 {
 public:
-
   using ROS1Request = typename ROS1_T::Request;
   using ROS2Request = typename ROS2_T::Request;
   using ROS1Response = typename ROS1_T::Response;
@@ -176,7 +173,8 @@ public:
   }
 
   bool forward_1_to_2(
-    rclcpp::client::ClientBase::SharedPtr cli, const ROS1Request & request1, ROS1Response & response1)
+    rclcpp::client::ClientBase::SharedPtr cli,
+    const ROS1Request & request1, ROS1Response & response1)
   {
     auto client = std::dynamic_pointer_cast<rclcpp::client::Client<ROS2_T>>(cli);
     if (!client) {
@@ -198,8 +196,8 @@ public:
       auto response2 = future.get();
       translate_2_to_1(*response2, response1);
     } else {
-        fprintf(stderr, "Failed to get response from ROS2 service.\n");
-        return false;
+      fprintf(stderr, "Failed to get response from ROS2 service.\n");
+      return false;
     }
     return true;
   }
@@ -209,26 +207,30 @@ public:
   {
     ServiceBridge1to2 bridge;
     bridge.client = ros2_node->create_client<ROS2_T>(name);
-    auto m = &ServiceFactory<ROS1_T,ROS2_T>::forward_1_to_2;
+    auto m = &ServiceFactory<ROS1_T, ROS2_T>::forward_1_to_2;
     auto f = std::bind(m, this, bridge.client, std::placeholders::_1, std::placeholders::_2);
-    bridge.server = ros1_node.advertiseService<ROS1Request,ROS1Response>(name, f);
+    bridge.server = ros1_node.advertiseService<ROS1Request, ROS1Response>(name, f);
     return bridge;
   }
 
   ServiceBridge2to1 service_bridge_2_to_1(
-     ros::NodeHandle & ros1_node, rclcpp::node::Node::SharedPtr ros2_node, const std::string & name)
+    ros::NodeHandle & ros1_node, rclcpp::node::Node::SharedPtr ros2_node, const std::string & name)
   {
     ServiceBridge2to1 bridge;
     bridge.client = ros1_node.serviceClient<ROS1_T>(name);
-    auto m = &ServiceFactory<ROS1_T,ROS2_T>::forward_2_to_1;
-    std::function<void(const std::shared_ptr<rmw_request_id_t>,const std::shared_ptr<ROS2Request>,std::shared_ptr<ROS2Response>)> f;
-    f = std::bind(m, this, bridge.client, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+    auto m = &ServiceFactory<ROS1_T, ROS2_T>::forward_2_to_1;
+    std::function<
+      void(
+        const std::shared_ptr<rmw_request_id_t>,
+        const std::shared_ptr<ROS2Request>,
+        std::shared_ptr<ROS2Response>)> f;
+    f = std::bind(
+      m, this, bridge.client, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
     bridge.server = ros2_node->create_service<ROS2_T>(name, f);
     return bridge;
   }
 
 private:
-
   void translate_1_to_2(const ROS1Request &, ROS2Request &);
   void translate_1_to_2(const ROS1Response &, ROS2Response &);
   void translate_2_to_1(const ROS2Request &, ROS1Request &);

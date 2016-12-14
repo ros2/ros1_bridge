@@ -12,24 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/rclcpp.hpp"
-#include <diagnostic_msgs/srv/self_test.hpp>
+#include <memory>
 
-using namespace diagnostic_msgs::srv;
+#include "diagnostic_msgs/srv/self_test.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
   auto node = rclcpp::Node::make_shared("ros1_bridge_test_client");
-  auto client = node->create_client<SelfTest>("ros1_bridge_test");
-  auto request = std::make_shared<SelfTest::Request>();
+  auto client = node->create_client<diagnostic_msgs::srv::SelfTest>("ros1_bridge_test");
+  auto request = std::make_shared<diagnostic_msgs::srv::SelfTest::Request>();
 
   if (!client->wait_for_service(4_s)) {
     throw std::runtime_error("Service is not available");
   }
 
   auto future = client->async_send_request(request);
-  if (rclcpp::spin_until_future_complete(node, future, 2_s) == rclcpp::executor::FutureReturnCode::SUCCESS)
+  if (
+    rclcpp::spin_until_future_complete(node, future, 2_s) ==
+    rclcpp::executor::FutureReturnCode::SUCCESS)
   {
     auto response = future.get();
     if (response->id != "ros1") {

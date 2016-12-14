@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <map>
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
@@ -39,7 +40,8 @@
 
 std::mutex g_bridge_mutex;
 
-namespace ros1_bridge {
+namespace ros1_bridge
+{
 std::unique_ptr<ros1_bridge::ServiceFactoryInterface>
 get_service_factory(const std::string &, const std::string &, const std::string &);
 }
@@ -111,8 +113,8 @@ void update_bridge(
   const std::map<std::string, std::map<std::string, std::string>> & ros2_services,
   std::map<std::string, Bridge1to2HandlesAndMessageTypes> & bridges_1to2,
   std::map<std::string, Bridge2to1HandlesAndMessageTypes> & bridges_2to1,
-  std::map<std::string, ros1_bridge::ServiceBridge1to2>& service_bridges_1_to_2,
-  std::map<std::string, ros1_bridge::ServiceBridge2to1>& service_bridges_2_to_1,
+  std::map<std::string, ros1_bridge::ServiceBridge1to2> & service_bridges_1_to_2,
+  std::map<std::string, ros1_bridge::ServiceBridge2to1> & service_bridges_2_to_1,
   bool bridge_all_1to2_topics, bool bridge_all_2to1_topics)
 {
   std::lock_guard<std::mutex> lock(g_bridge_mutex);
@@ -282,12 +284,13 @@ void update_bridge(
       service_bridges_2_to_1.find(name) == service_bridges_2_to_1.end() &&
       service_bridges_1_to_2.find(name) == service_bridges_1_to_2.end())
     {
-      auto factory = ros1_bridge::get_service_factory("ros1", details.at("package"), details.at("name"));
+      auto factory = ros1_bridge::get_service_factory(
+        "ros1", details.at("package"), details.at("name"));
       if (factory) {
         try {
           service_bridges_2_to_1[name] = factory->service_bridge_2_to_1(ros1_node, ros2_node, name);
           printf("Created 2 to 1 bridge for service %s\n", name.data());
-        } catch (std::runtime_error& e) {
+        } catch (std::runtime_error & e) {
           fprintf(stderr, "Failed to created a bridge: %s\n", e.what());
         }
       }
@@ -302,12 +305,13 @@ void update_bridge(
       service_bridges_1_to_2.find(name) == service_bridges_1_to_2.end() &&
       service_bridges_2_to_1.find(name) == service_bridges_2_to_1.end())
     {
-      auto factory = ros1_bridge::get_service_factory("ros2", details.at("package"), details.at("name"));
+      auto factory = ros1_bridge::get_service_factory(
+        "ros2", details.at("package"), details.at("name"));
       if (factory) {
         try {
           service_bridges_1_to_2[name] = factory->service_bridge_1_to_2(ros1_node, ros2_node, name);
           printf("Created 1 to 2 bridge for service %s\n", name.data());
-        } catch (std::runtime_error& e) {
+        } catch (std::runtime_error & e) {
           fprintf(stderr, "Failed to created a bridge: %s\n", e.what());
         }
       }
@@ -315,39 +319,37 @@ void update_bridge(
   }
 
   // remove obsolete ros1 services
-  for (auto it = service_bridges_2_to_1.begin(); it != service_bridges_2_to_1.end();) {
+  for (auto it = service_bridges_2_to_1.begin(); it != service_bridges_2_to_1.end(); ) {
     if (ros1_services.find(it->first) == ros1_services.end()) {
       printf("Removed 2 to 1 bridge for service %s\n", it->first.data());
       try {
         it = service_bridges_2_to_1.erase(it);
-      } catch (std::runtime_error& e) {
+      } catch (std::runtime_error & e) {
         fprintf(stderr, "There was an error while removing 2 to 1 bridge: %s\n", e.what());
       }
-    }
-    else {
+    } else {
       ++it;
     }
   }
 
   // remove obsolete ros2 services
-  for (auto it = service_bridges_1_to_2.begin(); it != service_bridges_1_to_2.end();) {
+  for (auto it = service_bridges_1_to_2.begin(); it != service_bridges_1_to_2.end(); ) {
     if (ros2_services.find(it->first) == ros2_services.end()) {
       printf("Removed 1 to 2 bridge for service %s\n", it->first.data());
       try {
         it->second.server.shutdown();
         it = service_bridges_1_to_2.erase(it);
-      } catch (std::runtime_error& e) {
+      } catch (std::runtime_error & e) {
         fprintf(stderr, "There was an error while removing 1 to 2 bridge: %s\n", e.what());
       }
-    }
-    else {
+    } else {
       ++it;
     }
   }
 }
 
 void get_ros1_service_info(
-  const std::string name, std::map<std::string, std::map<std::string,std::string>>& ros1_services)
+  const std::string name, std::map<std::string, std::map<std::string, std::string>> & ros1_services)
 {
   // NOTE(rkozik):
   // I tried to use Connection class but could not make it work
@@ -381,7 +383,7 @@ void get_ros1_service_info(
   std::memcpy(&message[4], buffer.get(), len);
   transport->write(message.data(), message.size());
   uint32_t length;
-  auto read = transport->read(reinterpret_cast<uint8_t*>(&length), 4);
+  auto read = transport->read(reinterpret_cast<uint8_t *>(&length), 4);
   if (read != 4) {
     fprintf(stderr, "Failed to read a response from a service server\n");
     return;
@@ -393,7 +395,7 @@ void get_ros1_service_info(
     return;
   }
   std::string key(name.begin() + 1, name.end());
-  ros1_services[key] = std::map<std::string,std::string>();
+  ros1_services[key] = std::map<std::string, std::string>();
   ros::Header header_in;
   std::string error;
   auto success = header_in.parse(response.data(), length, error);
@@ -401,11 +403,10 @@ void get_ros1_service_info(
     fprintf(stderr, "%s", error.data());
     return;
   }
-  for (std::string field : { "type", "request_type", "response_type" }) {
+  for (std::string field : {"type", "request_type", "response_type"}) {
     std::string value;
     auto success = header_in.getValue(field, value);
-    if (!success)
-    {
+    if (!success) {
       fprintf(stderr, "Failed to read %s from a header", field.data());
       return;
     }
@@ -440,8 +441,8 @@ int main(int argc, char * argv[])
   std::map<std::string, std::string> ros1_subscribers;
   std::map<std::string, std::string> ros2_publishers;
   std::map<std::string, std::string> ros2_subscribers;
-  std::map<std::string, std::map<std::string,std::string>> ros1_services;
-  std::map<std::string, std::map<std::string,std::string>> ros2_services;
+  std::map<std::string, std::map<std::string, std::string>> ros1_services;
+  std::map<std::string, std::map<std::string, std::string>> ros2_services;
 
   std::map<std::string, Bridge1to2HandlesAndMessageTypes> bridges_1to2;
   std::map<std::string, Bridge2to1HandlesAndMessageTypes> bridges_2to1;
@@ -508,7 +509,7 @@ int main(int argc, char * argv[])
       }
 
       // check services
-      std::map<std::string, std::map<std::string,std::string>> active_ros1_services;
+      std::map<std::string, std::map<std::string, std::string>> active_ros1_services;
       if (payload.size() >= 3) {
         for (int j = 0; j < payload[2].size(); ++j) {
           if (payload[2][j][0].getType() == XmlRpc::XmlRpcValue::TypeString) {
@@ -623,7 +624,7 @@ int main(int argc, char * argv[])
 
       ros2_publishers.clear();
       ros2_subscribers.clear();
-      std::map<std::string, std::map<std::string,std::string>> active_ros2_services;
+      std::map<std::string, std::map<std::string, std::string>> active_ros2_services;
       for (auto it : ros2_topics) {
         // ignore builtin DDS topics
         if (ignored_topics.find(it.first) != ignored_topics.end()) {
@@ -648,10 +649,10 @@ int main(int argc, char * argv[])
         if (publisher_count) {
           std::string suffix("Reply");
           if (it.first.rfind(suffix) == it.first.size() - suffix.size()) {
-            std::string& t = it.second;
+            std::string & t = it.second;
             std::string name(it.first.begin(), it.first.end() - suffix.size());
             if (active_ros2_services.find(name) == active_ros2_services.end()) {
-              active_ros2_services[name] = std::map<std::string,std::string>();
+              active_ros2_services[name] = std::map<std::string, std::string>();
             }
             std::string srv(t.begin() + t.rfind("::") + 2, t.begin() + t.rfind("_Response_"));
             std::string pkg(t.begin(), t.begin() + t.find("::"));
@@ -667,10 +668,10 @@ int main(int argc, char * argv[])
         if (subscriber_count) {
           std::string suffix("Request");
           if (it.first.rfind(suffix) == it.first.size() - suffix.size()) {
-            std::string& t = it.second;
+            std::string & t = it.second;
             std::string name(it.first.begin(), it.first.end() - suffix.size());
             if (active_ros2_services.find(name) == active_ros2_services.end()) {
-              active_ros2_services[name] = std::map<std::string,std::string>();
+              active_ros2_services[name] = std::map<std::string, std::string>();
             }
             active_ros2_services[name]["request_topic"] = it.first;
             active_ros2_services[name]["request_type"] = t;
@@ -685,11 +686,10 @@ int main(int argc, char * argv[])
         }
       }
 
-      for (auto it = active_ros2_services.begin(); it != active_ros2_services.end();) {
+      for (auto it = active_ros2_services.begin(); it != active_ros2_services.end(); ) {
         if (it->second.size() != 6) {
           it = active_ros2_services.erase(it);
-        }
-        else {
+        } else {
           ++it;
         }
       }

@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef ROS1_BRIDGE__CONVERT_BUILTIN_INTERFACES_HPP
-#define ROS1_BRIDGE__CONVERT_BUILTIN_INTERFACES_HPP
+#ifndef ROS1_BRIDGE__CONVERT_BUILTIN_INTERFACES_HPP_
+#define ROS1_BRIDGE__CONVERT_BUILTIN_INTERFACES_HPP_
 
 #include "ros1_bridge/convert_decl.hpp"
 
@@ -55,4 +55,4 @@ convert_2_to_1(
 
 }  // namespace ros1_bridge
 
-#endif  // ROS1_BRIDGE__CONVERT_BUILTIN_INTERFACES_HPP
+#endif  // ROS1_BRIDGE__CONVERT_BUILTIN_INTERFACES_HPP_

@@ -14,18 +14,18 @@
 
 #include <chrono>
 #include <thread>
-#include <ros/ros.h>
-#include <diagnostic_msgs/SelfTest.h>
 
-using namespace diagnostic_msgs;
+#include "diagnostic_msgs/SelfTest.h"
+#include "ros/ros.h"
 
-int main(int argc, char **argv)
+int main(int argc, char ** argv)
 {
   std::this_thread::sleep_for(std::chrono::seconds(4));
   ros::init(argc, argv, "ros1_bridge_test_client");
   ros::NodeHandle n;
-  ros::ServiceClient client = n.serviceClient<SelfTest>("ros1_bridge_test");
-  SelfTest request;
+  ros::ServiceClient client = n.serviceClient<diagnostic_msgs::SelfTest>(
+    "ros1_bridge_test");
+  diagnostic_msgs::SelfTest request;
   if (client.call(request)) {
     if (request.response.id != "ros2") {
       throw std::runtime_error("Expected a response from ROS2");

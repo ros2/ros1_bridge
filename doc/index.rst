@@ -22,13 +22,8 @@ In the third step fields are associated with each other.
 If one of the two associated messages has fields which is are not part of the other message they are being ignored.
 If both messages have fields the other message does not contain it is assumed that the mapping is incomplete and no association is established.
 
-How are ROS 1 and 2 services associated with each other?
---------------------------------------------------------
-
-For automatic mapping, ROS and ROS2 services need to have the same package name, service name and exactly the same fields.
-
 How can I specify custom mapping rule for messages?
---------------------------------------
+---------------------------------------------------
 
 Additional mapping rules can be provided by a ROS 2 package using a `yaml` file.
 Each mapping rule can have one of three types:
@@ -49,8 +44,14 @@ Each mapping rule can have one of three types:
 
 Each mapping rule file contains a list of mapping rules.
 
+How are ROS 1 and 2 services associated with each other?
+--------------------------------------------------------
+
+Automatic mapping between ROS 1 and 2 services is performed similar to messages.
+Except that currently different field names are not supported.
+
 How can I specify custom mapping rule for services?
---------------------------------------
+---------------------------------------------------
 
 In case of services, each mapping rule can have one of two types:
 
@@ -64,8 +65,10 @@ In case of services, each mapping rule can have one of two types:
    - a ``ros1_service_name``
    - a ``ros2_service_name``
 
+A custom field mapping is currently not supported for services.
+
 How can I install mapping rule files?
---------------------------------------
+-------------------------------------
 
 The mapping rule files must be exported in the ``package.xml`` in order to be processed by this package::
 
@@ -97,14 +100,6 @@ Example message mapping rule::
       ros2_package_name: 'pkg_name'
       ros2_message_name: 'ros2_msg_name'
 
-Example service mapping rule::
-
-    -
-      ros1_package_name: 'pkg_name'
-      ros1_service_name: 'ros1_srv_name'
-      ros2_package_name: 'pkg_name'
-      ros2_service_name: 'ros2_srv_name'
-
 Example message field mapping rule::
 
     -
@@ -115,3 +110,11 @@ Example message field mapping rule::
       fields_1_to_2:
         foo: 'foo'
         ros1_bar: 'ros2_bar'
+
+Example service mapping rule::
+
+    -
+      ros1_package_name: 'pkg_name'
+      ros1_service_name: 'ros1_srv_name'
+      ros2_package_name: 'pkg_name'
+      ros2_service_name: 'ros2_srv_name'

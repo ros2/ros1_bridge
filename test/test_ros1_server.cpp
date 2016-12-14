@@ -12,18 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "diagnostic_msgs/SelfTest.h"
 #include "ros/ros.h"
-#include <diagnostic_msgs/SelfTest.h>
 
-using namespace diagnostic_msgs;
-
-bool add(SelfTest::Request& /* req */, SelfTest::Response& res)
+bool add(diagnostic_msgs::SelfTest::Request & /* req */, diagnostic_msgs::SelfTest::Response & res)
 {
   res.id = "ros1";
   return true;
 }
 
-int main(int argc, char **argv)
+int main(int argc, char ** argv)
 {
   ros::init(argc, argv, "ros1_bridge_test_server");
   ros::NodeHandle n;
