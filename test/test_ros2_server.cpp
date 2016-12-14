@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rclcpp/rclcpp.hpp"
-#include <diagnostic_msgs/srv/self_test.hpp>
+#include <memory>
 
-using namespace diagnostic_msgs::srv;
+#include "diagnostic_msgs/srv/self_test.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 void handler(
-  const std::shared_ptr<rmw_request_id_t> /* request_header */,
-  const std::shared_ptr<SelfTest::Request> /* request */,
-  std::shared_ptr<SelfTest::Response> response)
+  const std::shared_ptr<rmw_request_id_t>/* request_header */,
+  const std::shared_ptr<diagnostic_msgs::srv::SelfTest::Request>/* request */,
+  std::shared_ptr<diagnostic_msgs::srv::SelfTest::Response> response)
 {
   response->id = "ros2";
 }
@@ -29,7 +29,7 @@ int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
   auto node = rclcpp::Node::make_shared("ros1_bridge_test_server");
-  auto server = node->create_service<SelfTest>("ros1_bridge_test", handler);
+  auto server = node->create_service<diagnostic_msgs::srv::SelfTest>("ros1_bridge_test", handler);
   rclcpp::spin(node);
   return 0;
 }

@@ -1,3 +1,17 @@
+# Copyright 2015-2016 Open Source Robotics Foundation, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from collections import OrderedDict
 import os
 import re
@@ -64,7 +78,7 @@ for package_path in reversed([p for p in rpp if p]):
         if sys_path.startswith(os.path.join(ros1_basepath, '')):
             sys.path.remove(sys_path)
             sys.path.insert(0, sys_path)
-import rosmsg
+import rosmsg  # noqa
 
 
 def generate_cpp(output_path, template_dir):
@@ -78,7 +92,7 @@ def generate_cpp(output_path, template_dir):
     data.update(generate_services())
     unique_package_names = set(data['ros2_package_names_msg'] + data['ros2_package_names_srv'])
     data['ros2_package_names'] = list(unique_package_names)
-    
+
     template_file = os.path.join(template_dir, 'get_factory.cpp.em')
     output_file = os.path.join(output_path, 'get_factory.cpp')
     expand_template(template_file, data, output_file)
@@ -104,7 +118,8 @@ def generate_cpp(output_path, template_dir):
                         if m.ros2_msg.package_name == ros2_package_name],
                 })
             template_file = os.path.join(template_dir, 'pkg_factories.%s.em' % extension)
-            output_file = os.path.join(output_path, '%s_factories.%s' % (ros2_package_name, extension))
+            output_file = os.path.join(
+                output_path, '%s_factories.%s' % (ros2_package_name, extension))
             expand_template(template_file, data_pkg, output_file)
 
 
@@ -298,10 +313,7 @@ class MappingRule(object):
                     (data['ros2_package_name'], expected_package_name))
             self.ros1_package_name = data['ros1_package_name']
             self.ros2_package_name = data['ros2_package_name']
-            if (len(data) == 2):
-                self.package_mapping = True
-            else:
-                self.package_mapping = False
+            self.package_mapping = (len(data) == 2)
         else:
             raise Exception('Ignoring a rule without a ros1_package_name and/or ros2_package_name')
 
@@ -310,6 +322,7 @@ class MappingRule(object):
 
     def __repr__(self):
         return self.__str__()
+
 
 class MessageMappingRule(MappingRule):
     __slots__ = [
@@ -330,10 +343,12 @@ class MessageMappingRule(MappingRule):
                 self.fields_1_to_2 = OrderedDict()
                 for ros1_field_name, ros2_field_name in data['fields_1_to_2'].items():
                     self.fields_1_to_2[ros1_field_name] = ros2_field_name
-            elif (len(data) > 4):
-                raise Exception('Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
-        elif (len(data) > 2):
-            raise Exception('Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
+            elif len(data) > 4:
+                raise RuntimeError(
+                    'Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
+        elif len(data) > 2:
+            raise RuntimeError(
+                'Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
 
     def is_message_mapping(self):
         return self.ros1_message_name is not None and self.fields_1_to_2 is None
@@ -342,7 +357,8 @@ class MessageMappingRule(MappingRule):
         return self.fields_1_to_2 is not None
 
     def __str__(self):
-        return "MessageMappingRule(" + self.ros1_package_name + " <-> " + self.ros2_package_name + ")"
+        return 'MessageMappingRule(%s <-> %s)' % (self.ros1_package_name, self.ros2_package_name)
+
 
 class ServiceMappingRule(MappingRule):
     __slots__ = [
@@ -357,11 +373,13 @@ class ServiceMappingRule(MappingRule):
         if all(n in data for n in ('ros1_service_name', 'ros2_service_name')):
             self.ros1_service_name = data['ros1_service_name']
             self.ros2_service_name = data['ros2_service_name']
-        elif (len(data) > 2):
-            raise Exception('Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
+        elif len(data) > 2:
+            raise RuntimeError(
+                'Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
 
     def __str__(self):
-        return "ServiceMappingRule(" + self.ros1_package_name + " <-> " + self.ros2_package_name + ")"
+        return 'ServiceMappingRule(%s <-> %s)' % (self.ros1_package_name, self.ros2_package_name)
+
 
 def determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules):
     pairs = []
@@ -444,8 +462,8 @@ def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
     services = []
     for ros1_srv in ros1_srvs:
         for ros2_srv in ros2_srvs:
-            if (ros1_srv.package_name == ros2_srv.package_name):
-                if (ros1_srv.message_name == ros2_srv.message_name):
+            if ros1_srv.package_name == ros2_srv.package_name:
+                if ros1_srv.message_name == ros2_srv.message_name:
                     pairs.append((ros1_srv, ros2_srv))
 
     for rule in mapping_rules:
@@ -453,12 +471,14 @@ def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
             for ros2_srv in ros2_srvs:
                 if rule.ros1_package_name == ros1_srv.package_name and \
                    rule.ros2_package_name == ros2_srv.package_name:
-                    if rule.ros1_service_name == None and rule.ros2_service_name == None:
-                        if (ros1_srv.message_name == ros2_srv.message_name):
+                    if rule.ros1_service_name is None and rule.ros2_service_name is None:
+                        if ros1_srv.message_name == ros2_srv.message_name:
                             pairs.append((ros1_srv, ros2_srv))
                     else:
-                        if rule.ros1_service_name == ros1_srv.message_name and \
-                           rule.ros2_service_name == ros2_srv.message_name:
+                        if (
+                            rule.ros1_service_name == ros1_srv.message_name and
+                            rule.ros2_service_name == ros2_srv.message_name
+                        ):
                             pairs.append((ros1_srv, ros2_srv))
 
     for pair in pairs:
@@ -486,7 +506,7 @@ def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
                 ros2_type = str(ros2_fields[direction][i].type)
                 ros1_name = ros1_field[1]
                 ros2_name = ros2_fields[direction][i].name
-                if (ros1_type != ros2_type or ros1_name != ros2_name):
+                if ros1_type != ros2_type or ros1_name != ros2_name:
                     match = False
                     break
                 output[direction].append({

@@ -15,6 +15,7 @@
 #ifndef ROS1_BRIDGE__BRIDGE_HPP_
 #define ROS1_BRIDGE__BRIDGE_HPP_
 
+#include <memory>
 #include <string>
 
 // include ROS 1

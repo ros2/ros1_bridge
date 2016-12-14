@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <iostream>
+#include <memory>
 
 // include ROS 1
 #ifdef __clang__

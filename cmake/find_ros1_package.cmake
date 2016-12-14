@@ -18,7 +18,8 @@ macro(find_ros1_package name)
   cmake_parse_arguments(_ARG "REQUIRED" "" "" ${ARGN})
   if(_ARG_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR
-      "find_ros1_package() called with unused arguments: ${ARG_UNPARSED_ARGUMENTS}")
+      "find_ros1_package() called with unused arguments: "
+      "${ARG_UNPARSED_ARGUMENTS}")
   endif()
 
   if(_ARG_REQUIRED)
