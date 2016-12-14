@@ -152,48 +152,41 @@ public:
     ROS1_T & ros1_msg);
 };
 
-template <class R1_TYPE, class R1_REQ, class R1_RES, class R2_TYPE, class R2_REQ, class R2_RES>
+template <class ROS1_T, class ROS2_T>
 class ServiceFactory : public ServiceFactoryInterface
 {
-private:
-
-  void translate_1_to_2(const R1_REQ&, R2_REQ&);
-  void translate_1_to_2(const R1_RES&, R2_RES&);
-  void translate_2_to_1(R1_REQ&, const R2_REQ&);
-  void translate_2_to_1(R1_RES&, const R2_RES&);
-
 public:
+
+  using ROS1Request = typename ROS1_T::Request;
+  using ROS2Request = typename ROS2_T::Request;
+  using ROS1Response = typename ROS1_T::Response;
+  using ROS2Response = typename ROS2_T::Response;
+
   void forward_2_to_1(
     ros::ServiceClient client, const std::shared_ptr<rmw_request_id_t>,
-    const std::shared_ptr<R2_REQ> request, std::shared_ptr<R2_RES> response)
+    const std::shared_ptr<ROS2Request> request, std::shared_ptr<ROS2Response> response)
   {
-    R1_TYPE srv;
-    translate_2_to_1(srv.request, *request);
-    if (client.call(srv))
-    {
+    ROS1_T srv;
+    translate_2_to_1(*request, srv.request);
+    if (client.call(srv)) {
       translate_1_to_2(srv.response, *response);
-    }
-    else
-    {
+    } else {
       throw std::runtime_error("Failed to get response from ROS service");
     }
   }
 
   bool forward_1_to_2(
-    rclcpp::client::ClientBase::SharedPtr cli, const R1_REQ& request1, R1_RES& response1)
+    rclcpp::client::ClientBase::SharedPtr cli, const ROS1Request & request1, ROS1Response & response1)
   {
-    auto client = std::dynamic_pointer_cast<rclcpp::client::Client<R2_TYPE>>(cli);
-    if (!client)
-    {
+    auto client = std::dynamic_pointer_cast<rclcpp::client::Client<ROS2_T>>(cli);
+    if (!client) {
       fprintf(stderr, "Failed to get the client.\n");
       return false;
     }
-    auto request2 = std::make_shared<R2_REQ>();
+    auto request2 = std::make_shared<ROS2Request>();
     translate_1_to_2(request1, *request2);
-    while (!client->wait_for_service(std::chrono::seconds(1)))
-    {
-      if (!rclcpp::utilities::ok())
-      {
+    while (!client->wait_for_service(std::chrono::seconds(1))) {
+      if (!rclcpp::utilities::ok()) {
         fprintf(stderr, "Client was interrupted while waiting for the service. Exiting.\n");
         return false;
       }
@@ -201,13 +194,10 @@ public:
     auto timeout = std::chrono::seconds(5);
     auto future = client->async_send_request(request2);
     auto status = future.wait_for(timeout);
-    if (status == std::future_status::ready)
-    {
+    if (status == std::future_status::ready) {
       auto response2 = future.get();
-      translate_2_to_1(response1, *response2);
-    }
-    else
-    {
+      translate_2_to_1(*response2, response1);
+    } else {
         fprintf(stderr, "Failed to get response from ROS2 service.\n");
         return false;
     }
@@ -215,27 +205,34 @@ public:
   }
 
   ServiceBridge1to2 service_bridge_1_to_2(
-    ros::NodeHandle& ros1_node, rclcpp::node::Node::SharedPtr ros2_node, const std::string name)
+    ros::NodeHandle & ros1_node, rclcpp::node::Node::SharedPtr ros2_node, const std::string & name)
   {
     ServiceBridge1to2 bridge;
-    bridge.client = ros2_node->create_client<R2_TYPE>(name);
-    auto m = &ServiceFactory<R1_TYPE,R1_REQ,R1_RES,R2_TYPE,R2_REQ,R2_RES>::forward_1_to_2;
-    auto f = boost::bind(m, this, bridge.client, _1, _2);
-    bridge.server = ros1_node.advertiseService<R1_REQ,R1_RES>(name, f);
+    bridge.client = ros2_node->create_client<ROS2_T>(name);
+    auto m = &ServiceFactory<ROS1_T,ROS2_T>::forward_1_to_2;
+    auto f = std::bind(m, this, bridge.client, std::placeholders::_1, std::placeholders::_2);
+    bridge.server = ros1_node.advertiseService<ROS1Request,ROS1Response>(name, f);
     return bridge;
   }
 
   ServiceBridge2to1 service_bridge_2_to_1(
-     ros::NodeHandle& ros1_node, rclcpp::node::Node::SharedPtr ros2_node, const std::string name)
+     ros::NodeHandle & ros1_node, rclcpp::node::Node::SharedPtr ros2_node, const std::string & name)
   {
     ServiceBridge2to1 bridge;
-    bridge.client = ros1_node.serviceClient<R1_TYPE>(name);
-    auto m = &ServiceFactory<R1_TYPE,R1_REQ,R1_RES,R2_TYPE,R2_REQ,R2_RES>::forward_2_to_1;
-    std::function<void(const std::shared_ptr<rmw_request_id_t>,const std::shared_ptr<R2_REQ>,std::shared_ptr<R2_RES>)> f;
+    bridge.client = ros1_node.serviceClient<ROS1_T>(name);
+    auto m = &ServiceFactory<ROS1_T,ROS2_T>::forward_2_to_1;
+    std::function<void(const std::shared_ptr<rmw_request_id_t>,const std::shared_ptr<ROS2Request>,std::shared_ptr<ROS2Response>)> f;
     f = std::bind(m, this, bridge.client, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-    bridge.server = ros2_node->create_service<R2_TYPE>(name, f);
+    bridge.server = ros2_node->create_service<ROS2_T>(name, f);
     return bridge;
   }
+
+private:
+
+  void translate_1_to_2(const ROS1Request &, ROS2Request &);
+  void translate_1_to_2(const ROS1Response &, ROS2Response &);
+  void translate_2_to_1(const ROS2Request &, ROS1Request &);
+  void translate_2_to_1(const ROS2Response &, ROS1Response &);
 };
 
 }  // namespace ros1_bridge

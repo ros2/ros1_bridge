@@ -1,213 +1,213 @@
 import os, time, subprocess, signal, unittest
 
 class TestBridge(unittest.TestCase):
-  ros_master_port = '12321';
-  ros_master_uri = 'http://localhost:{}'.format(ros_master_port)
-  devnull = None
-  master = None
-  bridge = None
-  server = None
+    ros_master_port = '12321';
+    ros_master_uri = 'http://localhost:{}'.format(ros_master_port)
+    devnull = None
+    master = None
+    bridge = None
+    server = None
 
-  def kill(self, process):
-    if (process != None and process.poll() == None):
-      if os.name == 'nt':
-        process.kill()
-      else:
-        process.send_signal(signal.SIGINT)
-        process.wait()
+    def kill(self, process):
+        if (process != None and process.poll() == None):
+            if os.name == 'nt':
+                process.kill()
+            else:
+                process.send_signal(signal.SIGINT)
+                process.wait()
 
-  def launch(self, cmd, env):
-    return subprocess.Popen(cmd, env=env, stderr=self.devnull, stdout=self.devnull)
+    def launch(self, cmd, env):
+        return subprocess.Popen(cmd, env=env, stderr=self.devnull, stdout=self.devnull)
 
-  def setUp(self):
-    self.devnull = open(os.devnull, 'w')
-    self.launch_rosmaster()
+    def setUp(self):
+        self.devnull = open(os.devnull, 'w')
+        self.launch_rosmaster()
 
-  def tearDown(self):
-    self.kill(self.bridge)
-    self.kill(self.server)
-    self.kill(self.master)
-    self.devnull.close()
+    def tearDown(self):
+        self.kill(self.bridge)
+        self.kill(self.server)
+        self.kill(self.master)
+        self.devnull.close()
 
-  def launch_rosmaster(self):
-    env = { 'ROS_MASTER_URI': self.ros_master_uri }
-    cmd = ['@TEST_BRIDGE_ENV@', '@TEST_BRIDGE_ROSCORE@', '-p', self.ros_master_port]
-    self.master = self.launch(cmd, env)
-    time.sleep(3)
+    def launch_rosmaster(self):
+        env = { 'ROS_MASTER_URI': self.ros_master_uri }
+        cmd = ['@TEST_BRIDGE_ENV@', '@TEST_BRIDGE_ROSCORE@', '-p', self.ros_master_port]
+        self.master = self.launch(cmd, env)
+        time.sleep(3)
 
-  def launch_dynamic_bridge(self):
-    env = dict(os.environ)
-    env['RCL_ASSERT_RMW_ID_MATCHES'] = '@TEST_BRIDGE_RMW@'
-    env['ROS_MASTER_URI'] = self.ros_master_uri
-    return self.launch(['@TEST_BRIDGE_DYNAMIC_BRIDGE@'], env)
+    def launch_dynamic_bridge(self):
+        env = dict(os.environ)
+        env['RCL_ASSERT_RMW_ID_MATCHES'] = '@TEST_BRIDGE_RMW@'
+        env['ROS_MASTER_URI'] = self.ros_master_uri
+        return self.launch(['@TEST_BRIDGE_DYNAMIC_BRIDGE@'], env)
 
-  def launch_ros1_client(self):
-    env = dict(os.environ)
-    env['ROS_MASTER_URI'] = self.ros_master_uri
-    return self.launch(['@TEST_BRIDGE_ROS1_CLIENT@'], env)
+    def launch_ros1_client(self):
+        env = dict(os.environ)
+        env['ROS_MASTER_URI'] = self.ros_master_uri
+        return self.launch(['@TEST_BRIDGE_ROS1_CLIENT@'], env)
 
-  def launch_ros1_server(self):
-    env = dict(os.environ)
-    env['ROS_MASTER_URI'] = self.ros_master_uri
-    return self.launch(['@TEST_BRIDGE_ROS1_SERVER@'], env)
+    def launch_ros1_server(self):
+        env = dict(os.environ)
+        env['ROS_MASTER_URI'] = self.ros_master_uri
+        return self.launch(['@TEST_BRIDGE_ROS1_SERVER@'], env)
 
-  def launch_ros2_client(self):
-    env = dict(os.environ)
-    env['RCL_ASSERT_RMW_ID_MATCHES'] = '@TEST_BRIDGE_RMW@'
-    return self.launch(['@TEST_BRIDGE_ROS2_CLIENT@'], env)
+    def launch_ros2_client(self):
+        env = dict(os.environ)
+        env['RCL_ASSERT_RMW_ID_MATCHES'] = '@TEST_BRIDGE_RMW@'
+        return self.launch(['@TEST_BRIDGE_ROS2_CLIENT@'], env)
 
-  def launch_ros2_server(self):
-    env = dict(os.environ)
-    env['RCL_ASSERT_RMW_ID_MATCHES'] = '@TEST_BRIDGE_RMW@'
-    return self.launch(['@TEST_BRIDGE_ROS2_SERVER@'], env)
+    def launch_ros2_server(self):
+        env = dict(os.environ)
+        env['RCL_ASSERT_RMW_ID_MATCHES'] = '@TEST_BRIDGE_RMW@'
+        return self.launch(['@TEST_BRIDGE_ROS2_SERVER@'], env)
 
-  def test_ros1_to_ros2(self):
-    self.server = self.launch_ros2_server()
-    self.bridge = self.launch_dynamic_bridge()
-    client = self.launch_ros1_client()
+    def test_ros1_to_ros2(self):
+        self.server = self.launch_ros2_server()
+        self.bridge = self.launch_dynamic_bridge()
+        client = self.launch_ros1_client()
 
-    self.assertEqual(0, client.wait(), "ROS Client returned an error")
-    self.assertEqual(None, self.server.poll(), "ROS2 server exited prematurely")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertEqual(0, client.wait(), "ROS Client returned an error")
+        self.assertEqual(None, self.server.poll(), "ROS2 server exited prematurely")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-  def test_ros2_to_ros1(self):
-    self.server = self.launch_ros1_server()
-    self.bridge = self.launch_dynamic_bridge()
-    client = self.launch_ros2_client()
+    def test_ros2_to_ros1(self):
+        self.server = self.launch_ros1_server()
+        self.bridge = self.launch_dynamic_bridge()
+        client = self.launch_ros2_client()
 
-    self.assertEqual(0, client.wait(), "ROS2 Client returned an error")
-    self.assertEqual(None, self.server.poll(), "ROS server exited prematurely")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertEqual(0, client.wait(), "ROS2 Client returned an error")
+        self.assertEqual(None, self.server.poll(), "ROS server exited prematurely")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-  def test_late_ros1_server(self):
-    self.bridge = self.launch_dynamic_bridge()
-    client = self.launch_ros2_client()
+    def test_late_ros1_server(self):
+        self.bridge = self.launch_dynamic_bridge()
+        client = self.launch_ros2_client()
 
-    self.assertNotEqual(0, client.wait(), "ROS2 Client should return an error")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertNotEqual(0, client.wait(), "ROS2 Client should return an error")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-    self.server = self.launch_ros1_server()
-    client = self.launch_ros2_client()
+        self.server = self.launch_ros1_server()
+        client = self.launch_ros2_client()
 
-    self.assertEqual(0, client.wait(), "ROS2 Client returned an error")
-    self.assertEqual(None, self.server.poll(), "ROS server exited prematurely")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertEqual(0, client.wait(), "ROS2 Client returned an error")
+        self.assertEqual(None, self.server.poll(), "ROS server exited prematurely")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-  def test_late_ros2_server(self):
-    self.bridge = self.launch_dynamic_bridge()
-    client = self.launch_ros1_client()
+    def test_late_ros2_server(self):
+        self.bridge = self.launch_dynamic_bridge()
+        client = self.launch_ros1_client()
 
-    self.assertNotEqual(0, client.wait(), "ROS Client should return an error")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertNotEqual(0, client.wait(), "ROS Client should return an error")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-    self.server = self.launch_ros2_server()
-    client = self.launch_ros1_client()
+        self.server = self.launch_ros2_server()
+        client = self.launch_ros1_client()
 
-    self.assertEqual(0, client.wait(), "ROS Client returned an error")
-    self.assertEqual(None, self.server.poll(), "ROS2 server exited prematurely")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertEqual(0, client.wait(), "ROS Client returned an error")
+        self.assertEqual(None, self.server.poll(), "ROS2 server exited prematurely")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-  def test_gone_ros1_server(self):
-    self.server = self.launch_ros1_server()
-    self.bridge = self.launch_dynamic_bridge()
-    client = self.launch_ros2_client()
+    def test_gone_ros1_server(self):
+        self.server = self.launch_ros1_server()
+        self.bridge = self.launch_dynamic_bridge()
+        client = self.launch_ros2_client()
 
-    self.assertEqual(0, client.wait(), "ROS2 Client returned an error")
-    self.assertEqual(None, self.server.poll(), "ROS server exited prematurely")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertEqual(0, client.wait(), "ROS2 Client returned an error")
+        self.assertEqual(None, self.server.poll(), "ROS server exited prematurely")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-    self.kill(self.server)
-    client = self.launch_ros2_client()
+        self.kill(self.server)
+        client = self.launch_ros2_client()
 
-    self.assertNotEqual(0, client.wait(), "ROS2 Client should return an error")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertNotEqual(0, client.wait(), "ROS2 Client should return an error")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-  def test_gone_ros2_server(self):
-    self.server = self.launch_ros2_server()
-    self.bridge = self.launch_dynamic_bridge()
-    client = self.launch_ros1_client()
+    def test_gone_ros2_server(self):
+        self.server = self.launch_ros2_server()
+        self.bridge = self.launch_dynamic_bridge()
+        client = self.launch_ros1_client()
 
-    self.assertEqual(0, client.wait(), "ROS Client returned an error")
-    self.assertEqual(None, self.server.poll(), "ROS2 server exited prematurely")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertEqual(0, client.wait(), "ROS Client returned an error")
+        self.assertEqual(None, self.server.poll(), "ROS2 server exited prematurely")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-    self.kill(self.server)
-    client = self.launch_ros1_client()
+        self.kill(self.server)
+        client = self.launch_ros1_client()
 
-    self.assertNotEqual(0, client.wait(), "ROS Client should return an error")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertNotEqual(0, client.wait(), "ROS Client should return an error")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-  def test_restart_ros1_server(self):
-    self.server = self.launch_ros1_server()
-    self.bridge = self.launch_dynamic_bridge()
-    client = self.launch_ros2_client()
+    def test_restart_ros1_server(self):
+        self.server = self.launch_ros1_server()
+        self.bridge = self.launch_dynamic_bridge()
+        client = self.launch_ros2_client()
 
-    self.assertEqual(0, client.wait(), "ROS2 Client returned an error")
-    self.assertEqual(None, self.server.poll(), "ROS server exited prematurely")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertEqual(0, client.wait(), "ROS2 Client returned an error")
+        self.assertEqual(None, self.server.poll(), "ROS server exited prematurely")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-    self.kill(self.server)
-    time.sleep(5)
-    self.server = self.launch_ros1_server()
-    client = self.launch_ros2_client()
+        self.kill(self.server)
+        time.sleep(5)
+        self.server = self.launch_ros1_server()
+        client = self.launch_ros2_client()
 
-    self.assertEqual(0, client.wait(), "ROS2 Client returned an error")
-    self.assertEqual(None, self.server.poll(), "ROS server exited prematurely")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertEqual(0, client.wait(), "ROS2 Client returned an error")
+        self.assertEqual(None, self.server.poll(), "ROS server exited prematurely")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-  def test_restart_ros2_server(self):
-    self.server = self.launch_ros2_server()
-    self.bridge = self.launch_dynamic_bridge()
-    client = self.launch_ros1_client()
+    def test_restart_ros2_server(self):
+        self.server = self.launch_ros2_server()
+        self.bridge = self.launch_dynamic_bridge()
+        client = self.launch_ros1_client()
 
-    self.assertEqual(0, client.wait(), "ROS Client returned an error")
-    self.assertEqual(None, self.server.poll(), "ROS2 server exited prematurely")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertEqual(0, client.wait(), "ROS Client returned an error")
+        self.assertEqual(None, self.server.poll(), "ROS2 server exited prematurely")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-    self.kill(self.server)
-    time.sleep(5)
-    self.server = self.launch_ros2_server()
-    client = self.launch_ros1_client()
+        self.kill(self.server)
+        time.sleep(5)
+        self.server = self.launch_ros2_server()
+        client = self.launch_ros1_client()
 
-    self.assertEqual(0, client.wait(), "ROS Client returned an error")
-    self.assertEqual(None, self.server.poll(), "ROS2 server exited prematurely")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertEqual(0, client.wait(), "ROS Client returned an error")
+        self.assertEqual(None, self.server.poll(), "ROS2 server exited prematurely")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-  def test_ros2_server_then_ros1(self):
-    self.server = self.launch_ros2_server()
-    self.bridge = self.launch_dynamic_bridge()
-    client = self.launch_ros1_client()
+    def test_ros2_server_then_ros1(self):
+        self.server = self.launch_ros2_server()
+        self.bridge = self.launch_dynamic_bridge()
+        client = self.launch_ros1_client()
 
-    self.assertEqual(0, client.wait(), "ROS Client returned an error")
-    self.assertEqual(None, self.server.poll(), "ROS2 server exited prematurely")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertEqual(0, client.wait(), "ROS Client returned an error")
+        self.assertEqual(None, self.server.poll(), "ROS2 server exited prematurely")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-    self.kill(self.server)
-    time.sleep(5)
-    self.server = self.launch_ros1_server()
-    client = self.launch_ros2_client()
+        self.kill(self.server)
+        time.sleep(5)
+        self.server = self.launch_ros1_server()
+        client = self.launch_ros2_client()
 
-    self.assertEqual(0, client.wait(), "ROS2 Client returned an error")
-    self.assertEqual(None, self.server.poll(), "ROS server exited prematurely")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertEqual(0, client.wait(), "ROS2 Client returned an error")
+        self.assertEqual(None, self.server.poll(), "ROS server exited prematurely")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-  def test_ros1_server_then_ros2(self):
-    self.server = self.launch_ros1_server()
-    self.bridge = self.launch_dynamic_bridge()
-    client = self.launch_ros2_client()
+    def test_ros1_server_then_ros2(self):
+        self.server = self.launch_ros1_server()
+        self.bridge = self.launch_dynamic_bridge()
+        client = self.launch_ros2_client()
 
-    self.assertEqual(0, client.wait(), "ROS2 Client returned an error")
-    self.assertEqual(None, self.server.poll(), "ROS server exited prematurely")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertEqual(0, client.wait(), "ROS2 Client returned an error")
+        self.assertEqual(None, self.server.poll(), "ROS server exited prematurely")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
-    self.kill(self.server)
-    time.sleep(5)
-    self.server = self.launch_ros2_server()
-    client = self.launch_ros1_client()
+        self.kill(self.server)
+        time.sleep(5)
+        self.server = self.launch_ros2_server()
+        client = self.launch_ros1_client()
 
-    self.assertEqual(0, client.wait(), "ROS Client returned an error")
-    self.assertEqual(None, self.server.poll(), "ROS2 server exited prematurely")
-    self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
+        self.assertEqual(0, client.wait(), "ROS Client returned an error")
+        self.assertEqual(None, self.server.poll(), "ROS2 server exited prematurely")
+        self.assertEqual(None, self.bridge.poll(), "Bridge exited prematurely")
 
 if __name__ == '__main__':
     unittest.main()

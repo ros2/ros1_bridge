@@ -223,14 +223,15 @@ Factory<
 template <>
 void ServiceFactory<
   @(service["ros1_package"])::@(service["ros1_name"]),
-  @(service["ros1_package"])::@(service["ros1_name"])::Request,
-  @(service["ros1_package"])::@(service["ros1_name"])::Response,
-  @(service["ros2_package"])::srv::@(service["ros2_name"]),
-  @(service["ros2_package"])::srv::@(service["ros2_name"])::Request,
-  @(service["ros2_package"])::srv::@(service["ros2_name"])::Response
+  @(service["ros2_package"])::srv::@(service["ros2_name"])
 >::translate_@(frm)_to_@(to)(
-  @[    if frm == "1"]const @[end if]@ @(service["ros1_package"])::@(service["ros1_name"])::@(type)& req1,
-  @[    if frm == "2"]const @[end if]@ @(service["ros2_package"])::srv::@(service["ros2_name"])::@(type)& req2
+@[      if frm == "1"]@
+  const @(service["ros1_package"])::@(service["ros1_name"])::@(type)& req1,
+  @(service["ros2_package"])::srv::@(service["ros2_name"])::@(type)& req2
+@[      else]@
+  const @(service["ros2_package"])::srv::@(service["ros2_name"])::@(type)& req2,
+  @(service["ros1_package"])::@(service["ros1_name"])::@(type)& req1
+@[      end if]@
 ) {
 @[      for field in service["fields"][type.lower()]]@
 @[        if field["array"]]@
@@ -241,25 +242,17 @@ void ServiceFactory<
     @(field["ros1"]["name"])1_it != req1.@(field["ros1"]["name"]).end() &&
     @(field["ros2"]["name"])2_it != req2.@(field["ros2"]["name"]).end()
   ) {
-    auto& @(field["ros1"]["name"])1 = *(@(field["ros1"]["name"])1_it++);
-    auto& @(field["ros2"]["name"])2 = *(@(field["ros2"]["name"])2_it++);
-@[        else]@
-  auto& @(field["ros1"]["name"])1 = req1.@(field["ros1"]["name"]);
-  auto& @(field["ros2"]["name"])2 = req2.@(field["ros2"]["name"]);
+    auto & @(field["ros1"]["name"])1 = *(@(field["ros1"]["name"])1_it++);
+    auto & @(field["ros2"]["name"])2 = *(@(field["ros2"]["name"])2_it++);
+  @[      else]@
+  auto & @(field["ros1"]["name"])1 = req1.@(field["ros1"]["name"]);
+  auto & @(field["ros2"]["name"])2 = req2.@(field["ros2"]["name"]);
 @[        end if]@
 @[        if field["basic"]]@
   @(field["ros2"]["name"])@(to) = @(field["ros1"]["name"])@(frm);
 @[        else]@
-@[          for m in mappings]@
-@[            if field["ros1"]["type"] == m.ros1_msg.package_name + "/" + m.ros1_msg.message_name]@
-@[              if field["ros2"]["type"] == m.ros2_msg.package_name + "/" + m.ros2_msg.message_name]@
-  Factory<
-    @(m.ros1_msg.package_name)::@(m.ros1_msg.message_name),
-    @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name)
-  >::convert_@(frm)_to_@(to)(@(field["ros2"]["name"])@(frm), @(field["ros1"]["name"])@(to));
-@[              end if]@
-@[            end if]@
-@[          end for]@
+  Factory<@(field["ros1"]["cpptype"]),@(field["ros2"]["cpptype"])>::convert_@(frm)_to_@(to)(@
+@(field["ros2"]["name"])@(frm), @(field["ros1"]["name"])@(to));
 @[        end if]@
 @[        if field["array"]]@
   }
@@ -271,32 +264,29 @@ void ServiceFactory<
 @[  end for]@
 @[end for]@
 
-std::unique_ptr<ServiceFactoryInterface> get_service_factory_@(ros2_package_name)(std::string ros, std::string package, std::string name)
+std::unique_ptr<ServiceFactoryInterface>
+get_service_factory_@(ros2_package_name)(const std::string & ros_id, const std::string & package_name, const std::string & service_name)
 {
 @[if not services]@
-  (void)ros;
-  (void)package;
-  (void)name;
+  (void)ros_id;
+  (void)package_name;
+  (void)service_name;
 @[end if]@
 @[for service in services]@
   if (
     (
-      ros == "ros1" &&
-      package == "@(service["ros1_package"])" &&
-      name == "@(service["ros1_name"])"
+      ros_id == "ros1" &&
+      package_name == "@(service["ros1_package"])" &&
+      service_name == "@(service["ros1_name"])"
     ) || (
-      ros == "ros2" &&
-      package == "@(service["ros2_package"])" &&
-      name == "@(service["ros2_name"])"
+      ros_id == "ros2" &&
+      package_name == "@(service["ros2_package"])" &&
+      service_name == "@(service["ros2_name"])"
     )
   ) {
     return std::unique_ptr<ServiceFactoryInterface>(new ServiceFactory<
       @(service["ros1_package"])::@(service["ros1_name"]),
-      @(service["ros1_package"])::@(service["ros1_name"])::Request,
-      @(service["ros1_package"])::@(service["ros1_name"])::Response,
-      @(service["ros2_package"])::srv::@(service["ros2_name"]),
-      @(service["ros2_package"])::srv::@(service["ros2_name"])::Request,
-      @(service["ros2_package"])::srv::@(service["ros2_name"])::Response
+      @(service["ros2_package"])::srv::@(service["ros2_name"])
     >);
   }
 @[end for]@
