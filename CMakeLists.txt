@@ -143,7 +143,7 @@ macro(targets)
   target_link_libraries(dynamic_bridge${target_suffix}
     ${PROJECT_NAME}${target_suffix})
 
-  if(TEST_ROS1_BRIDGE)
+  if(TEST_ROS1_BRIDGE AND NOT "${target_suffix}" STREQUAL "")
     custom_executable(test_ros2_client_cpp "test/test_ros2_client.cpp")
     ament_target_dependencies("test_ros2_client_cpp${target_suffix}" "ros1_roscpp" "diagnostic_msgs")
     custom_executable(test_ros2_server_cpp "test/test_ros2_server.cpp")
@@ -155,19 +155,16 @@ macro(targets)
     set(TEST_BRIDGE_RMW ${rmw_implementation})
 
     configure_file(
-      test/test_ros1_bridge.py.in
-      test_ros1_bridge_cpp${target_suffix}.py.configured
+      test/test_dynamic_bridge.py.in
+      test_dynamic_bridge${target_suffix}.py.genexp
       @ONLY
     )
     file(GENERATE
-      OUTPUT "test_ros1_bridge_cpp${target_suffix}_$<CONFIGURATION>.py"
-      INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_ros1_bridge_cpp${target_suffix}.py.configured"
-    )
-    ament_add_nose_test(
-      test_ros1_bridge_cpp${target_suffix}
-      "${CMAKE_CURRENT_BINARY_DIR}/test_ros1_bridge_cpp${target_suffix}_$<CONFIGURATION>.py"
-      TIMEOUT 30
-    )
+      OUTPUT test_dynamic_bridge${target_suffix}_$<CONFIGURATION>.py
+      INPUT test_dynamic_bridge${target_suffix}.py.genexp)
+    ament_add_nose_test(test_dynamic_bridge${target_suffix}
+      "${CMAKE_CURRENT_BINARY_DIR}/test_dynamic_bridge${target_suffix}_$<CONFIGURATION>.py"
+      TIMEOUT 60)
   endif()
 endmacro()
 
@@ -176,7 +173,7 @@ if(TEST_ROS1_BRIDGE)
   ament_target_dependencies(test_ros1_client "ros1_roscpp")
   add_executable(test_ros1_server "test/test_ros1_server.cpp")
   ament_target_dependencies(test_ros1_server "ros1_roscpp")
-  set(TEST_BRIDGE_ENV "${ros1_roslaunch_PREFIX}/env.sh")
+  set(TEST_BRIDGE_ROS1_ENV "${ros1_roslaunch_PREFIX}/env.sh")
   set(TEST_BRIDGE_ROSCORE "${ros1_roslaunch_PREFIX}/bin/roscore")
   set(TEST_BRIDGE_ROS1_CLIENT "$<TARGET_FILE:test_ros1_client>")
   set(TEST_BRIDGE_ROS1_SERVER "$<TARGET_FILE:test_ros1_server>")

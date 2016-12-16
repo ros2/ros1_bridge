@@ -1,0 +1,125 @@
+# Copyright 2016 Open Source Robotics Foundation, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import os
+
+from launch import LaunchDescriptor
+from launch.exit_handler import ignore_signal_exit_handler
+from launch.launcher import DefaultLauncher
+from launch.output_handler import ConsoleOutput
+from launch_testing import InMemoryHandler
+
+
+TEST_BRIDGE_ROS1_ENV = '@TEST_BRIDGE_ROS1_ENV@'
+TEST_BRIDGE_ROSCORE = '@TEST_BRIDGE_ROSCORE@'
+TEST_BRIDGE_ROS1_TALKER = ['rosrun', 'roscpp_tutorials', 'talker']
+TEST_BRIDGE_ROS1_LISTENER = ['rosrun', 'rospy_tutorials', 'listener']
+TEST_BRIDGE_ROS1_CLIENT = '@TEST_BRIDGE_ROS1_CLIENT@'
+TEST_BRIDGE_ROS1_SERVER = '@TEST_BRIDGE_ROS1_SERVER@'
+TEST_BRIDGE_DYNAMIC_BRIDGE = '@TEST_BRIDGE_DYNAMIC_BRIDGE@'
+TEST_BRIDGE_ROS2_TALKER = 'talker'
+TEST_BRIDGE_ROS2_LISTENER = 'listener'
+TEST_BRIDGE_ROS2_CLIENT = '@TEST_BRIDGE_ROS2_CLIENT@'
+TEST_BRIDGE_ROS2_SERVER = '@TEST_BRIDGE_ROS2_SERVER@'
+TEST_BRIDGE_RMW = '@TEST_BRIDGE_RMW@'
+
+
+def test_dynamic_bridge_msg_1to2():
+    name = 'test_dynamic_bridge_msg_1to2'
+    launch(
+        name,
+        ('ros1talker', [TEST_BRIDGE_ROS1_ENV] + TEST_BRIDGE_ROS1_TALKER),
+        ('ros2listener', [TEST_BRIDGE_ROS2_LISTENER]),
+        exit_handler2=ignore_signal_exit_handler,
+        expected_output2=[b'I heard.+'])
+
+
+def test_dynamic_bridge_msg_2to1():
+    name = 'test_dynamic_bridge_msg_2to1'
+    env2 = dict(os.environ)
+    env2['PYTHONUNBUFFERED'] = '1'
+    launch(
+        name,
+        ('ros2talker', [TEST_BRIDGE_ROS2_TALKER]),
+        ('ros1listener', [TEST_BRIDGE_ROS1_ENV] + TEST_BRIDGE_ROS1_LISTENER),
+        env2=env2,
+        exit_handler2=ignore_signal_exit_handler,
+        expected_output2=[b'I heard.+'])
+
+
+def test_dynamic_bridge_srv_1to2():
+    name = 'test_dynamic_bridge_srv_1to2'
+    launch(
+        name,
+        ('ros1server', [TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_ROS1_SERVER]),
+        ('ros2client', [TEST_BRIDGE_ROS2_CLIENT]))
+
+
+def test_dynamic_bridge_srv_2to1():
+    name = 'test_dynamic_bridge_srv_2to1'
+    launch(
+        name,
+        ('ros2server', [TEST_BRIDGE_ROS2_SERVER]),
+        ('ros1client', [TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_ROS1_CLIENT]))
+
+
+def launch(name, process1, process2, env1=None, env2=None, exit_handler2=None, expected_output2=None):
+    launch_descriptor = LaunchDescriptor()
+
+    # ROS 1 core
+    launch_descriptor.add_process(
+        cmd=[TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_ROSCORE],
+        name=name + '__roscore',
+        exit_handler=ignore_signal_exit_handler,
+    )
+    # dynamic bridge
+    launch_descriptor.add_process(
+        cmd=[TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_DYNAMIC_BRIDGE],
+        name=name + '__dynamic_bridge',
+    )
+
+    launch_descriptor.add_process(
+        cmd=process1[1],
+        name=name + '__' + process1[0],
+        env=env1)
+
+    process_name = name + '__' + process2[0]
+    output_handlers = None
+    if expected_output2 is not None:
+        output_handlers = [
+            ConsoleOutput(),
+              InMemoryHandler(
+                  process_name, launch_descriptor, expected_output2,
+                  regex_match=True, exit_on_match=True,
+                  filtered_rmw_implementation=TEST_BRIDGE_RMW)]
+    launch_descriptor.add_process(
+        cmd=process2[1],
+        name=process_name,
+        env=env2,
+        exit_handler=exit_handler2,
+        output_handlers=output_handlers)
+
+    launcher = DefaultLauncher()
+    launcher.add_launch_descriptor(launch_descriptor)
+    rc = launcher.launch()
+
+    assert rc == 0, \
+        "The launch file failed with exit code '%s'" % str(rc)
+
+
+if __name__ == '__main__':
+    test_dynamic_bridge_msg_1to2()
+    test_dynamic_bridge_msg_2to1()
+    test_dynamic_bridge_srv_1to2()
+    test_dynamic_bridge_srv_2to1()
