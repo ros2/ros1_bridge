@@ -4,7 +4,7 @@ This package provides a network bridge which enables the exchange of messages be
 
 The bridge is currently implemented in C++ as at the time the Python API for ROS 2 had not been developed.
 Because of this its support is limited to only the message/service types available at compile time of the bridge.
-The bridge provided with the prebuilt ROS 2 binaries includes support for common ROS interfaces (messages/services), such as the interface packages listed in the [ros2/common_interfaces repository](https://github.com/ros2/common_interfaces) and `tf2_msgs`. 
+The bridge provided with the prebuilt ROS 2 binaries includes support for common ROS interfaces (messages/services), such as the interface packages listed in the [ros2/common_interfaces repository](https://github.com/ros2/common_interfaces) and `tf2_msgs`.
 See [the documentation](doc/index.rst) for more details on how ROS 1 and ROS 2 interfaces are associated with each other.
 If you would like to use a bridge with other interfaces (including your own custom types), you will have to build the bridge from source (instructions below).
 
@@ -73,7 +73,7 @@ Alternatively you can do it manually by sourcing the relevant workspaces yoursel
 
 ```
 # You have already sourced your ROS installation.
-# Source your ROS 2 installation: 
+# Source your ROS 2 installation:
 . <install-space-with-ros2>/local_setup.bash
 # And if you have a ROS 1 overlay workspace, something like:
 # . <install-space-to-ros1-overlay-ws>/setup.bash
@@ -142,7 +142,7 @@ The ROS 1 node will start printing the published messages to the console.
 
 ---
 
-Now we start the ROS 2 listener from the `rclcpp_tutorials` ROS 2 package.
+Now we start the ROS 2 listener from the `demo_nodes_cpp` ROS 2 package.
 
 ```
 # Shell D:
@@ -199,7 +199,7 @@ dynamic_bridge
 
 ---
 
-Now we start the ROS 2 talker from the `rclcpp_tutorials` ROS 2 package.
+Now we start the ROS 2 talker from the `demo_nodes_cpp` ROS 2 package.
 
 ```
 # Shell C:
