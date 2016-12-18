@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <chrono>
 #include <memory>
 
 #include "diagnostic_msgs/srv/self_test.hpp"
 #include "rclcpp/rclcpp.hpp"
+
+using namespace std::chrono_literals;
 
 int main(int argc, char ** argv)
 {
@@ -24,13 +27,13 @@ int main(int argc, char ** argv)
   auto client = node->create_client<diagnostic_msgs::srv::SelfTest>("ros1_bridge_test");
   auto request = std::make_shared<diagnostic_msgs::srv::SelfTest::Request>();
 
-  if (!client->wait_for_service(4_s)) {
+  if (!client->wait_for_service(4s)) {
     throw std::runtime_error("Service is not available");
   }
 
   auto future = client->async_send_request(request);
   if (
-    rclcpp::spin_until_future_complete(node, future, 2_s) ==
+    rclcpp::spin_until_future_complete(node, future, 2s) ==
     rclcpp::executor::FutureReturnCode::SUCCESS)
   {
     auto response = future.get();
