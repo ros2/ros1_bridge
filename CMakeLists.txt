@@ -160,10 +160,10 @@ macro(targets)
       @ONLY
     )
     file(GENERATE
-      OUTPUT test_dynamic_bridge${target_suffix}_$<CONFIGURATION>.py
+      OUTPUT test_dynamic_bridge${target_suffix}_$<CONFIG>.py
       INPUT test_dynamic_bridge${target_suffix}.py.genexp)
     ament_add_nose_test(test_dynamic_bridge${target_suffix}
-      "${CMAKE_CURRENT_BINARY_DIR}/test_dynamic_bridge${target_suffix}_$<CONFIGURATION>.py"
+      "${CMAKE_CURRENT_BINARY_DIR}/test_dynamic_bridge${target_suffix}_$<CONFIG>.py"
       TIMEOUT 60)
   endif()
 endmacro()
