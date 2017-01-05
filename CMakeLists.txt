@@ -119,8 +119,8 @@ macro(targets)
     "src/convert_builtin_interfaces.cpp"
     ${generated_files})
   ament_target_dependencies(${PROJECT_NAME}${target_suffix}
-    "rclcpp${target_suffix}"
     ${message_packages}
+    "rclcpp${target_suffix}"
     "ros1_roscpp"
     "ros1_std_msgs")
 
