@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-include(CMakeParseArguments)
-
 macro(find_ros1_package name)
   cmake_parse_arguments(_ARG "REQUIRED" "" "" ${ARGN})
   if(_ARG_UNPARSED_ARGUMENTS)
