@@ -16,16 +16,17 @@ from collections import OrderedDict
 import os
 import re
 import sys
-import yaml
 
 import ament_index_python
 from ament_package import parse_package
-from rosidl_cmake import expand_template
-import rosidl_parser
-
 # ROS 1 imports
 import genmsg
 import genmsg.msg_loader
+
+from rosidl_cmake import expand_template
+import rosidl_parser
+
+import yaml
 
 # import catkin_pkg and rospkg which are required by rosmsg
 # and likely only available for Python 2
@@ -674,6 +675,8 @@ def load_ros2_service(ros2_srv):
 # make field types hashable
 def FieldHash(self):
     return self.name.__hash__()
+
+
 genmsg.msgs.Field.__hash__ = FieldHash
 rosidl_parser.Field.__hash__ = FieldHash
 
