@@ -648,7 +648,8 @@ int main(int argc, char * argv[])
 
         if (publisher_count) {
           std::string suffix("Reply");
-          if (it.first.rfind(suffix) == it.first.size() - suffix.size()) {
+          auto position = it.first.rfind(suffix);
+          if (position != std::string::npos && position == it.first.size() - suffix.size()) {
             std::string & t = it.second;
             std::string name(it.first.begin(), it.first.end() - suffix.size());
             if (active_ros2_services.find(name) == active_ros2_services.end()) {
@@ -667,7 +668,8 @@ int main(int argc, char * argv[])
 
         if (subscriber_count) {
           std::string suffix("Request");
-          if (it.first.rfind(suffix) == it.first.size() - suffix.size()) {
+          auto position = it.first.rfind(suffix);
+          if (position != std::string::npos && position == it.first.size() - suffix.size()) {
             std::string & t = it.second;
             std::string name(it.first.begin(), it.first.end() - suffix.size());
             if (active_ros2_services.find(name) == active_ros2_services.end()) {
