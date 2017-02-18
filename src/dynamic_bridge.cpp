@@ -186,6 +186,9 @@ void update_bridge(
         "failed to create 1to2 bridge for topic '%s' "
         "with ROS 1 type '%s' and ROS 2 type '%s': %s\n",
         topic_name.c_str(), bridge.ros1_type_name.c_str(), bridge.ros2_type_name.c_str(), e.what());
+      if (std::string(e.what()).find("No template specialization") != std::string::npos) {
+        fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
+      }
       continue;
     }
 
@@ -249,6 +252,9 @@ void update_bridge(
         "failed to create 2to1 bridge for topic '%s' "
         "with ROS 2 type '%s' and ROS 1 type '%s': %s\n",
         topic_name.c_str(), bridge.ros2_type_name.c_str(), bridge.ros1_type_name.c_str(), e.what());
+      if (std::string(e.what()).find("No template specialization") != std::string::npos) {
+        fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
+      }
       continue;
     }
 
