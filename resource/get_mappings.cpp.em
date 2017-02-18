@@ -15,6 +15,7 @@
 @#    Mapping between messages as well as their fields
 @###############################################
 @
+#include <map>
 #include <string>
 
 namespace ros1_bridge
@@ -56,6 +57,20 @@ get_2to1_mapping(const std::string & ros2_type_name, std::string & ros1_type_nam
 @[end for]@
 
   return false;
+}
+
+std::map<std::string, std::string>
+get_all_mappings_2to1()
+{
+  static std::map<std::string, std::string> mappings = {
+@[for m in mappings]@
+    {
+      "@(m.ros2_msg.package_name)/@(m.ros2_msg.message_name)",  // ROS 2
+      "@(m.ros1_msg.package_name)/@(m.ros1_msg.message_name)"   // ROS 1
+    },
+@[end for]@
+  };
+  return mappings;
 }
 
 }  // namespace ros1_bridge
