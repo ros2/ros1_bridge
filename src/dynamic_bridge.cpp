@@ -83,6 +83,8 @@ bool parse_command_options(
     ss << " -h, --help: This message." << std::endl;
     ss << " --show-introspection: Print output of introspection of both sides of the bridge.";
     ss << std::endl;
+    ss << " --print-pairs: Print a list of the supported ROS 2 <=> ROS 1 conversion pairs.";
+    ss << std::endl;
     ss << " --bridge-all-topics: Bridge all topics in both directions, whether or not there is ";
     ss << "a matching subscriber." << std::endl;
     ss << " --bridge-all-1to2-topics: Bridge all ROS 1 topics to ROS 2, whether or not there is ";
@@ -90,6 +92,19 @@ bool parse_command_options(
     ss << " --bridge-all-2to1-topics: Bridge all ROS 2 topics to ROS 1, whether or not there is ";
     ss << "a matching subscriber." << std::endl;
     std::cout << ss.str();
+    return false;
+  }
+
+  if (get_flag_option(args, "--print-pairs")) {
+    auto mappings_2to1 = ros1_bridge::get_all_mappings_2to1();
+    if (mappings_2to1.size() > 0) {
+      printf("Supported ROS 2 <=> ROS 1 message type conversion pairs:\n");
+      for (auto & pair : mappings_2to1) {
+        printf("  - '%s' (ROS 2) <=> '%s' (ROS 1)\n", pair.first.c_str(), pair.second.c_str());
+      }
+    } else {
+      printf("No message type conversion pairs supported.\n");
+    }
     return false;
   }
 
@@ -171,6 +186,9 @@ void update_bridge(
         "failed to create 1to2 bridge for topic '%s' "
         "with ROS 1 type '%s' and ROS 2 type '%s': %s\n",
         topic_name.c_str(), bridge.ros1_type_name.c_str(), bridge.ros2_type_name.c_str(), e.what());
+      if (std::string(e.what()).find("No template specialization") != std::string::npos) {
+        fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
+      }
       continue;
     }
 
@@ -234,6 +252,9 @@ void update_bridge(
         "failed to create 2to1 bridge for topic '%s' "
         "with ROS 2 type '%s' and ROS 1 type '%s': %s\n",
         topic_name.c_str(), bridge.ros2_type_name.c_str(), bridge.ros1_type_name.c_str(), e.what());
+      if (std::string(e.what()).find("No template specialization") != std::string::npos) {
+        fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
+      }
       continue;
     }
 

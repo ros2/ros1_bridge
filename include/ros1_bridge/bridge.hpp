@@ -15,6 +15,7 @@
 #ifndef ROS1_BRIDGE__BRIDGE_HPP_
 #define ROS1_BRIDGE__BRIDGE_HPP_
 
+#include <map>
 #include <memory>
 #include <string>
 
@@ -56,6 +57,9 @@ bool
 get_2to1_mapping(
   const std::string & ros2_type_name,
   std::string & ros1_type_name);
+
+std::map<std::string, std::string>
+get_all_mappings_2to1();
 
 std::shared_ptr<FactoryInterface>
 get_factory(
