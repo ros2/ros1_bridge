@@ -83,7 +83,7 @@ bool parse_command_options(
     ss << " -h, --help: This message." << std::endl;
     ss << " --show-introspection: Print output of introspection of both sides of the bridge.";
     ss << std::endl;
-    ss << " --print-pairs: Print output a list of the supported ROS 2 <=> ROS 1 conversion pairs.";
+    ss << " --print-pairs: Print a list of the supported ROS 2 <=> ROS 1 conversion pairs.";
     ss << std::endl;
     ss << " --bridge-all-topics: Bridge all topics in both directions, whether or not there is ";
     ss << "a matching subscriber." << std::endl;
