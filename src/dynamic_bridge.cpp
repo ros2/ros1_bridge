@@ -670,7 +670,14 @@ int main(int argc, char * argv[])
         if (publisher_count) {
           std::string suffix("Reply");
           auto position = it.first.rfind(suffix);
-          if (position != std::string::npos && position == it.first.size() - suffix.size()) {
+          auto separator = it.second.find("::");
+          auto response_position = it.second.rfind("_Response_");
+          if (
+            position != std::string::npos &&
+            position == it.first.size() - suffix.size() &&
+            separator != std::string::npos &&
+            response_position != std::string::npos)
+          {
             std::string & t = it.second;
             std::string name(it.first.begin(), it.first.end() - suffix.size());
             if (active_ros2_services.find(name) == active_ros2_services.end()) {
