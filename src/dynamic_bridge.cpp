@@ -383,12 +383,12 @@ void get_ros1_service_info(
   std::string host;
   std::uint32_t port;
   if (!manager.lookupService(name, host, port)) {
-    fprintf(stderr, "Failed to look up %s", name.data());
+    fprintf(stderr, "Failed to look up %s\n", name.data());
     return;
   }
   ros::TransportTCPPtr transport(new ros::TransportTCP(nullptr, ros::TransportTCP::SYNCHRONOUS));
   if (!transport->connect(host, port)) {
-    fprintf(stderr, "Failed to connect to %s:%d", host.data(), port);
+    fprintf(stderr, "Failed to connect to %s:%d\n", host.data(), port);
     return;
   }
   ros::M_string header_out;
@@ -421,14 +421,14 @@ void get_ros1_service_info(
   std::string error;
   auto success = header_in.parse(response.data(), length, error);
   if (!success) {
-    fprintf(stderr, "%s", error.data());
+    fprintf(stderr, "%s\n", error.data());
     return;
   }
   for (std::string field : {"type", "request_type", "response_type"}) {
     std::string value;
     auto success = header_in.getValue(field, value);
     if (!success) {
-      fprintf(stderr, "Failed to read %s from a header", field.data());
+      fprintf(stderr, "Failed to read %s from a header\n", field.data());
       return;
     }
     ros1_services[key][field] = value;
