@@ -40,16 +40,15 @@ execute_process (
     COMMAND bash -c "rosmsg list"
     OUTPUT_VARIABLE rosmsg_output
 )
-set(ros1_interfaces_string "${rosmsg_output}")
 execute_process (
     COMMAND bash -c "rossrv list"
     OUTPUT_VARIABLE rossrv_output
 )
-set(ros1_interfaces_string "${ros1_interfaces_string}\n${rosmsg_output}")
+set(ros1_interfaces_string "${rosmsg_output}\n${rossrv_output}")
 
-string(REGEX REPLACE "\n" ";" rosmsg_list "${ros1_interfaces_string}")
+string(REGEX REPLACE "\n" ";" ros1_interfaces_list "${ros1_interfaces_string}")
 set(ros1_message_packages "")
-foreach(interface_package ${rosmsg_list})
+foreach(interface_package ${ros1_interfaces_list})
   string(REGEX REPLACE "/.*$" "" interface_package "${interface_package}")
   list_append_unique(ros1_message_packages ${interface_package})
 endforeach()
@@ -57,7 +56,6 @@ list(SORT ros1_message_packages)
 
 set(prefixed_ros1_message_packages "")
 foreach(ros1_message_package ${ros1_message_packages})
-  message(STATUS ${ros1_message_package})
   find_ros1_package(${ros1_message_package} REQUIRED)
   list(APPEND prefixed_ros1_message_packages "ros1_${ros1_message_package}")
 endforeach()
