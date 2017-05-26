@@ -34,6 +34,31 @@ endif()
 
 find_ros1_package(std_msgs REQUIRED)
 
+# find all known ROS1 message/service packages
+find_ros1_package(rosmsg REQUIRED)
+execute_process (
+    COMMAND bash -c "rosmsg list"
+    OUTPUT_VARIABLE rosmsg_output
+)
+set(ros1_interfaces_string "${rosmsg_output}")
+execute_process (
+    COMMAND bash -c "rossrv list"
+    OUTPUT_VARIABLE rossrv_output
+)
+set(ros1_interfaces_string "${ros1_interfaces_string}\n${rosmsg_output}")
+
+string(REGEX REPLACE "\n" ";" rosmsg_list "${ros1_interfaces_string}")
+set(ros1_message_packages "")
+foreach(interface_package ${rosmsg_list})
+  string(REGEX REPLACE "/.*$" "" interface_package "${interface_package}")
+  list_append_unique(ros1_message_packages ${interface_package})
+endforeach()
+list(SORT ros1_message_packages)
+foreach(ros1_message_package ${ros1_message_packages})
+  message(STATUS ${ros1_message_package})
+  find_ros1_package(${ros1_message_package} REQUIRED)
+endforeach()
+
 set(TEST_ROS1_BRIDGE FALSE)
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -115,6 +140,7 @@ add_library(${PROJECT_NAME} SHARED
   "src/convert_builtin_interfaces.cpp"
   ${generated_files})
 ament_target_dependencies(${PROJECT_NAME}
+  ${ros1_message_packages}
   ${ros2_message_packages}
   "rclcpp"
   "ros1_roscpp"
