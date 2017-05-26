@@ -36,11 +36,11 @@ find_ros1_package(std_msgs REQUIRED)
 
 # find all known ROS1 message/service packages
 find_ros1_package(rosmsg REQUIRED)
-execute_process (
+execute_process(
     COMMAND bash -c "rosmsg list"
     OUTPUT_VARIABLE rosmsg_output
 )
-execute_process (
+execute_process(
     COMMAND bash -c "rossrv list"
     OUTPUT_VARIABLE rossrv_output
 )
