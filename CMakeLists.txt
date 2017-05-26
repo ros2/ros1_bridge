@@ -54,9 +54,12 @@ foreach(interface_package ${rosmsg_list})
   list_append_unique(ros1_message_packages ${interface_package})
 endforeach()
 list(SORT ros1_message_packages)
+
+set(prefixed_ros1_message_packages "")
 foreach(ros1_message_package ${ros1_message_packages})
   message(STATUS ${ros1_message_package})
   find_ros1_package(${ros1_message_package} REQUIRED)
+  list(APPEND prefixed_ros1_message_packages "ros1_${ros1_message_package}")
 endforeach()
 
 set(TEST_ROS1_BRIDGE FALSE)
@@ -140,7 +143,7 @@ add_library(${PROJECT_NAME} SHARED
   "src/convert_builtin_interfaces.cpp"
   ${generated_files})
 ament_target_dependencies(${PROJECT_NAME}
-  ${ros1_message_packages}
+  ${prefixed_ros1_message_packages}
   ${ros2_message_packages}
   "rclcpp"
   "ros1_roscpp"
