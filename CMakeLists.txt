@@ -35,7 +35,6 @@ endif()
 find_ros1_package(std_msgs REQUIRED)
 
 # find all known ROS1 message/service packages
-find_ros1_package(rosmsg REQUIRED)
 execute_process(
     COMMAND bash -c "rosmsg list"
     OUTPUT_VARIABLE rosmsg_output
@@ -46,7 +45,7 @@ execute_process(
 )
 set(ros1_interfaces_string "${rosmsg_output}\n${rossrv_output}")
 
-string(REGEX REPLACE "\n" ";" ros1_interfaces_list "${ros1_interfaces_string}")
+string(REPLACE "\n" ";" ros1_interfaces_list "${ros1_interfaces_string}")
 set(ros1_message_packages "")
 foreach(interface_package ${ros1_interfaces_list})
   string(REGEX REPLACE "/.*$" "" interface_package "${interface_package}")
