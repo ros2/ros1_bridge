@@ -38,11 +38,17 @@ find_ros1_package(std_msgs REQUIRED)
 execute_process(
     COMMAND "rosmsg" "list"
     OUTPUT_VARIABLE rosmsg_output
+    ERROR_VARIABLE rosmsg_error
 )
 execute_process(
     COMMAND "rossrv" "list"
     OUTPUT_VARIABLE rossrv_output
+    ERROR_VARIABLE rossrv_error
 )
+if(NOT rosmsg_error STREQUAL "" OR NOT rossrv_error STREQUAL "")
+  message(FATAL_ERROR "${rosmsg_error}\n${rossrv_error}\nFailed to find ROS 1 message packages\nPlease make sure to source your ROS2 workspace BEFORE sourcing your ROS1 workspace")
+endif()
+
 set(ros1_interfaces_string "${rosmsg_output}\n${rossrv_output}")
 
 string(REPLACE "\n" ";" ros1_interfaces_list "${ros1_interfaces_string}")
