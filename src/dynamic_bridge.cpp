@@ -554,8 +554,8 @@ int main(int argc, char * argv[])
         return;
       }
 
-      ros1_publishers.clear();
-      ros1_subscribers.clear();
+      std::map<std::string, std::string> current_ros1_publishers;
+      std::map<std::string, std::string> current_ros1_subscribers;
       for (auto topic : topics) {
         auto topic_name = topic.name;
         if (topic_name.compare(0, 1, "/") == 0) {
@@ -568,10 +568,10 @@ int main(int argc, char * argv[])
           continue;
         }
         if (has_publisher) {
-          ros1_publishers[topic_name] = topic.datatype;
+          current_ros1_publishers[topic_name] = topic.datatype;
         }
         if (has_subscriber) {
-          ros1_subscribers[topic_name] = topic.datatype;
+          current_ros1_subscribers[topic_name] = topic.datatype;
         }
         if (output_topic_introspection) {
           printf("  ROS 1: %s (%s) [%s pubs, %s subs]\n",
@@ -582,8 +582,8 @@ int main(int argc, char * argv[])
 
       // since ROS 1 subscribers don't report their type they must be added anyway
       for (auto active_subscriber : active_subscribers) {
-        if (ros1_subscribers.find(active_subscriber) == ros1_subscribers.end()) {
-          ros1_subscribers[active_subscriber] = "";
+        if (current_ros1_subscribers.find(active_subscriber) == current_ros1_subscribers.end()) {
+          current_ros1_subscribers[active_subscriber] = "";
           if (output_topic_introspection) {
             printf("  ROS 1: %s (<unknown>) sub++\n", active_subscriber.c_str());
           }
@@ -592,6 +592,12 @@ int main(int argc, char * argv[])
 
       if (output_topic_introspection) {
         printf("\n");
+      }
+
+      {
+        std::lock_guard<std::mutex> lock(g_bridge_mutex);
+        ros1_publishers = current_ros1_publishers;
+        ros1_subscribers = current_ros1_subscribers;
       }
 
       update_bridge(
@@ -643,8 +649,8 @@ int main(int argc, char * argv[])
       ignored_topics.insert("parameter_events");
       ignored_topics.insert("q_bubble");
 
-      ros2_publishers.clear();
-      ros2_subscribers.clear();
+      std::map<std::string, std::string> current_ros2_publishers;
+      std::map<std::string, std::string> current_ros2_subscribers;
       std::map<std::string, std::map<std::string, std::string>> active_ros2_services;
       for (auto it : ros2_topics) {
         // ignore builtin DDS topics
@@ -690,7 +696,7 @@ int main(int argc, char * argv[])
             active_ros2_services[name]["response_topic"] = it.first;
             active_ros2_services[name]["response_type"] = t;
           } else {
-            ros2_publishers[it.first] = it.second;
+            current_ros2_publishers[it.first] = it.second;
           }
         }
 
@@ -706,7 +712,7 @@ int main(int argc, char * argv[])
             active_ros2_services[name]["request_topic"] = it.first;
             active_ros2_services[name]["request_type"] = t;
           } else {
-            ros2_subscribers[it.first] = it.second;
+            current_ros2_subscribers[it.first] = it.second;
           }
         }
 
@@ -730,6 +736,12 @@ int main(int argc, char * argv[])
 
       if (output_topic_introspection) {
         printf("\n");
+      }
+
+      {
+        std::lock_guard<std::mutex> lock(g_bridge_mutex);
+        ros2_publishers = current_ros2_publishers;
+        ros2_subscribers = current_ros2_subscribers;
       }
 
       update_bridge(
