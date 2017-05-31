@@ -434,7 +434,7 @@ def determine_message_pairs(ros1_msgs, ros2_msgs, package_pairs, mapping_rules):
 
     # add manual message mapping rules
     for rule in mapping_rules:
-        if not rule.is_message_mapping:
+        if not rule.is_message_mapping():
             continue
         for ros1_msg in ros1_msgs:
             if rule.ros1_package_name == ros1_msg.package_name and \
@@ -558,7 +558,7 @@ def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, rospack=None):
 
     # check for manual field mapping rules first
     for rule in mapping_rules:
-        if not rule.is_field_mapping:
+        if not rule.is_field_mapping():
             continue
         if rule.ros1_package_name != ros1_msg.package_name or \
                 rule.ros1_message_name != ros1_msg.message_name:
