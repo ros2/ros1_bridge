@@ -46,7 +46,7 @@ execute_process(
     ERROR_VARIABLE rossrv_error
 )
 if(NOT rosmsg_error STREQUAL "" OR NOT rossrv_error STREQUAL "")
-  message(FATAL_ERROR "${rosmsg_error}\n${rossrv_error}\nFailed to find ROS 1 message packages\nPlease make sure to source your ROS2 workspace BEFORE sourcing your ROS1 workspace")
+  message(FATAL_ERROR "${rosmsg_error}\n${rossrv_error}\nFailed to call rosmsg/rossrv\nPlease make sure to source your ROS2 workspace BEFORE sourcing your ROS1 workspace")
 endif()
 
 set(ros1_interfaces_string "${rosmsg_output}\n${rossrv_output}")
