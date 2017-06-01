@@ -220,6 +220,7 @@ def get_ros2_messages():
                 continue
             rule_file = os.path.join(package_path, export.attributes['mapping_rules'])
             with open(rule_file, 'r') as h:
+                print('Loading message mappings from file: %s' % rule_file)
                 for data in yaml.load(h):
                     if all(n not in data for n in ('ros1_service_name', 'ros2_service_name')):
                         try:
@@ -263,6 +264,7 @@ def get_ros2_services():
                 continue
             rule_file = os.path.join(package_path, export.attributes['mapping_rules'])
             with open(rule_file, 'r') as h:
+                print('Loading service mappings from file: %s' % rule_file)
                 for data in yaml.load(h):
                     if all(n not in data for n in ('ros1_message_name', 'ros2_message_name')):
                         try:
