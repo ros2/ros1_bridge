@@ -132,6 +132,13 @@ custom_executable(static_bridge
 target_link_libraries(static_bridge
   ${PROJECT_NAME})
 
+custom_executable(parameter_bridge
+  "src/parameter_bridge.cpp"
+  ROS1_DEPENDENCIES
+  TARGET_DEPENDENCIES ${message_packages})
+target_link_libraries(parameter_bridge
+  ${PROJECT_NAME})
+
 custom_executable(dynamic_bridge
   "src/dynamic_bridge.cpp"
   ROS1_DEPENDENCIES
