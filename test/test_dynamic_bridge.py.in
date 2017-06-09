@@ -99,10 +99,10 @@ def launch(name, process1, process2, env1=None, env2=None, exit_handler2=None, e
     if expected_output2 is not None:
         output_handlers = [
             ConsoleOutput(),
-              InMemoryHandler(
-                  process_name, launch_descriptor, expected_output2,
-                  regex_match=True, exit_on_match=True,
-                  filtered_rmw_implementation=TEST_BRIDGE_RMW)]
+            InMemoryHandler(
+                process_name, launch_descriptor, expected_output2,
+                regex_match=True, exit_on_match=True,
+                filtered_rmw_implementation=TEST_BRIDGE_RMW)]
     launch_descriptor.add_process(
         cmd=process2[1],
         name=process_name,
