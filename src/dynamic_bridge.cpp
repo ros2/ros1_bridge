@@ -428,7 +428,8 @@ void get_ros1_service_info(
     std::string value;
     auto success = header_in.getValue(field, value);
     if (!success) {
-      fprintf(stderr, "Failed to read %s from a header\n", field.data());
+      fprintf(stderr, "Failed to read '%s' from a header for '%s'\n", field.data(), key.c_str());
+      ros1_services.erase(key);
       return;
     }
     ros1_services[key][field] = value;
