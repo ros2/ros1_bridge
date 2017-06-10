@@ -415,7 +415,7 @@ void get_ros1_service_info(
     fprintf(stderr, "Failed to read a response from a service server\n");
     return;
   }
-  std::string key(name.begin() + 1, name.end());
+  std::string key = name;
   ros1_services[key] = std::map<std::string, std::string>();
   ros::Header header_in;
   std::string error;
@@ -428,7 +428,8 @@ void get_ros1_service_info(
     std::string value;
     auto success = header_in.getValue(field, value);
     if (!success) {
-      fprintf(stderr, "Failed to read %s from a header\n", field.data());
+      fprintf(stderr, "Failed to read '%s' from a header for '%s'\n", field.data(), key.c_str());
+      ros1_services.erase(key);
       return;
     }
     ros1_services[key][field] = value;
@@ -496,9 +497,6 @@ int main(int argc, char * argv[])
       if (payload.size() >= 1) {
         for (int j = 0; j < payload[0].size(); ++j) {
           std::string topic_name = payload[0][j][0];
-          if (topic_name.compare(0, 1, "/") == 0) {
-            topic_name = topic_name.substr(1);
-          }
           for (int k = 0; k < payload[0][j][1].size(); ++k) {
             std::string node_name = payload[0][j][1][k];
             // ignore publishers from the bridge itself
@@ -514,9 +512,6 @@ int main(int argc, char * argv[])
       if (payload.size() >= 2) {
         for (int j = 0; j < payload[1].size(); ++j) {
           std::string topic_name = payload[1][j][0];
-          if (topic_name.compare(0, 1, "/") == 0) {
-            topic_name = topic_name.substr(1);
-          }
           for (int k = 0; k < payload[1][j][1].size(); ++k) {
             std::string node_name = payload[1][j][1][k];
             // ignore subscribers from the bridge itself
@@ -535,9 +530,7 @@ int main(int argc, char * argv[])
         for (int j = 0; j < payload[2].size(); ++j) {
           if (payload[2][j][0].getType() == XmlRpc::XmlRpcValue::TypeString) {
             std::string name = payload[2][j][0];
-            if (name.find("/", 1) == std::string::npos) {
-              get_ros1_service_info(name, active_ros1_services);
-            }
+            get_ros1_service_info(name, active_ros1_services);
           }
         }
       }
@@ -558,9 +551,6 @@ int main(int argc, char * argv[])
       std::map<std::string, std::string> current_ros1_subscribers;
       for (auto topic : topics) {
         auto topic_name = topic.name;
-        if (topic_name.compare(0, 1, "/") == 0) {
-          topic_name = topic_name.substr(1);
-        }
         bool has_publisher = active_publishers.find(topic_name) != active_publishers.end();
         bool has_subscriber = active_subscribers.find(topic_name) != active_subscribers.end();
         if (!has_publisher && !has_subscriber) {
