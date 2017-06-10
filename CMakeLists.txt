@@ -34,6 +34,27 @@ endif()
 
 find_ros1_package(std_msgs REQUIRED)
 
+# ROS1 message packages need to be first in the PYTHONPATH
+# So we remove every ROS2 path from the python path for now
+set(__AMENT_PREFIX_PATH $ENV{AMENT_PREFIX_PATH})
+set(__ORIG_PYTHONPATH $ENV{PYTHONPATH})
+set(__PYTHONPATH "${__ORIG_PYTHONPATH}")
+string(REPLACE ":" ";" __AMENT_PREFIX_PATH ${__AMENT_PREFIX_PATH})
+string(REPLACE ":" ";" __PYTHONPATH ${__PYTHONPATH})
+foreach(ament_path ${__AMENT_PREFIX_PATH})
+  foreach(py_path ${__PYTHONPATH})
+    if(py_path MATCHES "^${ament_path}")
+      list(REMOVE_ITEM __PYTHONPATH ${py_path})
+    endif()
+  endforeach()
+endforeach()
+set(__PYTHONPATH_STRING "")
+foreach(py_path ${__PYTHONPATH})
+  string(CONCAT __PYTHONPATH_STRING "${__PYTHONPATH_STRING}" "${py_path}" ":")
+endforeach()
+
+set(ENV{PYTHONPATH} "${__PYTHONPATH_STRING}")
+
 # find all known ROS1 message/service packages
 execute_process(
     COMMAND "rosmsg" "list"
@@ -45,8 +66,9 @@ execute_process(
     OUTPUT_VARIABLE rossrv_output
     ERROR_VARIABLE rossrv_error
 )
+set(ENV{PYTHONPATH} ${__ORIG_PYTHONPATH})
 if(NOT rosmsg_error STREQUAL "" OR NOT rossrv_error STREQUAL "")
-  message(FATAL_ERROR "${rosmsg_error}\n${rossrv_error}\nFailed to call rosmsg/rossrv\nPlease make sure to source your ROS2 workspace BEFORE sourcing your ROS1 workspace")
+  message(FATAL_ERROR "${rosmsg_error}\n${rossrv_error}\nFailed to call rosmsg/rossrv")
 endif()
 
 set(ros1_interfaces_string "${rosmsg_output}\n${rossrv_output}")
