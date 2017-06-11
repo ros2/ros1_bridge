@@ -36,24 +36,24 @@ find_ros1_package(std_msgs REQUIRED)
 
 # ROS1 message packages need to be first in the PYTHONPATH
 # So we remove every ROS2 path from the python path for now
-set(__AMENT_PREFIX_PATH $ENV{AMENT_PREFIX_PATH})
-set(__ORIG_PYTHONPATH $ENV{PYTHONPATH})
-set(__PYTHONPATH "${__ORIG_PYTHONPATH}")
-string(REPLACE ":" ";" __AMENT_PREFIX_PATH ${__AMENT_PREFIX_PATH})
-string(REPLACE ":" ";" __PYTHONPATH ${__PYTHONPATH})
-foreach(ament_path ${__AMENT_PREFIX_PATH})
-  foreach(py_path ${__PYTHONPATH})
+set(_AMENT_PREFIX_PATH $ENV{AMENT_PREFIX_PATH})
+set(_ORIG_PYTHONPATH $ENV{PYTHONPATH})
+set(_PYTHONPATH "${_ORIG_PYTHONPATH}")
+string(REPLACE ":" ";" _AMENT_PREFIX_PATH ${_AMENT_PREFIX_PATH})
+string(REPLACE ":" ";" _PYTHONPATH ${_PYTHONPATH})
+foreach(ament_path ${_AMENT_PREFIX_PATH})
+  foreach(py_path ${_PYTHONPATH})
     if(py_path MATCHES "^${ament_path}")
-      list(REMOVE_ITEM __PYTHONPATH ${py_path})
+      list(REMOVE_ITEM _PYTHONPATH ${py_path})
     endif()
   endforeach()
 endforeach()
-set(__PYTHONPATH_STRING "")
-foreach(py_path ${__PYTHONPATH})
-  string(CONCAT __PYTHONPATH_STRING "${__PYTHONPATH_STRING}" "${py_path}" ":")
+set(_PYTHONPATH_STRING "")
+foreach(py_path ${_PYTHONPATH})
+  string(CONCAT _PYTHONPATH_STRING "${_PYTHONPATH_STRING}" "${py_path}" ":")
 endforeach()
 
-set(ENV{PYTHONPATH} "${__PYTHONPATH_STRING}")
+set(ENV{PYTHONPATH} "${_PYTHONPATH_STRING}")
 
 # find all known ROS1 message/service packages
 execute_process(
@@ -66,7 +66,7 @@ execute_process(
     OUTPUT_VARIABLE rossrv_output
     ERROR_VARIABLE rossrv_error
 )
-set(ENV{PYTHONPATH} ${__ORIG_PYTHONPATH})
+set(ENV{PYTHONPATH} ${_ORIG_PYTHONPATH})
 if(NOT rosmsg_error STREQUAL "" OR NOT rossrv_error STREQUAL "")
   message(FATAL_ERROR "${rosmsg_error}\n${rossrv_error}\nFailed to call rosmsg/rossrv")
 endif()
