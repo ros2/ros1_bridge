@@ -34,57 +34,9 @@ endif()
 
 find_ros1_package(std_msgs REQUIRED)
 
-# ROS1 message packages need to be first in the PYTHONPATH
-# So we remove every ROS2 path from the python path for now
-set(_AMENT_PREFIX_PATH $ENV{AMENT_PREFIX_PATH})
-set(_ORIG_PYTHONPATH $ENV{PYTHONPATH})
-set(_PYTHONPATH "${_ORIG_PYTHONPATH}")
-if(WIN32)
-  set(path_delimiter "\\")
-  set(env_var_delimiter ";")
-else()
-  set(path_delimiter "/")
-  set(env_var_delimiter ":")
-  string(REPLACE ":" ";" _AMENT_PREFIX_PATH ${_AMENT_PREFIX_PATH})
-  string(REPLACE ":" ";" _PYTHONPATH ${_PYTHONPATH})
-endif()
-
-foreach(ament_path ${_AMENT_PREFIX_PATH})
-  foreach(py_path ${_PYTHONPATH})
-    if(py_path MATCHES "^${ament_path}${path_delimiter}")
-      list(REMOVE_ITEM _PYTHONPATH ${py_path})
-    endif()
-  endforeach()
-endforeach()
-string(REPLACE ";" ${env_var_delimiter} _PYTHONPATH "${_PYTHONPATH}")
-
-set(ENV{PYTHONPATH} "${_PYTHONPATH}")
-
-# find all known ROS1 message/service packages
-execute_process(
-    COMMAND "rosmsg" "list"
-    OUTPUT_VARIABLE rosmsg_output
-    ERROR_VARIABLE rosmsg_error
-)
-execute_process(
-    COMMAND "rossrv" "list"
-    OUTPUT_VARIABLE rossrv_output
-    ERROR_VARIABLE rossrv_error
-)
-set(ENV{PYTHONPATH} ${_ORIG_PYTHONPATH})
-if(NOT rosmsg_error STREQUAL "" OR NOT rossrv_error STREQUAL "")
-  message(FATAL_ERROR "${rosmsg_error}\n${rossrv_error}\nFailed to call rosmsg/rossrv")
-endif()
-
-set(ros1_interfaces_string "${rosmsg_output}\n${rossrv_output}")
-
-string(REPLACE "\n" ";" ros1_interfaces_list "${ros1_interfaces_string}")
-set(ros1_message_packages "")
-foreach(interface_package ${ros1_interfaces_list})
-  string(REGEX REPLACE "/.*$" "" interface_package "${interface_package}")
-  list_append_unique(ros1_message_packages ${interface_package})
-endforeach()
-list(SORT ros1_message_packages)
+# find ROS 1 packages with messages / services
+include(cmake/find_ros1_interface_packages.cmake)
+find_ros1_interface_packages(ros1_message_packages)
 
 set(prefixed_ros1_message_packages "")
 foreach(ros1_message_package ${ros1_message_packages})
