@@ -31,6 +31,9 @@ function(find_ros1_interface_packages var)
     endif()
   endforeach()
   file(TO_NATIVE_PATH "${PYTHONPATH_WITHOUT_ROS2}" PYTHONPATH_WITHOUT_ROS2)
+  if(NOT WIN32)
+    string(REPLACE ";" ":" PYTHONPATH_WITHOUT_ROS2 "${PYTHONPATH_WITHOUT_ROS2}")
+  endif()
   set(ENV{PYTHONPATH} "${PYTHONPATH_WITHOUT_ROS2}")
 
   # find all known ROS1 message/service packages
