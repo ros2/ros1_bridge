@@ -34,6 +34,16 @@ endif()
 
 find_ros1_package(std_msgs REQUIRED)
 
+# find ROS 1 packages with messages / services
+include(cmake/find_ros1_interface_packages.cmake)
+find_ros1_interface_packages(ros1_message_packages)
+
+set(prefixed_ros1_message_packages "")
+foreach(ros1_message_package ${ros1_message_packages})
+  find_ros1_package(${ros1_message_package} REQUIRED)
+  list(APPEND prefixed_ros1_message_packages "ros1_${ros1_message_package}")
+endforeach()
+
 set(TEST_ROS1_BRIDGE FALSE)
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -58,8 +68,8 @@ set(generated_files "${generated_path}/get_factory.cpp")
 list(APPEND generated_files "${generated_path}/get_mappings.cpp")
 
 # generate per package compilation units to keep the memory usage low
-ament_index_get_resources(message_packages "rosidl_interfaces")
-foreach(message_package ${message_packages})
+ament_index_get_resources(ros2_message_packages "rosidl_interfaces")
+foreach(message_package ${ros2_message_packages})
   find_package(${message_package} REQUIRED)
   list(APPEND generated_files "${generated_path}/${message_package}_factories.cpp")
 endforeach()
@@ -115,7 +125,8 @@ add_library(${PROJECT_NAME} SHARED
   "src/convert_builtin_interfaces.cpp"
   ${generated_files})
 ament_target_dependencies(${PROJECT_NAME}
-  ${message_packages}
+  ${prefixed_ros1_message_packages}
+  ${ros2_message_packages}
   "rclcpp"
   "ros1_roscpp"
   "ros1_std_msgs")
@@ -128,7 +139,7 @@ install(TARGETS ${PROJECT_NAME}
 custom_executable(static_bridge
   "src/static_bridge.cpp"
   ROS1_DEPENDENCIES
-  TARGET_DEPENDENCIES ${message_packages})
+  TARGET_DEPENDENCIES ${ros2_message_packages})
 target_link_libraries(static_bridge
   ${PROJECT_NAME})
 
@@ -142,7 +153,7 @@ target_link_libraries(parameter_bridge
 custom_executable(dynamic_bridge
   "src/dynamic_bridge.cpp"
   ROS1_DEPENDENCIES
-  TARGET_DEPENDENCIES ${message_packages})
+  TARGET_DEPENDENCIES ${ros2_message_packages})
 target_link_libraries(dynamic_bridge
   ${PROJECT_NAME})
 
