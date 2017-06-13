@@ -16,7 +16,8 @@ function(find_ros1_interface_packages var)
   # rosmsg/rossrv require the ROS 1 packages to be first in the PYTHONPATH
   # therefore we temporarily remove every ROS 2 path from the PYTHONPATH
   file(TO_CMAKE_PATH "$ENV{AMENT_PREFIX_PATH}" AMENT_PREFIX_PATH)
-  file(TO_CMAKE_PATH "$ENV{PYTHONPATH}" PYTHONPATH)
+  set(_ORIG_PYTHONPATH "$ENV{PYTHONPATH}")
+  file(TO_CMAKE_PATH "${_ORIG_PYTHONPATH}" PYTHONPATH)
   set(PYTHONPATH_WITHOUT_ROS2 "")
   foreach(python_path IN LISTS PYTHONPATH)
     set(match FALSE)
