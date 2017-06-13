@@ -16,10 +16,10 @@ function(find_ros1_interface_packages var)
   # rosmsg/rossrv require the ROS 1 packages to be first in the PYTHONPATH
   # therefore we temporarily remove every ROS 2 path from the PYTHONPATH
   file(TO_CMAKE_PATH "$ENV{AMENT_PREFIX_PATH}" AMENT_PREFIX_PATH)
-  set(_ORIG_PYTHONPATH "$ENV{PYTHONPATH}")
-  file(TO_CMAKE_PATH "${_ORIG_PYTHONPATH}" PYTHONPATH)
+  set(PYTHONPATH "$ENV{PYTHONPATH}")
+  file(TO_CMAKE_PATH "${PYTHONPATH}" CMAKE_PYTHONPATH)
   set(PYTHONPATH_WITHOUT_ROS2 "")
-  foreach(python_path IN LISTS PYTHONPATH)
+  foreach(python_path IN LISTS CMAKE_PYTHONPATH)
     set(match FALSE)
     foreach(ament_prefix_path IN LISTS AMENT_PREFIX_PATH)
       if(python_path MATCHES "^${ament_prefix_path}/")
@@ -50,7 +50,7 @@ function(find_ros1_interface_packages var)
   )
 
   # restore PYTHONPATH
-  set(ENV{PYTHONPATH} ${_ORIG_PYTHONPATH})
+  set(ENV{PYTHONPATH} ${PYTHONPATH})
 
   if(NOT rosmsg_error STREQUAL "" OR NOT rossrv_error STREQUAL "")
     message(FATAL_ERROR "${rosmsg_error}\n${rossrv_error}\nFailed to call rosmsg/rossrv")
