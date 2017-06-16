@@ -605,6 +605,7 @@ int main(int argc, char * argv[])
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
   // setup polling of ROS 2
+  std::set<std::string> already_ignored_topics;
   auto ros2_poll = [
     &ros1_node, ros2_node,
     &ros1_publishers, &ros1_subscribers,
@@ -613,7 +614,8 @@ int main(int argc, char * argv[])
     &bridges_1to2, &bridges_2to1,
     &service_bridges_1_to_2, &service_bridges_2_to_1,
     &output_topic_introspection,
-    &bridge_all_1to2_topics, &bridge_all_2to1_topics
+    &bridge_all_1to2_topics, &bridge_all_2to1_topics,
+    &already_ignored_topics
     ]() -> void
     {
       auto ros2_topics = ros2_node->get_topic_names_and_types();
@@ -647,6 +649,24 @@ int main(int argc, char * argv[])
         if (ignored_topics.find(it.first) != ignored_topics.end()) {
           continue;
         }
+
+        if (it.second.size() > 1) {
+          if (already_ignored_topics.count(it.first) == 0) {
+            std::string types = "";
+            for (auto type : it.second) {
+              types += type + ", ";
+            }
+            fprintf(
+              stderr,
+              "warning: ignoring topic '%s', which has more than one type: [%s]\n",
+              it.first.c_str(),
+              types.substr(0, types.length() - 2).c_str()
+            );
+            already_ignored_topics.insert(it.first);
+          }
+        }
+        auto topic_type = it.second[0];  // explicitly take the first
+
         auto publisher_count = ros2_node->count_publishers(it.first);
         auto subscriber_count = ros2_node->count_subscribers(it.first);
 
@@ -666,15 +686,15 @@ int main(int argc, char * argv[])
         if (publisher_count) {
           std::string suffix("Reply");
           auto position = it.first.rfind(suffix);
-          auto separator = it.second.find("::");
-          auto response_position = it.second.rfind("_Response_");
+          auto separator = topic_type.find("::");
+          auto response_position = topic_type.rfind("_Response_");
           if (
             position != std::string::npos &&
             position == it.first.size() - suffix.size() &&
             separator != std::string::npos &&
             response_position != std::string::npos)
           {
-            std::string & t = it.second;
+            std::string & t = topic_type;
             std::string name(it.first.begin(), it.first.end() - suffix.size());
             if (active_ros2_services.find(name) == active_ros2_services.end()) {
               active_ros2_services[name] = std::map<std::string, std::string>();
@@ -686,7 +706,7 @@ int main(int argc, char * argv[])
             active_ros2_services[name]["response_topic"] = it.first;
             active_ros2_services[name]["response_type"] = t;
           } else {
-            current_ros2_publishers[it.first] = it.second;
+            current_ros2_publishers[it.first] = topic_type;
           }
         }
 
@@ -694,7 +714,7 @@ int main(int argc, char * argv[])
           std::string suffix("Request");
           auto position = it.first.rfind(suffix);
           if (position != std::string::npos && position == it.first.size() - suffix.size()) {
-            std::string & t = it.second;
+            std::string & t = topic_type;
             std::string name(it.first.begin(), it.first.end() - suffix.size());
             if (active_ros2_services.find(name) == active_ros2_services.end()) {
               active_ros2_services[name] = std::map<std::string, std::string>();
@@ -702,13 +722,13 @@ int main(int argc, char * argv[])
             active_ros2_services[name]["request_topic"] = it.first;
             active_ros2_services[name]["request_type"] = t;
           } else {
-            current_ros2_subscribers[it.first] = it.second;
+            current_ros2_subscribers[it.first] = topic_type;
           }
         }
 
         if (output_topic_introspection) {
           printf("  ROS 2: %s (%s) [%ld pubs, %ld subs]\n",
-            it.first.c_str(), it.second.c_str(), publisher_count, subscriber_count);
+            it.first.c_str(), topic_type.c_str(), publisher_count, subscriber_count);
         }
       }
 
