@@ -20,11 +20,11 @@
 
 int main(int argc, char ** argv)
 {
-  std::this_thread::sleep_for(std::chrono::seconds(4));
   ros::init(argc, argv, "ros1_bridge_test_client");
   ros::NodeHandle n;
   ros::ServiceClient client = n.serviceClient<diagnostic_msgs::SelfTest>(
     "ros1_bridge_test");
+  client.waitForExistence();
   diagnostic_msgs::SelfTest request;
   if (client.call(request)) {
     if (request.response.id != "ros2") {
