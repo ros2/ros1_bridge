@@ -605,6 +605,8 @@ int main(int argc, char * argv[])
   std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
   // setup polling of ROS 2
+  std::set<std::string> already_ignored_topics;
+  std::set<std::string> already_ignored_services;
   auto ros2_poll = [
     &ros1_node, ros2_node,
     &ros1_publishers, &ros1_subscribers,
@@ -613,112 +615,112 @@ int main(int argc, char * argv[])
     &bridges_1to2, &bridges_2to1,
     &service_bridges_1_to_2, &service_bridges_2_to_1,
     &output_topic_introspection,
-    &bridge_all_1to2_topics, &bridge_all_2to1_topics
+    &bridge_all_1to2_topics, &bridge_all_2to1_topics,
+    &already_ignored_topics, &already_ignored_services
     ]() -> void
     {
       auto ros2_topics = ros2_node->get_topic_names_and_types();
 
       std::set<std::string> ignored_topics;
-      ignored_topics.insert("CMParticipant");
-      ignored_topics.insert("DCPSCandMCommand");
-      ignored_topics.insert("DCPSDelivery");
-      ignored_topics.insert("DCPSHeartbeat");
-      ignored_topics.insert("DCPSParticipant");
-      ignored_topics.insert("DCPSPublication");
-      ignored_topics.insert("DCPSSubscription");
-      ignored_topics.insert("DCPSTopic");
-      ignored_topics.insert("d_deleteData");
-      ignored_topics.insert("d_groupsRequest");
-      ignored_topics.insert("d_nameSpaces");
-      ignored_topics.insert("d_nameSpacesRequest");
-      ignored_topics.insert("d_newGroup");
-      ignored_topics.insert("d_sampleChain");
-      ignored_topics.insert("d_sampleRequest");
-      ignored_topics.insert("d_status");
-      ignored_topics.insert("d_statusRequest");
       ignored_topics.insert("parameter_events");
-      ignored_topics.insert("q_bubble");
 
       std::map<std::string, std::string> current_ros2_publishers;
       std::map<std::string, std::string> current_ros2_subscribers;
-      std::map<std::string, std::map<std::string, std::string>> active_ros2_services;
-      for (auto it : ros2_topics) {
-        // ignore builtin DDS topics
-        if (ignored_topics.find(it.first) != ignored_topics.end()) {
+      for (auto topic_and_types : ros2_topics) {
+        // ignore some common ROS 2 specific topics
+        if (ignored_topics.find(topic_and_types.first) != ignored_topics.end()) {
           continue;
         }
-        auto publisher_count = ros2_node->count_publishers(it.first);
-        auto subscriber_count = ros2_node->count_subscribers(it.first);
+
+        auto & topic_name = topic_and_types.first;
+        auto & topic_type = topic_and_types.second[0];  // explicitly take the first
+
+        // explicitly avoid topics with more than one type
+        if (topic_and_types.second.size() > 1) {
+          if (already_ignored_topics.count(topic_name) == 0) {
+            std::string types = "";
+            for (auto type : topic_and_types.second) {
+              types += type + ", ";
+            }
+            fprintf(
+              stderr,
+              "warning: ignoring topic '%s', which has more than one type: [%s]\n",
+              topic_name.c_str(),
+              types.substr(0, types.length() - 2).c_str()
+            );
+            already_ignored_topics.insert(topic_name);
+          }
+          continue;
+        }
+
+        auto publisher_count = ros2_node->count_publishers(topic_name);
+        auto subscriber_count = ros2_node->count_subscribers(topic_name);
 
         // ignore publishers from the bridge itself
-        if (bridges_1to2.find(it.first) != bridges_1to2.end()) {
+        if (bridges_1to2.find(topic_name) != bridges_1to2.end()) {
           if (publisher_count > 0) {
             --publisher_count;
           }
         }
         // ignore subscribers from the bridge itself
-        if (bridges_2to1.find(it.first) != bridges_2to1.end()) {
+        if (bridges_2to1.find(topic_name) != bridges_2to1.end()) {
           if (subscriber_count > 0) {
             --subscriber_count;
           }
         }
 
         if (publisher_count) {
-          std::string suffix("Reply");
-          auto position = it.first.rfind(suffix);
-          auto separator = it.second.find("::");
-          auto response_position = it.second.rfind("_Response_");
-          if (
-            position != std::string::npos &&
-            position == it.first.size() - suffix.size() &&
-            separator != std::string::npos &&
-            response_position != std::string::npos)
-          {
-            std::string & t = it.second;
-            std::string name(it.first.begin(), it.first.end() - suffix.size());
-            if (active_ros2_services.find(name) == active_ros2_services.end()) {
-              active_ros2_services[name] = std::map<std::string, std::string>();
-            }
-            std::string srv(t.begin() + t.rfind("::") + 2, t.begin() + t.rfind("_Response_"));
-            std::string pkg(t.begin(), t.begin() + t.find("::"));
-            active_ros2_services[name]["package"] = pkg;
-            active_ros2_services[name]["name"] = srv;
-            active_ros2_services[name]["response_topic"] = it.first;
-            active_ros2_services[name]["response_type"] = t;
-          } else {
-            current_ros2_publishers[it.first] = it.second;
-          }
+          current_ros2_publishers[topic_name] = topic_type;
         }
 
         if (subscriber_count) {
-          std::string suffix("Request");
-          auto position = it.first.rfind(suffix);
-          if (position != std::string::npos && position == it.first.size() - suffix.size()) {
-            std::string & t = it.second;
-            std::string name(it.first.begin(), it.first.end() - suffix.size());
-            if (active_ros2_services.find(name) == active_ros2_services.end()) {
-              active_ros2_services[name] = std::map<std::string, std::string>();
-            }
-            active_ros2_services[name]["request_topic"] = it.first;
-            active_ros2_services[name]["request_type"] = t;
-          } else {
-            current_ros2_subscribers[it.first] = it.second;
-          }
+          current_ros2_subscribers[topic_name] = topic_type;
         }
 
         if (output_topic_introspection) {
           printf("  ROS 2: %s (%s) [%ld pubs, %ld subs]\n",
-            it.first.c_str(), it.second.c_str(), publisher_count, subscriber_count);
+            topic_name.c_str(), topic_type.c_str(), publisher_count, subscriber_count);
         }
       }
 
-      for (auto it = active_ros2_services.begin(); it != active_ros2_services.end(); ) {
-        if (it->second.size() != 6) {
-          it = active_ros2_services.erase(it);
-        } else {
-          ++it;
+      auto ros2_services_and_types = ros2_node->get_service_names_and_types();
+      std::map<std::string, std::map<std::string, std::string>> active_ros2_services;
+      for (const auto & service_and_types : ros2_services_and_types) {
+        auto & service_name = service_and_types.first;
+        auto & service_type = service_and_types.second[0];  // explicitly take the first
+
+        // explicitly avoid services with more than one type
+        if (service_and_types.second.size() > 1) {
+          if (already_ignored_services.count(service_name) == 0) {
+            std::string types = "";
+            for (auto type : service_and_types.second) {
+              types += type + ", ";
+            }
+            fprintf(
+              stderr,
+              "warning: ignoring service '%s', which has more than one type: [%s]\n",
+              service_name.c_str(),
+              types.substr(0, types.length() - 2).c_str()
+            );
+            already_ignored_services.insert(service_name);
+          }
+          continue;
         }
+
+        // TODO(wjwwood): this should be common functionality in the C++ rosidl package
+        size_t separator_position = service_type.find('/');
+        if (separator_position == std::string::npos) {
+          fprintf(stderr, "invalid service type '%s', skipping...\n", service_type.c_str());
+          continue;
+        }
+        auto service_type_package_name = service_type.substr(0, separator_position);
+        auto service_type_srv_name = service_type.substr(separator_position + 1);
+
+        // TODO(wjwwood): fix bug where just a ros2 client will cause a ros1 service to be made
+        active_ros2_services[service_name]["package"] = service_type_package_name;
+        active_ros2_services[service_name]["name"] = service_type_srv_name;
       }
+
       {
         std::lock_guard<std::mutex> lock(g_bridge_mutex);
         ros2_services = active_ros2_services;
