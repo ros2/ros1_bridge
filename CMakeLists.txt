@@ -111,7 +111,7 @@ function(custom_executable target)
   endif()
 
   install(TARGETS ${target}
-    DESTINATION bin)
+  DESTINATION lib/${PROJECT_NAME})
 endfunction()
 
 custom_executable(simple_bridge_1_to_2 "src/simple_bridge_1_to_2.cpp"
@@ -203,7 +203,7 @@ endif()
 
 install(
   PROGRAMS bin/ros1_bridge_generate_factories
-  DESTINATION lib/ros1_bridge_generate_factories
+  DESTINATION lib/${PROJECT_NAME}/generate_factories
 )
 install(
   DIRECTORY cmake
