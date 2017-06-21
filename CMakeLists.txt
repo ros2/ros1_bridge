@@ -167,7 +167,7 @@ if(TEST_ROS1_BRIDGE)
   custom_executable(test_ros2_server_cpp "test/test_ros2_server.cpp")
   ament_target_dependencies("test_ros2_server_cpp${target_suffix}" "ros1_roscpp" "diagnostic_msgs")
 
-  set(TEST_BRIDGE_DYNAMIC_BRIDGE "${CMAKE_INSTALL_PREFIX}/bin/dynamic_bridge")
+  set(TEST_BRIDGE_DYNAMIC_BRIDGE "$<TARGET_FILE:dynamic_bridge>")
   set(TEST_BRIDGE_ROS2_CLIENT "$<TARGET_FILE:test_ros2_client_cpp>")
   set(TEST_BRIDGE_ROS2_SERVER "$<TARGET_FILE:test_ros2_server_cpp>")
   set(TEST_BRIDGE_RMW ${rmw_implementation})
