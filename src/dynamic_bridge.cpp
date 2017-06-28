@@ -388,7 +388,9 @@ void get_ros1_service_info(
     return;
   }
   ros::TransportTCPPtr transport(new ros::TransportTCP(nullptr, ros::TransportTCP::SYNCHRONOUS));
-  auto transport_exit = rclcpp::make_scope_exit([&transport](){ transport->close(); });
+  auto transport_exit = rclcpp::make_scope_exit([&transport]() {
+    transport->close();
+  });
   if (!transport->connect(host, port)) {
     fprintf(stderr, "Failed to connect to %s:%d\n", host.data(), port);
     return;
