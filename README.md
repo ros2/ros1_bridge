@@ -12,7 +12,7 @@ If you would like to use a bridge with other interfaces (including your own cust
 
 For efficiency reasons, topics will only be bridged when matching publisher-subscriber pairs are active for a topic on either side of the bridge.
 You can use the `--bridge-all-2to1-topics` option to bridge all ROS 2 topics to ROS 1 so that tools such as `rostopic list` and `rqt` will see the topics even if there are no matching ROS 1 subscribers.
-Run `dynamic_bridge --help` for more options.
+Run `ros2 run ros1_bridge dynamic_bridge -- --help` for more options.
 
 ## Prerequisites
 
@@ -121,7 +121,7 @@ Once a *matching* topic has been detected it starts to bridge the messages on th
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 . <install-space-with-bridge>/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
-dynamic_bridge
+ros2 run ros1_bridge dynamic_bridge
 ```
 
 The program will start outputting the currently available topics in ROS 1 and ROS 2 in a regular interval.
@@ -147,7 +147,7 @@ Now we start the ROS 2 listener from the `demo_nodes_cpp` ROS 2 package.
 ```
 # Shell D:
 . <install-space-with-ros2>/setup.bash
-listener
+ros2 run demo_nodes_cpp listener
 ```
 
 The ROS 2 node will start printing the received messages to the console.
@@ -194,17 +194,17 @@ roscore
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 . <install-space-with-bridge>/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
-dynamic_bridge
+ros2 run ros1_bridge dynamic_bridge
 ```
 
 ---
 
-Now we start the ROS 2 talker from the `demo_nodes_cpp` ROS 2 package.
+Now we start the ROS 2 talker from the `demo_nodes_py` ROS 2 package.
 
 ```
 # Shell C:
 . <install-space-with-ros2>/setup.bash
-talker
+ros2 run demo_nodes_py talker
 ```
 
 ---
@@ -243,7 +243,7 @@ roscore
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 . <workspace-with-bridge>/install/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
-dynamic_bridge
+ros2 run ros1_bridge dynamic_bridge
 ```
 
 ---
@@ -318,7 +318,7 @@ Launch dynamic_bridge:
 . <ros-install-dir>/setup.bash
 . <ros2-install-dir>/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
-dynamic_bridge
+ros2 run ros1_bridge dynamic_bridge
 ```
 
 Launch TwoInts server:
