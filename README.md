@@ -264,7 +264,7 @@ Now we start the ROS 2 image publisher from the `image_tools` ROS 2 package:
 ```
 # Shell D:
 . <workspace-with-ros2>/install/setup.bash
-cam2image
+ros2 run image_tools cam2image
 ```
 
 You should see the current images in `rqt_image_view` which are coming from the ROS 2 node `cam2image` and are being passed along by the bridge.
@@ -335,5 +335,5 @@ Launch AddTwoInts client:
 ```
 # Shell D:
 . <ros2-install-dir>/setup.bash
-add_two_ints_client
+ros2 run demo_nodes_cpp add_two_ints_client
 ```
