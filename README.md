@@ -84,7 +84,7 @@ Alternatively you can do it manually by sourcing the relevant workspaces yoursel
 Then build just the ROS 1 bridge with `-j2`:
 
 ```
-src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install -j2 --only ros1_bridge
+src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install -j2 --only ros1_bridge --force-cmake-configure
 ```
 
 
