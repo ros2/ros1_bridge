@@ -81,10 +81,10 @@ Alternatively you can do it manually by sourcing the relevant workspaces yoursel
 # . <install-space-to-ros2-overlay-ws>/local_setup.bash
 ```
 
-Then build just the ROS 1 bridge with `-j1`:
+Then build just the ROS 1 bridge with `-j2`:
 
 ```
-src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install -j1 --only ros1_bridge
+src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install -j2 --only ros1_bridge
 ```
 
 
