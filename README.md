@@ -87,7 +87,7 @@ Then build just the ROS 1 bridge:
 src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install --only ros1_bridge --force-cmake-configure
 ```
 
-*Note:* If you build on a memory constrained system you might want to limit the number of parallel jobs by passing e.g. `-j1`.
+*Note:* If you are building on a memory constrained system you might want to limit the number of parallel jobs by passing e.g. `-j1`.
 
 
 ## Example 1: run the bridge and the example talker and listener
