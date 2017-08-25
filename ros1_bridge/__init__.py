@@ -272,7 +272,7 @@ def get_ros2_services():
     return pkgs, srvs, rules
 
 
-class Message(object):
+class Message:
     __slots__ = [
         'package_name',
         'message_name',
@@ -298,7 +298,7 @@ class Message(object):
         return self.__str__()
 
 
-class MappingRule(object):
+class MappingRule:
     __slots__ = [
         'ros1_package_name',
         'ros2_package_name',
@@ -681,7 +681,7 @@ genmsg.msgs.Field.__hash__ = FieldHash
 rosidl_parser.Field.__hash__ = FieldHash
 
 
-class Mapping(object):
+class Mapping:
     __slots__ = [
         'ros1_msg',
         'ros2_msg',
