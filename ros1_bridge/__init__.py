@@ -189,7 +189,7 @@ def get_ros1_messages(rospack=None):
     if not rospack:
         rospack = rospkg.RosPack()
     msgs = []
-    pkgs = sorted([x for x in rosmsg.iterate_packages(rospack, rosmsg.MODE_MSG)])
+    pkgs = sorted(x for x in rosmsg.iterate_packages(rospack, rosmsg.MODE_MSG))
     for package_name, path in pkgs:
         for message_name in rosmsg._list_types(path, 'msg', rosmsg.MODE_MSG):
             msgs.append(Message(package_name, message_name, path))
@@ -233,7 +233,7 @@ def get_ros1_services(rospack=None):
     if not rospack:
         rospack = rospkg.RosPack()
     srvs = []
-    pkgs = sorted([x for x in rosmsg.iterate_packages(rospack, rosmsg.MODE_SRV)])
+    pkgs = sorted(x for x in rosmsg.iterate_packages(rospack, rosmsg.MODE_SRV))
     for package_name, path in pkgs:
         for message_name in rosmsg._list_types(path, 'srv', rosmsg.MODE_SRV):
             srvs.append(Message(package_name, message_name, path))
@@ -292,7 +292,7 @@ class Message:
         return hash('%s/%s' % (self.package_name, self.message_name))
 
     def __str__(self):
-        return self.prefix_path + ":" + self.package_name + ":" + self.message_name
+        return self.prefix_path + ':' + self.package_name + ':' + self.message_name
 
     def __repr__(self):
         return self.__str__()
@@ -387,8 +387,8 @@ def determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules):
     # determine package names considered equal between ROS 1 and ROS 2
     ros1_suffix = '_msgs'
     ros2_suffixes = ['_msgs', '_interfaces']
-    ros1_package_names = set([m.package_name for m in ros1_msgs])
-    ros2_package_names = set([m.package_name for m in ros2_msgs])
+    ros1_package_names = {m.package_name for m in ros1_msgs}
+    ros2_package_names = {m.package_name for m in ros2_msgs}
     for ros1_package_name in ros1_package_names:
         if not ros1_package_name.endswith(ros1_suffix):
             continue
@@ -511,17 +511,17 @@ def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
                     match = False
                     break
                 output[direction].append({
-                    'basic': False if "/" in ros1_type else True,
-                    'array': True if "[]" in ros1_type else False,
+                    'basic': False if '/' in ros1_type else True,
+                    'array': True if '[]' in ros1_type else False,
                     'ros1': {
                         'name': ros1_name,
-                        'type': ros1_type.rstrip("[]"),
-                        'cpptype': ros1_type.rstrip("[]").replace("/", "::")
+                        'type': ros1_type.rstrip('[]'),
+                        'cpptype': ros1_type.rstrip('[]').replace('/', '::')
                     },
                     'ros2': {
                         'name': ros2_name,
-                        'type': ros2_type.rstrip("[]"),
-                        'cpptype': ros2_type.rstrip("[]").replace("/", "::msg::")
+                        'type': ros2_type.rstrip('[]'),
+                        'cpptype': ros2_type.rstrip('[]').replace('/', '::msg::')
                     }
                 })
         if match:
@@ -695,7 +695,7 @@ class Mapping:
         self.ros2_msg = ros2_msg
         self.fields_1_to_2 = OrderedDict()
         self.fields_2_to_1 = OrderedDict()
-        self.depends_on_ros2_messages = set([])
+        self.depends_on_ros2_messages = set()
 
     def add_field_pair(self, ros1_field, ros2_field):
         self.fields_1_to_2[ros1_field] = ros2_field
