@@ -34,7 +34,7 @@ The following ROS 1 packages are required to build and use the bridge:
 * `std_msgs`
 * as well as the Python package `rospkg`
 
-To run the following examples you will also need these ROS1 packages:
+To run the following examples you will also need these ROS 1 packages:
 * `rosbash` (for `rosrun` executable)
 * `roscpp_tutorials`
 * `rospy_tutorials`
