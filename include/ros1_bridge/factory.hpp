@@ -22,7 +22,11 @@
 // include ROS 1 message event
 #include "ros/message.h"
 
+#include "rcutils/logging_macros.h"
+
 #include "ros1_bridge/factory_interface.hpp"
+
+#define _ros1_bridge_type_to_name(x) #x
 
 namespace ros1_bridge
 {
@@ -120,7 +124,10 @@ protected:
 
     auto ros2_msg = std::make_shared<ROS2_T>();
     convert_1_to_2(*ros1_msg, *ros2_msg);
-    printf("  Passing message from ROS 1 to ROS 2\n");
+    RCUTILS_LOG_INFO_ONCE_NAMED(
+      "ros1_bridge", "Passing message from ROS 1 "
+      _ros1_bridge_type_to_name(ROS1_T) " to ROS 2 "
+      _ros1_bridge_type_to_name(ROS2_T) " (showing msg only once per type)");
     typed_ros2_pub->publish(ros2_msg);
   }
 
@@ -131,7 +138,10 @@ protected:
   {
     ROS1_T ros1_msg;
     convert_2_to_1(*ros2_msg, ros1_msg);
-    printf("  Passing message from ROS 2 to ROS 1\n");
+    RCUTILS_LOG_INFO_ONCE_NAMED(
+      "ros1_bridge", "Passing message from ROS 2 "
+      _ros1_bridge_type_to_name(ROS2_T) " to ROS 1 "
+      _ros1_bridge_type_to_name(ROS1_T) " (showing msg only once per type)");
     ros1_pub.publish(ros1_msg);
   }
 
