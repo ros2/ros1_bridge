@@ -29,10 +29,17 @@ Additionally you will need to either source the ROS 1 environment or at least se
 The following ROS 1 packages are required to build and use the bridge:
 * `catkin`
 * `roscpp`
+* `roslaunch` (for `roscore` executable)
 * `rosmsg`
 * `std_msgs`
 * as well as the Python package `rospkg`
 
+To run the following examples you will also need these ROS 1 packages:
+* `rosbash` (for `rosrun` executable)
+* `roscpp_tutorials`
+* `rospy_tutorials`
+* `rostopic`
+* `rqt_image_view`
 
 ### Building the bridge from source
 
