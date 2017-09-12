@@ -428,7 +428,7 @@ void get_ros1_service_info(
     fprintf(stderr, "%s\n", error.data());
     return;
   }
-  for (std::string field : {"type", "request_type", "response_type"}) {
+  for (std::string field : {"type"}) {
     std::string value;
     auto success = header_in.getValue(field, value);
     if (!success) {
