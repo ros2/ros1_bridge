@@ -27,7 +27,7 @@ int main(int argc, char ** argv)
   auto client = node->create_client<diagnostic_msgs::srv::SelfTest>("ros1_bridge_test");
   auto request = std::make_shared<diagnostic_msgs::srv::SelfTest::Request>();
 
-  if (!client->wait_for_service(4s)) {
+  if (!client->wait_for_service(20s)) {
     throw std::runtime_error("Service is not available");
   }
 
