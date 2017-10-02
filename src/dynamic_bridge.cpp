@@ -271,8 +271,7 @@ void update_bridge(
     std::string topic_name = it.first;
     if (
       ros1_publishers.find(topic_name) == ros1_publishers.end() ||
-      (!bridge_all_1to2_topics && ros2_subscribers.find(topic_name) == ros2_subscribers.end())
-    )
+      (!bridge_all_1to2_topics && ros2_subscribers.find(topic_name) == ros2_subscribers.end()))
     {
       to_be_removed_1to2.push_back(topic_name);
     }
@@ -287,8 +286,7 @@ void update_bridge(
     std::string topic_name = it.first;
     if (
       (!bridge_all_2to1_topics && ros1_subscribers.find(topic_name) == ros1_subscribers.end()) ||
-      ros2_publishers.find(topic_name) == ros2_publishers.end()
-    )
+      ros2_publishers.find(topic_name) == ros2_publishers.end())
     {
       to_be_removed_2to1.push_back(topic_name);
     }
@@ -389,8 +387,8 @@ void get_ros1_service_info(
   }
   ros::TransportTCPPtr transport(new ros::TransportTCP(nullptr, ros::TransportTCP::SYNCHRONOUS));
   auto transport_exit = rclcpp::make_scope_exit([transport]() {
-    transport->close();
-  });
+        transport->close();
+      });
   if (!transport->connect(host, port)) {
     fprintf(stderr, "Failed to connect to %s:%d\n", host.data(), port);
     return;
