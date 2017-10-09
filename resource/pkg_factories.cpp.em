@@ -58,7 +58,7 @@ get_factory_@(ros2_package_name)(const std::string & ros1_type_name, const std::
         @(m.ros1_msg.package_name)::@(m.ros1_msg.message_name),
         @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name)
       >
-    >();
+    >("@(m.ros1_msg.package_name)/@(m.ros1_msg.message_name)", ros2_type_name);
   }
 @[end for]@
   return std::shared_ptr<FactoryInterface>();
