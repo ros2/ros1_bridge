@@ -182,13 +182,15 @@ macro(targets)
   file(GENERATE
     OUTPUT test_dynamic_bridge${target_suffix}_$<CONFIG>.py
     INPUT test_dynamic_bridge${target_suffix}.py.genexp)
-  ament_add_nose_test(test_dynamic_bridge${target_suffix}
+  ament_add_pytest_test(test_dynamic_bridge${target_suffix}
     "${CMAKE_CURRENT_BINARY_DIR}/test_dynamic_bridge${target_suffix}_$<CONFIG>.py"
     ENV RMW_IMPLEMENTAION=${rmw_implementaion}
     TIMEOUT 60)
 endmacro()
 
 if(TEST_ROS1_BRIDGE)
+  find_package(ament_cmake_pytest REQUIRED)
+
   add_executable(test_ros1_client "test/test_ros1_client.cpp")
   ament_target_dependencies(test_ros1_client "ros1_roscpp")
   add_executable(test_ros1_server "test/test_ros1_server.cpp")
