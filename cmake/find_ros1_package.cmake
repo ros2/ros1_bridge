@@ -29,6 +29,16 @@ macro(find_ros1_package name)
   pkg_check_modules(ros1_${name} ${_required} ${name})
   if(ros1_${name}_FOUND)
     set(_libraries "${ros1_${name}_LIBRARIES}")
+    # Prior to catkin 0.7.7, dependent libraries in the pkg-config file were always generated
+    # in the form "-l:/absolute/path/to/library".  Because of the leading "-l", this made
+    # them show up in ${ros1_${name}_LIBRARIES}.  catkin 0.7.7 and later has changed this to
+    # just be an absolute path (of the form "/absolute/path/to/library"), so we now have to
+    # look through the LDFLAGS_OTHER and add those to the libraries that we need to link with.
+    foreach(_flag ${ros1_${name}_LDFLAGS_OTHER})
+      if(IS_ABSOLUTE ${_flag})
+        list(APPEND _libraries "${_flag}")
+      endif()
+    endforeach()
     set(_library_dirs "${ros1_${name}_LIBRARY_DIRS}")
     set(ros1_${name}_LIBRARIES "")
     set(ros1_${name}_LIBRARY_DIRS "")
