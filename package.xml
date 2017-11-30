@@ -32,7 +32,7 @@
   <test_depend>launch</test_depend>
   <test_depend>ros2run</test_depend>
 
-  <group_depend>rosidlinterfaces_packages</group_depend>
+  <group_depend>rosidl_interfaces_packages</group_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
