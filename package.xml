@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>ros1_bridge</name>
   <version>0.0.3</version>
   <description>A simple bridge between ROS 1 and ROS 2</description>
@@ -31,6 +31,8 @@
   <test_depend>diagnostic_msgs</test_depend>
   <test_depend>launch</test_depend>
   <test_depend>ros2run</test_depend>
+
+  <group_depend>rosidl_interface_packages</group_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
