@@ -31,7 +31,7 @@
 #include "std_msgs/msg/string.hpp"
 
 
-rclcpp::publisher::Publisher<std_msgs::msg::String>::SharedPtr pub;
+rclcpp::Publisher<std_msgs::msg::String>::SharedPtr pub;
 
 void chatterCallback(const std_msgs::String::ConstPtr & ros1_msg)
 {

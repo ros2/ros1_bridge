@@ -48,7 +48,7 @@ public:
     return node.advertise<ROS1_T>(topic_name, queue_size);
   }
 
-  rclcpp::publisher::PublisherBase::SharedPtr
+  rclcpp::PublisherBase::SharedPtr
   create_ros2_publisher(
     rclcpp::node::Node::SharedPtr node,
     const std::string & topic_name,
@@ -64,7 +64,7 @@ public:
     ros::NodeHandle node,
     const std::string & topic_name,
     size_t queue_size,
-    rclcpp::publisher::PublisherBase::SharedPtr ros2_pub)
+    rclcpp::PublisherBase::SharedPtr ros2_pub)
   {
     // workaround for https://github.com/ros/roscpp_core/issues/22 to get the connection header
     ros::SubscribeOptions ops;
@@ -105,13 +105,13 @@ protected:
   static
   void ros1_callback(
     const ros::MessageEvent<ROS1_T const> & ros1_msg_event,
-    rclcpp::publisher::PublisherBase::SharedPtr ros2_pub,
+    rclcpp::PublisherBase::SharedPtr ros2_pub,
     const std::string & ros1_type_name,
     const std::string & ros2_type_name)
   {
-    typename rclcpp::publisher::Publisher<ROS2_T>::SharedPtr typed_ros2_pub;
+    typename rclcpp::Publisher<ROS2_T>::SharedPtr typed_ros2_pub;
     typed_ros2_pub =
-      std::dynamic_pointer_cast<typename rclcpp::publisher::Publisher<ROS2_T>>(ros2_pub);
+      std::dynamic_pointer_cast<typename rclcpp::Publisher<ROS2_T>>(ros2_pub);
 
     if (!typed_ros2_pub) {
       throw std::runtime_error("Invalid type for publisher");
