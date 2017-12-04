@@ -38,7 +38,7 @@ struct ServiceBridge1to2
 
 struct ServiceBridge2to1
 {
-  rclcpp::service::ServiceBase::SharedPtr server;
+  rclcpp::ServiceBase::SharedPtr server;
   ros::ServiceClient client;
 };
 
