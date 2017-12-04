@@ -33,7 +33,7 @@ namespace ros1_bridge
 struct ServiceBridge1to2
 {
   ros::ServiceServer server;
-  rclcpp::client::ClientBase::SharedPtr client;
+  rclcpp::ClientBase::SharedPtr client;
 };
 
 struct ServiceBridge2to1

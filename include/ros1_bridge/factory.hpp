@@ -199,10 +199,10 @@ public:
   }
 
   bool forward_1_to_2(
-    rclcpp::client::ClientBase::SharedPtr cli,
+    rclcpp::ClientBase::SharedPtr cli,
     const ROS1Request & request1, ROS1Response & response1)
   {
-    auto client = std::dynamic_pointer_cast<rclcpp::client::Client<ROS2_T>>(cli);
+    auto client = std::dynamic_pointer_cast<rclcpp::Client<ROS2_T>>(cli);
     if (!client) {
       fprintf(stderr, "Failed to get the client.\n");
       return false;
