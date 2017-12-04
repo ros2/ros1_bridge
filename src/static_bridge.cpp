@@ -38,7 +38,7 @@ int main(int argc, char * argv[])
 
   // ROS 2 node
   rclcpp::init(argc, argv);
-  auto ros2_node = rclcpp::node::Node::make_shared("ros_bridge");
+  auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
 
   // bridge one example topic
   std::string topic_name = "chatter";

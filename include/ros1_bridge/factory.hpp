@@ -50,7 +50,7 @@ public:
 
   rclcpp::PublisherBase::SharedPtr
   create_ros2_publisher(
-    rclcpp::node::Node::SharedPtr node,
+    rclcpp::Node::SharedPtr node,
     const std::string & topic_name,
     size_t queue_size)
   {
@@ -82,7 +82,7 @@ public:
 
   rclcpp::SubscriptionBase::SharedPtr
   create_ros2_subscriber(
-    rclcpp::node::Node::SharedPtr node,
+    rclcpp::Node::SharedPtr node,
     const std::string & topic_name,
     size_t queue_size,
     ros::Publisher ros1_pub)
@@ -229,7 +229,7 @@ public:
   }
 
   ServiceBridge1to2 service_bridge_1_to_2(
-    ros::NodeHandle & ros1_node, rclcpp::node::Node::SharedPtr ros2_node, const std::string & name)
+    ros::NodeHandle & ros1_node, rclcpp::Node::SharedPtr ros2_node, const std::string & name)
   {
     ServiceBridge1to2 bridge;
     bridge.client = ros2_node->create_client<ROS2_T>(name);
@@ -240,7 +240,7 @@ public:
   }
 
   ServiceBridge2to1 service_bridge_2_to_1(
-    ros::NodeHandle & ros1_node, rclcpp::node::Node::SharedPtr ros2_node, const std::string & name)
+    ros::NodeHandle & ros1_node, rclcpp::Node::SharedPtr ros2_node, const std::string & name)
   {
     ServiceBridge2to1 bridge;
     bridge.client = ros1_node.serviceClient<ROS1_T>(name);
