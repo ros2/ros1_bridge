@@ -68,7 +68,7 @@ public:
     rclcpp::PublisherBase::SharedPtr ros2_pub) = 0;
 
   virtual
-  rclcpp::subscription::SubscriptionBase::SharedPtr
+  rclcpp::SubscriptionBase::SharedPtr
   create_ros2_subscriber(
     rclcpp::node::Node::SharedPtr node,
     const std::string & topic_name,

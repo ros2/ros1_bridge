@@ -38,7 +38,7 @@ struct Bridge1to2Handles
 
 struct Bridge2to1Handles
 {
-  rclcpp::subscription::SubscriptionBase::SharedPtr ros2_subscriber;
+  rclcpp::SubscriptionBase::SharedPtr ros2_subscriber;
   ros::Publisher ros1_publisher;
 };
 
