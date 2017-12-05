@@ -55,7 +55,7 @@ int main(int argc, char * argv[])
 
   // ROS 2 spinning loop
   rclcpp::executors::SingleThreadedExecutor executor;
-  while (ros1_node.ok() && rclcpp::utilities::ok()) {
+  while (ros1_node.ok() && rclcpp::ok()) {
     executor.spin_node_once(ros2_node, std::chrono::milliseconds(1000));
   }
 

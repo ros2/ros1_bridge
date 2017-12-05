@@ -210,7 +210,7 @@ public:
     auto request2 = std::make_shared<ROS2Request>();
     translate_1_to_2(request1, *request2);
     while (!client->wait_for_service(std::chrono::seconds(1))) {
-      if (!rclcpp::utilities::ok()) {
+      if (!rclcpp::ok()) {
         fprintf(stderr, "Client was interrupted while waiting for the service. Exiting.\n");
         return false;
       }
