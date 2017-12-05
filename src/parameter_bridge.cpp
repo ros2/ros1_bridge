@@ -39,7 +39,7 @@ int main(int argc, char * argv[])
 
   // ROS 2 node
   rclcpp::init(argc, argv);
-  auto ros2_node = rclcpp::node::Node::make_shared("ros_bridge");
+  auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
 
   std::list<ros1_bridge::BridgeHandles> all_handles;
 
@@ -94,7 +94,7 @@ int main(int argc, char * argv[])
 
   // ROS 2 spinning loop
   rclcpp::executors::SingleThreadedExecutor executor;
-  while (ros1_node.ok() && rclcpp::utilities::ok()) {
+  while (ros1_node.ok() && rclcpp::ok()) {
     executor.spin_node_once(ros2_node, std::chrono::milliseconds(1000));
   }
 

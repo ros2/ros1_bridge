@@ -31,7 +31,7 @@
 #include "std_msgs/msg/string.hpp"
 
 
-rclcpp::publisher::Publisher<std_msgs::msg::String>::SharedPtr pub;
+rclcpp::Publisher<std_msgs::msg::String>::SharedPtr pub;
 
 void chatterCallback(const std_msgs::String::ConstPtr & ros1_msg)
 {
@@ -47,7 +47,7 @@ int main(int argc, char * argv[])
 {
   // ROS 2 node and publisher
   rclcpp::init(argc, argv);
-  auto node = rclcpp::node::Node::make_shared("talker");
+  auto node = rclcpp::Node::make_shared("talker");
   pub = node->create_publisher<std_msgs::msg::String>("chatter");
 
   // ROS 1 node and subscriber

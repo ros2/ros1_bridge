@@ -120,7 +120,7 @@ bool parse_command_options(
 
 void update_bridge(
   ros::NodeHandle & ros1_node,
-  rclcpp::node::Node::SharedPtr ros2_node,
+  rclcpp::Node::SharedPtr ros2_node,
   const std::map<std::string, std::string> & ros1_publishers,
   const std::map<std::string, std::string> & ros1_subscribers,
   const std::map<std::string, std::string> & ros2_publishers,
@@ -458,7 +458,7 @@ int main(int argc, char * argv[])
 
   // ROS 2 node
   rclcpp::init(argc, argv);
-  auto ros2_node = rclcpp::node::Node::make_shared("ros_bridge");
+  auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
 
   // mapping of available topic names to type names
   std::map<std::string, std::string> ros1_publishers;
@@ -758,7 +758,7 @@ int main(int argc, char * argv[])
 
   // ROS 2 spinning loop
   rclcpp::executors::SingleThreadedExecutor executor;
-  while (ros1_node.ok() && rclcpp::utilities::ok()) {
+  while (ros1_node.ok() && rclcpp::ok()) {
     executor.spin_node_once(ros2_node);
   }
 

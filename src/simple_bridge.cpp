@@ -46,7 +46,7 @@ void ros2ChatterCallback(const std_msgs::msg::String::SharedPtr ros2_msg)
 }
 
 
-rclcpp::publisher::Publisher<std_msgs::msg::String>::SharedPtr ros2_pub;
+rclcpp::Publisher<std_msgs::msg::String>::SharedPtr ros2_pub;
 
 void ros1ChatterCallback(const ros::MessageEvent<std_msgs::String const> & ros1_msg_event)
 {
@@ -80,7 +80,7 @@ int main(int argc, char * argv[])
 
   // ROS 2 node and publisher
   rclcpp::init(argc, argv);
-  auto ros2_node = rclcpp::node::Node::make_shared("ros_bridge");
+  auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
   ros2_pub = ros2_node->create_publisher<std_msgs::msg::String>(
     "chatter", rmw_qos_profile_sensor_data);
 
@@ -98,7 +98,7 @@ int main(int argc, char * argv[])
 
   // ROS 2 spinning loop
   rclcpp::executors::SingleThreadedExecutor executor;
-  while (ros1_node.ok() && rclcpp::utilities::ok()) {
+  while (ros1_node.ok() && rclcpp::ok()) {
     executor.spin_node_once(ros2_node, std::chrono::milliseconds(1000));
   }
 

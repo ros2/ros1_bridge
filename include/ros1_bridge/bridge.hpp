@@ -33,12 +33,12 @@ namespace ros1_bridge
 struct Bridge1to2Handles
 {
   ros::Subscriber ros1_subscriber;
-  rclcpp::publisher::PublisherBase::SharedPtr ros2_publisher;
+  rclcpp::PublisherBase::SharedPtr ros2_publisher;
 };
 
 struct Bridge2to1Handles
 {
-  rclcpp::subscription::SubscriptionBase::SharedPtr ros2_subscriber;
+  rclcpp::SubscriptionBase::SharedPtr ros2_subscriber;
   ros::Publisher ros1_publisher;
 };
 
@@ -69,7 +69,7 @@ get_factory(
 Bridge1to2Handles
 create_bridge_from_1_to_2(
   ros::NodeHandle ros1_node,
-  rclcpp::node::Node::SharedPtr ros2_node,
+  rclcpp::Node::SharedPtr ros2_node,
   const std::string & ros1_type_name,
   const std::string & ros1_topic_name,
   size_t subscriber_queue_size,
@@ -92,7 +92,7 @@ create_bridge_from_1_to_2(
 
 Bridge2to1Handles
 create_bridge_from_2_to_1(
-  rclcpp::node::Node::SharedPtr ros2_node,
+  rclcpp::Node::SharedPtr ros2_node,
   ros::NodeHandle ros1_node,
   const std::string & ros2_type_name,
   const std::string & ros2_topic_name,
@@ -117,7 +117,7 @@ create_bridge_from_2_to_1(
 BridgeHandles
 create_bidirectional_bridge(
   ros::NodeHandle ros1_node,
-  rclcpp::node::Node::SharedPtr ros2_node,
+  rclcpp::Node::SharedPtr ros2_node,
   const std::string & ros1_type_name,
   const std::string & ros2_type_name,
   const std::string & topic_name,

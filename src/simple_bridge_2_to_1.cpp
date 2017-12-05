@@ -51,7 +51,7 @@ int main(int argc, char * argv[])
 
   // ROS 2 node and subscriber
   rclcpp::init(argc, argv);
-  auto node = rclcpp::node::Node::make_shared("listener");
+  auto node = rclcpp::Node::make_shared("listener");
   auto sub = node->create_subscription<std_msgs::msg::String>(
     "chatter", chatterCallback, rmw_qos_profile_sensor_data);
 

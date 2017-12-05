@@ -33,12 +33,12 @@ namespace ros1_bridge
 struct ServiceBridge1to2
 {
   ros::ServiceServer server;
-  rclcpp::client::ClientBase::SharedPtr client;
+  rclcpp::ClientBase::SharedPtr client;
 };
 
 struct ServiceBridge2to1
 {
-  rclcpp::service::ServiceBase::SharedPtr server;
+  rclcpp::ServiceBase::SharedPtr server;
   ros::ServiceClient client;
 };
 
@@ -53,9 +53,9 @@ public:
     size_t queue_size) = 0;
 
   virtual
-  rclcpp::publisher::PublisherBase::SharedPtr
+  rclcpp::PublisherBase::SharedPtr
   create_ros2_publisher(
-    rclcpp::node::Node::SharedPtr node,
+    rclcpp::Node::SharedPtr node,
     const std::string & topic_name,
     size_t queue_size) = 0;
 
@@ -65,12 +65,12 @@ public:
     ros::NodeHandle node,
     const std::string & topic_name,
     size_t queue_size,
-    rclcpp::publisher::PublisherBase::SharedPtr ros2_pub) = 0;
+    rclcpp::PublisherBase::SharedPtr ros2_pub) = 0;
 
   virtual
-  rclcpp::subscription::SubscriptionBase::SharedPtr
+  rclcpp::SubscriptionBase::SharedPtr
   create_ros2_subscriber(
-    rclcpp::node::Node::SharedPtr node,
+    rclcpp::Node::SharedPtr node,
     const std::string & topic_name,
     size_t queue_size,
     ros::Publisher ros1_pub) = 0;
@@ -80,10 +80,10 @@ class ServiceFactoryInterface
 {
 public:
   virtual ServiceBridge1to2 service_bridge_1_to_2(
-    ros::NodeHandle &, rclcpp::node::Node::SharedPtr, const std::string &) = 0;
+    ros::NodeHandle &, rclcpp::Node::SharedPtr, const std::string &) = 0;
 
   virtual ServiceBridge2to1 service_bridge_2_to_1(
-    ros::NodeHandle &, rclcpp::node::Node::SharedPtr, const std::string &) = 0;
+    ros::NodeHandle &, rclcpp::Node::SharedPtr, const std::string &) = 0;
 };
 
 }  // namespace ros1_bridge

@@ -48,9 +48,9 @@ public:
     return node.advertise<ROS1_T>(topic_name, queue_size);
   }
 
-  rclcpp::publisher::PublisherBase::SharedPtr
+  rclcpp::PublisherBase::SharedPtr
   create_ros2_publisher(
-    rclcpp::node::Node::SharedPtr node,
+    rclcpp::Node::SharedPtr node,
     const std::string & topic_name,
     size_t queue_size)
   {
@@ -64,7 +64,7 @@ public:
     ros::NodeHandle node,
     const std::string & topic_name,
     size_t queue_size,
-    rclcpp::publisher::PublisherBase::SharedPtr ros2_pub)
+    rclcpp::PublisherBase::SharedPtr ros2_pub)
   {
     // workaround for https://github.com/ros/roscpp_core/issues/22 to get the connection header
     ros::SubscribeOptions ops;
@@ -80,9 +80,9 @@ public:
     return node.subscribe(ops);
   }
 
-  rclcpp::subscription::SubscriptionBase::SharedPtr
+  rclcpp::SubscriptionBase::SharedPtr
   create_ros2_subscriber(
-    rclcpp::node::Node::SharedPtr node,
+    rclcpp::Node::SharedPtr node,
     const std::string & topic_name,
     size_t queue_size,
     ros::Publisher ros1_pub)
@@ -105,13 +105,13 @@ protected:
   static
   void ros1_callback(
     const ros::MessageEvent<ROS1_T const> & ros1_msg_event,
-    rclcpp::publisher::PublisherBase::SharedPtr ros2_pub,
+    rclcpp::PublisherBase::SharedPtr ros2_pub,
     const std::string & ros1_type_name,
     const std::string & ros2_type_name)
   {
-    typename rclcpp::publisher::Publisher<ROS2_T>::SharedPtr typed_ros2_pub;
+    typename rclcpp::Publisher<ROS2_T>::SharedPtr typed_ros2_pub;
     typed_ros2_pub =
-      std::dynamic_pointer_cast<typename rclcpp::publisher::Publisher<ROS2_T>>(ros2_pub);
+      std::dynamic_pointer_cast<typename rclcpp::Publisher<ROS2_T>>(ros2_pub);
 
     if (!typed_ros2_pub) {
       throw std::runtime_error("Invalid type for publisher");
@@ -199,10 +199,10 @@ public:
   }
 
   bool forward_1_to_2(
-    rclcpp::client::ClientBase::SharedPtr cli,
+    rclcpp::ClientBase::SharedPtr cli,
     const ROS1Request & request1, ROS1Response & response1)
   {
-    auto client = std::dynamic_pointer_cast<rclcpp::client::Client<ROS2_T>>(cli);
+    auto client = std::dynamic_pointer_cast<rclcpp::Client<ROS2_T>>(cli);
     if (!client) {
       fprintf(stderr, "Failed to get the client.\n");
       return false;
@@ -210,7 +210,7 @@ public:
     auto request2 = std::make_shared<ROS2Request>();
     translate_1_to_2(request1, *request2);
     while (!client->wait_for_service(std::chrono::seconds(1))) {
-      if (!rclcpp::utilities::ok()) {
+      if (!rclcpp::ok()) {
         fprintf(stderr, "Client was interrupted while waiting for the service. Exiting.\n");
         return false;
       }
@@ -229,7 +229,7 @@ public:
   }
 
   ServiceBridge1to2 service_bridge_1_to_2(
-    ros::NodeHandle & ros1_node, rclcpp::node::Node::SharedPtr ros2_node, const std::string & name)
+    ros::NodeHandle & ros1_node, rclcpp::Node::SharedPtr ros2_node, const std::string & name)
   {
     ServiceBridge1to2 bridge;
     bridge.client = ros2_node->create_client<ROS2_T>(name);
@@ -240,7 +240,7 @@ public:
   }
 
   ServiceBridge2to1 service_bridge_2_to_1(
-    ros::NodeHandle & ros1_node, rclcpp::node::Node::SharedPtr ros2_node, const std::string & name)
+    ros::NodeHandle & ros1_node, rclcpp::Node::SharedPtr ros2_node, const std::string & name)
   {
     ServiceBridge2to1 bridge;
     bridge.client = ros1_node.serviceClient<ROS1_T>(name);
