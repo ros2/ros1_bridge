@@ -164,14 +164,14 @@ The ROS 2 node will start printing the received messages to the console.
 When looking at the output in *shell B* there will be a line stating that the bridge for this topic has been created:
 
 ```
-created 1to2 bridge for topic 'chatter' with ROS 1 type 'std_msgs/String' and ROS 2 type 'std_msgs/String'
+created 1to2 bridge for topic '/chatter' with ROS 1 type 'std_msgs/String' and ROS 2 type 'std_msgs/String'
 ```
 
 At the end stop all programs with `Ctrl-C`.
 Once you stop either the talker or the listener in *shell B* a line will be stating that the bridge has been torn down:
 
 ```
-removed 1to2 bridge for topic 'chatter'
+removed 1to2 bridge for topic '/chatter'
 ```
 
 *Note:* When the bridge is run using the default ROS 2 middleware implementation, which uses Fast RTPS, it does not always remove bridges instantly.
