@@ -20,42 +20,42 @@ namespace ros1_bridge
 template<>
 void
 convert_1_to_2(
-  const ros::Duration & ros1_msg,
+  const ros::Duration & ros1_type,
   builtin_interfaces::msg::Duration & ros2_msg)
 {
-  ros2_msg.sec = ros1_msg.sec;
-  ros2_msg.nanosec = ros1_msg.nsec;
+  ros2_msg.sec = ros1_type.sec;
+  ros2_msg.nanosec = ros1_type.nsec;
 }
 
 template<>
 void
 convert_2_to_1(
   const builtin_interfaces::msg::Duration & ros2_msg,
-  ros::Duration & ros1_msg)
+  ros::Duration & ros1_type)
 {
-  ros1_msg.sec = ros2_msg.sec;
-  ros1_msg.nsec = ros2_msg.nanosec;
+  ros1_type.sec = ros2_msg.sec;
+  ros1_type.nsec = ros2_msg.nanosec;
 }
 
 
 template<>
 void
 convert_1_to_2(
-  const ros::Time & ros1_msg,
+  const ros::Time & ros1_type,
   builtin_interfaces::msg::Time & ros2_msg)
 {
-  ros2_msg.sec = ros1_msg.sec;
-  ros2_msg.nanosec = ros1_msg.nsec;
+  ros2_msg.sec = ros1_type.sec;
+  ros2_msg.nanosec = ros1_type.nsec;
 }
 
 template<>
 void
 convert_2_to_1(
   const builtin_interfaces::msg::Time & ros2_msg,
-  ros::Time & ros1_msg)
+  ros::Time & ros1_type)
 {
-  ros1_msg.sec = ros2_msg.sec;
-  ros1_msg.nsec = ros2_msg.nanosec;
+  ros1_type.sec = ros2_msg.sec;
+  ros1_type.nsec = ros2_msg.nanosec;
 }
 
 }  // namespace ros1_bridge
