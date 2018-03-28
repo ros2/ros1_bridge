@@ -40,7 +40,8 @@ Each mapping rule can have one of three types:
 
 3. A field mapping rule is defined by the attributes of a message mapping rule and:
 
-   - a dictionary ``fields_1_to_2`` mapping ROS 1 field names to ROS 2 field names
+   - a dictionary ``fields_1_to_2`` mapping ROS 1 field names to ROS 2 field names.
+     All fields must be listed explicitly - not listed fields are not mapped implicitly when their names match.
 
 Each mapping rule file contains a list of mapping rules.
 
