@@ -220,12 +220,18 @@ def get_ros2_messages():
                 continue
             rule_file = os.path.join(package_path, export.attributes['mapping_rules'])
             with open(rule_file, 'r') as h:
-                for data in yaml.load(h):
-                    if all(n not in data for n in ('ros1_service_name', 'ros2_service_name')):
-                        try:
-                            rules.append(MessageMappingRule(data, package_name))
-                        except Exception as e:
-                            print('%s' % str(e), file=sys.stderr)
+                content = yaml.load(h)
+            if not isinstance(content, list):
+                print(
+                    "The content of the mapping rules in '%s' is not a list" % rule_file,
+                    file=sys.stderr)
+                continue
+            for data in content:
+                if all(n not in data for n in ('ros1_service_name', 'ros2_service_name')):
+                    try:
+                        rules.append(MessageMappingRule(data, package_name))
+                    except Exception as e:
+                        print('%s' % str(e), file=sys.stderr)
     return pkgs, msgs, rules
 
 
@@ -263,12 +269,18 @@ def get_ros2_services():
                 continue
             rule_file = os.path.join(package_path, export.attributes['mapping_rules'])
             with open(rule_file, 'r') as h:
-                for data in yaml.load(h):
-                    if all(n not in data for n in ('ros1_message_name', 'ros2_message_name')):
-                        try:
-                            rules.append(ServiceMappingRule(data, package_name))
-                        except Exception as e:
-                            print('%s' % str(e), file=sys.stderr)
+                content = yaml.load(h)
+            if not isinstance(content, list):
+                print(
+                    "The content of the mapping rules in '%s' is not a list" % rule_file,
+                    file=sys.stderr)
+                continue
+            for data in content:
+                if all(n not in data for n in ('ros1_message_name', 'ros2_message_name')):
+                    try:
+                        rules.append(ServiceMappingRule(data, package_name))
+                    except Exception as e:
+                        print('%s' % str(e), file=sys.stderr)
     return pkgs, srvs, rules
 
 
