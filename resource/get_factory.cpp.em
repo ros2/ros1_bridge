@@ -19,6 +19,7 @@
 from ros1_bridge import camel_case_to_lower_case_underscore
 }@
 #include "ros1_bridge/factory.hpp"
+#include "ros1_bridge/builtin_interfaces_factories.hpp"
 
 @[for ros2_package_name in sorted(ros2_package_names)]@
 #include "@(ros2_package_name)_factories.hpp"
@@ -36,6 +37,10 @@ get_factory(const std::string & ros1_type_name, const std::string & ros2_type_na
 @[else]@
   std::shared_ptr<FactoryInterface> factory;
 @[end if]@
+  factory = get_factory_builtin_interfaces(ros1_type_name, ros2_type_name);
+  if (factory) {
+    return factory;
+  }
 @[for ros2_package_name in sorted(ros2_package_names)]@
   factory = get_factory_@(ros2_package_name)(ros1_type_name, ros2_type_name);
   if (factory) {

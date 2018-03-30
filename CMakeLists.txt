@@ -75,7 +75,9 @@ list(APPEND generated_files "${generated_path}/get_mappings.cpp")
 ament_index_get_resources(ros2_message_packages "rosidl_interfaces")
 foreach(message_package ${ros2_message_packages})
   find_package(${message_package} REQUIRED)
-  list(APPEND generated_files "${generated_path}/${message_package}_factories.cpp")
+  if(NOT "${message_package}" STREQUAL "builtin_interfaces")
+    list(APPEND generated_files "${generated_path}/${message_package}_factories.cpp")
+  endif()
 endforeach()
 
 add_custom_command(
@@ -126,6 +128,7 @@ custom_executable(simple_bridge "src/simple_bridge.cpp"
   TARGET_DEPENDENCIES "std_msgs")
 
 add_library(${PROJECT_NAME} SHARED
+  "src/builtin_interfaces_factories.cpp"
   "src/convert_builtin_interfaces.cpp"
   ${generated_files})
 ament_target_dependencies(${PROJECT_NAME}

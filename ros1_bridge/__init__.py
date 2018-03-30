@@ -92,6 +92,8 @@ def generate_cpp(output_path, template_dir):
 
     data.update(generate_services())
     unique_package_names = set(data['ros2_package_names_msg'] + data['ros2_package_names_srv'])
+    # skip builtin_interfaces since there is a custom implementation
+    unique_package_names -= {'builtin_interfaces'}
     data['ros2_package_names'] = list(unique_package_names)
 
     template_file = os.path.join(template_dir, 'get_factory.cpp.em')
@@ -133,6 +135,17 @@ def generate_messages():
     message_pairs = determine_message_pairs(ros1_msgs, ros2_msgs, package_pairs, mapping_rules)
 
     mappings = []
+    # add custom mapping for builtin_interfaces
+    for msg_name in ('Duration', 'Time'):
+        ros1_msg = [
+            m for m in ros1_msgs
+            if m.package_name == 'std_msgs' and m.message_name == msg_name]
+        ros2_msg = [
+            m for m in ros2_msgs
+            if m.package_name == 'builtin_interfaces' and m.message_name == msg_name]
+        if ros1_msg and ros2_msg:
+            mappings.append(Mapping(ros1_msg[0], ros2_msg[0]))
+
     for ros1_msg, ros2_msg in message_pairs:
         mapping = determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, rospack=rospack)
         if mapping:

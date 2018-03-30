@@ -31,27 +31,26 @@ namespace ros1_bridge
 template<>
 void
 convert_1_to_2(
-  const ros::Duration & ros1_msg,
+  const ros::Duration & ros1_type,
   builtin_interfaces::msg::Duration & ros2_msg);
 
 template<>
 void
 convert_2_to_1(
   const builtin_interfaces::msg::Duration & ros2_msg,
-  ros::Duration & ros1_msg);
-
+  ros::Duration & ros1_type);
 
 template<>
 void
 convert_1_to_2(
-  const ros::Time & ros1_msg,
+  const ros::Time & ros1_type,
   builtin_interfaces::msg::Time & ros2_msg);
 
 template<>
 void
 convert_2_to_1(
   const builtin_interfaces::msg::Time & ros2_msg,
-  ros::Time & ros1_msg);
+  ros::Time & ros1_type);
 
 }  // namespace ros1_bridge
 
