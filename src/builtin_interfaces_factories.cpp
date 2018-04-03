@@ -16,10 +16,10 @@
 #include <string>
 
 #include "rclcpp/rclcpp.hpp"
-#include "ros1_bridge/builtin_interfaces_factories.hpp"
 
 // include builtin interfaces
 #include "ros1_bridge/convert_builtin_interfaces.hpp"
+#include "ros1_bridge/builtin_interfaces_factories.hpp"
 
 namespace ros1_bridge
 {
