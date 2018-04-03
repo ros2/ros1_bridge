@@ -12,17 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+#include <string>
+
 #include "rclcpp/rclcpp.hpp"
+#include "ros1_bridge/builtin_interfaces_factories.hpp"
 
 // include builtin interfaces
-#include <ros1_bridge/builtin_interfaces_factories.hpp>
-#include <ros1_bridge/convert_builtin_interfaces.hpp>
+#include "ros1_bridge/convert_builtin_interfaces.hpp"
 
 namespace ros1_bridge
 {
 
 std::shared_ptr<FactoryInterface>
-get_factory_builtin_interfaces(const std::string & ros1_type_name, const std::string & ros2_type_name)
+get_factory_builtin_interfaces(
+  const std::string & ros1_type_name,
+  const std::string & ros2_type_name)
 {
   // mapping from string to specialized template
   if (
