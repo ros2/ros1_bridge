@@ -15,8 +15,6 @@
 #ifndef ROS1_BRIDGE__BUILTIN_INTERFACES_FACTORIES_HPP_
 #define ROS1_BRIDGE__BUILTIN_INTERFACES_FACTORIES_HPP_
 
-#include <ros1_bridge/factory.hpp>
-
 // include ROS 1 messages
 #include <std_msgs/Duration.h>
 #include <std_msgs/Time.h>
@@ -25,11 +23,18 @@
 #include <builtin_interfaces/msg/duration.hpp>
 #include <builtin_interfaces/msg/time.hpp>
 
+#include <memory>
+#include <string>
+
+#include "ros1_bridge/factory.hpp"
+
 namespace ros1_bridge
 {
 
 std::shared_ptr<FactoryInterface>
-get_factory_builtin_interfaces(const std::string & ros1_type_name, const std::string & ros2_type_name);
+get_factory_builtin_interfaces(
+  const std::string & ros1_type_name,
+  const std::string & ros2_type_name);
 
 // conversion functions for available interfaces
 
