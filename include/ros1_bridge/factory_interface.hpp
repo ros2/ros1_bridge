@@ -73,7 +73,8 @@ public:
     rclcpp::Node::SharedPtr node,
     const std::string & topic_name,
     size_t queue_size,
-    ros::Publisher ros1_pub) = 0;
+    ros::Publisher ros1_pub,
+    rclcpp::PublisherBase::SharedPtr ros2_pub) = 0;
 };
 
 class ServiceFactoryInterface

@@ -85,7 +85,8 @@ public:
     rclcpp::Node::SharedPtr node,
     const std::string & topic_name,
     size_t queue_size,
-    ros::Publisher ros1_pub)
+    ros::Publisher ros1_pub,
+    rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr)
   {
     rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_sensor_data;
     custom_qos_profile.depth = queue_size;
@@ -93,9 +94,9 @@ public:
     const std::string & ros2_type_name = ros2_type_name_;
     // TODO(wjwwood): use a lambda until create_subscription supports std/boost::bind.
     auto callback =
-      [this, ros1_pub, ros1_type_name, ros2_type_name](const typename ROS2_T::SharedPtr msg) {
+      [this, ros1_pub, ros1_type_name, ros2_type_name, ros2_pub](const typename ROS2_T::SharedPtr msg) {
         return this->ros2_callback(
-          msg, ros1_pub, ros1_type_name, ros2_type_name);
+          msg, ros1_pub, ros1_type_name, ros2_type_name, ros2_pub);
       };
     return node->create_subscription<ROS2_T>(
       topic_name, callback, custom_qos_profile, nullptr, true);
@@ -147,7 +148,8 @@ protected:
     typename ROS2_T::SharedPtr ros2_msg,
     ros::Publisher ros1_pub,
     const std::string & ros1_type_name,
-    const std::string & ros2_type_name)
+    const std::string & ros2_type_name,
+    rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr)
   {
     ROS1_T ros1_msg;
     convert_2_to_1(*ros2_msg, ros1_msg);
