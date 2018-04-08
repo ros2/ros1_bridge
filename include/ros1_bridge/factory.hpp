@@ -19,6 +19,8 @@
 #include <memory>
 #include <string>
 
+#include <rmw/rmw.h>
+
 // include ROS 1 message event
 #include "ros/message.h"
 
@@ -152,6 +154,14 @@ protected:
     const std::string & ros2_type_name,
     rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr)
   {
+    if (ros2_pub) {
+      bool result = false;
+      auto ret = rmw_compare_gids_equal(&msg_info.publisher_gid, &ros2_pub->get_gid(), &result);
+      if (ret == RMW_RET_OK) 
+        if (result) // message gid equals to bridge publisher gid
+          return; // do not publish messages from bridge itself
+    }
+    
     ROS1_T ros1_msg;
     convert_2_to_1(*ros2_msg, ros1_msg);
     RCUTILS_LOG_INFO_ONCE_NAMED(
