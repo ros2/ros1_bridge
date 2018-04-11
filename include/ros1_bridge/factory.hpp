@@ -19,7 +19,7 @@
 #include <memory>
 #include <string>
 
-#include <rmw/rmw.h>
+#include "rmw/rmw.h"
 
 // include ROS 1 message event
 #include "ros/message.h"
@@ -96,7 +96,8 @@ public:
     const std::string & ros2_type_name = ros2_type_name_;
     // TODO(wjwwood): use a lambda until create_subscription supports std/boost::bind.
     auto callback =
-      [this, ros1_pub, ros1_type_name, ros2_type_name, ros2_pub](const typename ROS2_T::SharedPtr msg, const rmw_message_info_t & msg_info) {
+      [this, ros1_pub, ros1_type_name, ros2_type_name,
+      ros2_pub](const typename ROS2_T::SharedPtr msg, const rmw_message_info_t & msg_info) {
         return this->ros2_callback(
           msg, msg_info, ros1_pub, ros1_type_name, ros2_type_name, ros2_pub);
       };
@@ -157,11 +158,13 @@ protected:
     if (ros2_pub) {
       bool result = false;
       auto ret = rmw_compare_gids_equal(&msg_info.publisher_gid, &ros2_pub->get_gid(), &result);
-      if (ret == RMW_RET_OK) 
-        if (result) // message gid equals to bridge publisher gid
-          return; // do not publish messages from bridge itself
+      if (ret == RMW_RET_OK) {
+        if (result) {  // message gid equals to bridge publisher gid
+          return;  // do not publish messages from bridge itself
+        }
+      }
     }
-    
+
     ROS1_T ros1_msg;
     convert_2_to_1(*ros2_msg, ros1_msg);
     RCUTILS_LOG_INFO_ONCE_NAMED(
