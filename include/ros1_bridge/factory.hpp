@@ -159,7 +159,7 @@ protected:
       bool result = false;
       auto ret = rmw_compare_gids_equal(&msg_info.publisher_gid, &ros2_pub->get_gid(), &result);
       if (ret == RMW_RET_OK) {
-        if (result) {  // message gid equals to bridge publisher gid
+        if (result) {  // message GID equals to bridge's ROS2 publisher GID
           return;  // do not publish messages from bridge itself
         }
       }
