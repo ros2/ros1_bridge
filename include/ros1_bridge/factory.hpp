@@ -162,9 +162,13 @@ protected:
         if (result) {  // message GID equals to bridge's ROS2 publisher GID
           return;  // do not publish messages from bridge itself
         }
+      } else {
+        auto msg = std::string("Failed to compare gids: ") + rmw_get_error_string_safe();
+        rmw_reset_error();
+        throw std::runtime_error(msg);
       }
     }
-
+    
     ROS1_T ros1_msg;
     convert_2_to_1(*ros2_msg, ros1_msg);
     RCUTILS_LOG_INFO_ONCE_NAMED(
