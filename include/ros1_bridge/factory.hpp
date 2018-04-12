@@ -168,7 +168,7 @@ protected:
         throw std::runtime_error(msg);
       }
     }
-    
+
     ROS1_T ros1_msg;
     convert_2_to_1(*ros2_msg, ros1_msg);
     RCUTILS_LOG_INFO_ONCE_NAMED(
