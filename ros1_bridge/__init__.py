@@ -410,23 +410,23 @@ class ServiceMappingRule(MappingRule):
 def determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules):
     pairs = []
     # determine package names considered equal between ROS 1 and ROS 2
-    ros1_suffix = '_msgs'
-    ros2_suffixes = ['_msgs', '_interfaces']
+    # ros1_suffix = '_msgs'
+    # ros2_suffixes = ['_msgs', '_interfaces']
     ros1_package_names = {m.package_name for m in ros1_msgs}
     ros2_package_names = {m.package_name for m in ros2_msgs}
     for ros1_package_name in ros1_package_names:
-        if not ros1_package_name.endswith(ros1_suffix):
-            continue
-        ros1_package_basename = ros1_package_name[:-len(ros1_suffix)]
+        # if not ros1_package_name.endswith(ros1_suffix):
+        #     continue
+        # ros1_package_basename = ros1_package_name[:-len(ros1_suffix)]
 
         for ros2_package_name in ros2_package_names:
-            for ros2_suffix in ros2_suffixes:
-                if ros2_package_name.endswith(ros2_suffix):
-                    break
-            else:
-                continue
-            ros2_package_basename = ros2_package_name[:-len(ros2_suffix)]
-            if ros1_package_basename != ros2_package_basename:
+            # for ros2_suffix in ros2_suffixes:
+            #     if ros2_package_name.endswith(ros2_suffix):
+            #         break
+            # else:
+            #     continue
+            # ros2_package_basename = ros2_package_name[:-len(ros2_suffix)]
+            if ros1_package_name != ros2_package_name:
                 continue
             pairs.append((ros1_package_name, ros2_package_name))
 
