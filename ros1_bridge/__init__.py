@@ -67,21 +67,21 @@ except ImportError:
         raise
 
 try:
-    import rosmsg
+    import Crypto
 except ImportError:
     from importlib.machinery import SourceFileLoader
     import subprocess
     for python_executable in ['python2', 'python2.7']:
         try:
-            rosmsg_path = subprocess.check_output(
-                [python_executable, '-c', 'import rosmsg; print(rosmsg.__file__)'])
+            crypto_path = subprocess.check_output(
+                [python_executable, '-c', 'import Crypto; print(Crypto.__file__)'])
         except (subprocess.CalledProcessError, FileNotFoundError):
             continue
-        rosmsg_path = rosmsg_path.decode().strip()
-        if rosmsg_path.endswith('.pyc'):
-            rosmsg_path = rosmsg_path[:-1]
-        rosmsg = SourceFileLoader('rosmsg', rosmsg_path).load_module()
-    if not rosmsg:
+        crypto_path = crypto_path.decode().strip()
+        if crypto_path.endswith('.pyc'):
+            crypto_path = rosmsg_path[:-1]
+        Crypto = SourceFileLoader('Crypto', crypto_path).load_module()
+    if not Crypto:
         raise
 
 # more ROS 1 imports
@@ -97,6 +97,7 @@ for package_path in reversed([p for p in rpp if p]):
         if sys_path.startswith(os.path.join(ros1_basepath, '')):
             sys.path.remove(sys_path)
             sys.path.insert(0, sys_path)
+import rosmsg  # noqa
 
 
 def generate_cpp(output_path, template_dir):
