@@ -79,7 +79,7 @@ except ImportError:
             continue
         crypto_path = crypto_path.decode().strip()
         if crypto_path.endswith('.pyc'):
-            crypto_path = rosmsg_path[:-1]
+            crypto_path = crypto_path[:-1]
         Crypto = SourceFileLoader('Crypto', crypto_path).load_module()
     if not Crypto:
         raise
