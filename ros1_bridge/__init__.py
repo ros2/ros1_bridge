@@ -18,7 +18,7 @@ import re
 import sys
 
 import ament_index_python
-from ament_package import parse_package
+from catkin_pkg.package import parse_package
 # ROS 1 imports
 import genmsg
 import genmsg.msg_loader
