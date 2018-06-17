@@ -20,14 +20,16 @@ macro(find_ros1_package name)
       "${ARG_UNPARSED_ARGUMENTS}")
   endif()
 
-  if(_ARG_REQUIRED)
-    set(_required "REQUIRED")
+  # the error message of pkg_check_modules for not found required modules
+  # doesn't include the module name which is not helpful
+  pkg_check_modules(ros1_${name} ${name})
+  if(NOT ros1_${name}_FOUND)
+    if(_ARG_REQUIRED)
+      message(FATAL_ERROR
+        "find_ros1_package() failed to find '${name}' using "
+        "pkg_check_modules()")
+    endif()
   else()
-    set(_required "")
-  endif()
-
-  pkg_check_modules(ros1_${name} ${_required} ${name})
-  if(ros1_${name}_FOUND)
     set(_libraries "${ros1_${name}_LIBRARIES}")
     # Prior to catkin 0.7.7, dependent libraries in the pkg-config file were always generated
     # in the form "-l:/absolute/path/to/library".  Because of the leading "-l", this made
