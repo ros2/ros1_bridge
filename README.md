@@ -94,7 +94,7 @@ Then build just the ROS 1 bridge:
 colcon build --build-tests --symlink-install --packages-select ros1_bridge --cmake-force-configure
 ```
 
-*Note:* If you are building on a memory constrained system you might want to limit the number of parallel jobs by setting e.g. `MAKEFLAGS=-j1`.
+*Note:* If you are building on a memory constrained system you might want to limit the number of parallel jobs by setting e.g. the environment variable `MAKEFLAGS=-j1`.
 
 
 ## Example 1: run the bridge and the example talker and listener
