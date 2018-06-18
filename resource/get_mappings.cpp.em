@@ -60,13 +60,27 @@ get_2to1_mapping(const std::string & ros2_type_name, std::string & ros1_type_nam
 }
 
 std::map<std::string, std::string>
-get_all_mappings_2to1()
+get_all_message_mappings_2to1()
 {
   static std::map<std::string, std::string> mappings = {
 @[for m in mappings]@
     {
       "@(m.ros2_msg.package_name)/@(m.ros2_msg.message_name)",  // ROS 2
       "@(m.ros1_msg.package_name)/@(m.ros1_msg.message_name)"   // ROS 1
+    },
+@[end for]@
+  };
+  return mappings;
+}
+
+std::map<std::string, std::string>
+get_all_service_mappings_2to1()
+{
+  static std::map<std::string, std::string> mappings = {
+@[for s in services]@
+    {
+      "@(s['ros2_package'])/@(s['ros2_name'])",  // ROS 2
+      "@(s['ros1_package'])/@(s['ros1_name'])"   // ROS 1
     },
 @[end for]@
   };
