@@ -66,13 +66,14 @@ import rosmsg  # noqa
 
 def generate_cpp(output_path, template_dir):
     data = generate_messages()
+    data.update(generate_services())
 
     template_file = os.path.join(template_dir, 'get_mappings.cpp.em')
     output_file = os.path.join(output_path, 'get_mappings.cpp')
-    data_for_template = {'mappings': data['mappings']}
+    data_for_template = {
+        'mappings': data['mappings'], 'services': data['services']}
     expand_template(template_file, data_for_template, output_file)
 
-    data.update(generate_services())
     unique_package_names = set(data['ros2_package_names_msg'] + data['ros2_package_names_srv'])
     # skip builtin_interfaces since there is a custom implementation
     unique_package_names -= {'builtin_interfaces'}

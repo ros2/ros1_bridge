@@ -59,7 +59,10 @@ get_2to1_mapping(
   std::string & ros1_type_name);
 
 std::map<std::string, std::string>
-get_all_mappings_2to1();
+get_all_message_mappings_2to1();
+
+std::map<std::string, std::string>
+get_all_service_mappings_2to1();
 
 std::shared_ptr<FactoryInterface>
 get_factory(
