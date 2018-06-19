@@ -23,7 +23,7 @@ In order to run the bridge you need to either:
 
 After that you can run both examples described below.
 
-For all examples you need to source the environment of the ament install space where the bridge was built or unpacked to.
+For all examples you need to source the environment of the install space where the bridge was built or unpacked to.
 Additionally you will need to either source the ROS 1 environment or at least set the `ROS_MASTER_URI` and run a `roscore`.
 
 The following ROS 1 packages are required to build and use the bridge:
@@ -62,20 +62,20 @@ We don't recommend having your ROS 1 environment sourced during this step as it 
 The ROS 2 image demos you build in this step would then use OpenCV 3 and require it to be on your path when you run them, while the standard installation on Ubuntu Xenial is OpenCV 2.
 
 ```
-src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install --skip-packages ros1_bridge
+colcon build --symlink-install --packages-skip ros1_bridge
 ```
 
-Next you need to source the ROS 1 environment, for Linux and ROS Kinetic that would be:
+Next you need to source the ROS 1 environment, for Linux and ROS Melodic that would be:
 
 ```
-source /opt/ros/kinetic/setup.bash
+source /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 ```
 
 The bridge will be built with support for any message/service packages that are on your path and have an associated mapping between ROS 1 and ROS 2.
 Therefore you must add any ROS 1 or ROS 2 workspaces that have message/service packages that you want to be bridged to your path before building the bridge.
-This can be done by adding explicit dependencies on the message/service packages to the `package.xml` of the bridge, so that `ament` will add them to the path before it builds the bridge.
+This can be done by adding explicit dependencies on the message/service packages to the `package.xml` of the bridge, so that `colcon` will add them to the path before it builds the bridge.
 Alternatively you can do it manually by sourcing the relevant workspaces yourself, e.g.:
 
 ```
@@ -91,10 +91,10 @@ Alternatively you can do it manually by sourcing the relevant workspaces yoursel
 Then build just the ROS 1 bridge:
 
 ```
-src/ament/ament_tools/scripts/ament.py build --build-tests --symlink-install --only ros1_bridge --force-cmake-configure
+colcon build --build-tests --symlink-install --packages-select ros1_bridge --cmake-force-configure
 ```
 
-*Note:* If you are building on a memory constrained system you might want to limit the number of parallel jobs by passing e.g. `-j1`.
+*Note:* If you are building on a memory constrained system you might want to limit the number of parallel jobs by setting e.g. the environment variable `MAKEFLAGS=-j1`.
 
 
 ## Example 1: run the bridge and the example talker and listener
@@ -112,7 +112,7 @@ First we start a ROS 1 `roscore`:
 
 ```
 # Shell A:
-. /opt/ros/kinetic/setup.bash
+. /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 roscore
@@ -125,7 +125,7 @@ Once a *matching* topic has been detected it starts to bridge the messages on th
 
 ```
 # Shell B:
-. /opt/ros/kinetic/setup.bash
+. /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 . <install-space-with-bridge>/setup.bash
@@ -141,7 +141,7 @@ Now we start the ROS 1 talker.
 
 ```
 # Shell C:
-. /opt/ros/kinetic/setup.bash
+. /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 rosrun rospy_tutorials talker
@@ -188,7 +188,7 @@ The steps are very similar to the previous example and therefore only the comman
 
 ```
 # Shell A:
-. /opt/ros/kinetic/setup.bash
+. /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 roscore
@@ -198,7 +198,7 @@ roscore
 
 ```
 # Shell B:
-. /opt/ros/kinetic/setup.bash
+. /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 . <install-space-with-bridge>/setup.bash
@@ -222,7 +222,7 @@ Now we start the ROS 1 listener.
 
 ```
 # Shell D:
-. /opt/ros/kinetic/setup.bash
+. /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 rosrun roscpp_tutorials listener
@@ -239,7 +239,7 @@ First we start a ROS 1 `roscore` and the bridge:
 
 ```
 # Shell A:
-. /opt/ros/kinetic/setup.bash
+. /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 roscore
@@ -247,7 +247,7 @@ roscore
 
 ```
 # Shell B:
-. /opt/ros/kinetic/setup.bash
+. /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 . <workspace-with-bridge>/install/setup.bash
@@ -261,7 +261,7 @@ Now we start the ROS 1 GUI:
 
 ```
 # Shell C:
-. /opt/ros/kinetic/setup.bash
+. /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 rqt_image_view /image
@@ -286,14 +286,14 @@ You can either use the `Message Publisher` plugin in `rqt` to publish a `std_msg
 
 ```
 # Shell E:
-. /opt/ros/kinetic/setup.bash
+. /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 rostopic pub -r 1 /flip_image std_msgs/Bool "{data: true}"
 rostopic pub -r 1 /flip_image std_msgs/Bool "{data: false}"
 ```
 
-The screenshot shows all the shell windows and their expected content (it was taken when Indigo was supported - you should use Kinetic):
+The screenshot shows all the shell windows and their expected content (it was taken when Indigo was supported - you should use Melodic):
 
 ![ROS 2 camera and ROS 1 rqt](doc/ros2_camera_ros1_rqt.png)
 
