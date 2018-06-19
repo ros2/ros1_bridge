@@ -13,6 +13,8 @@
 @# Context:
 @#  - mappings (list of ros1_bridge.Mapping)
 @#    Mapping between messages as well as their fields
+@#  - services (list of dictionaries)
+@#    Mapping between services as well as their fields
 @###############################################
 @
 #include <map>
