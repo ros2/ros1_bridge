@@ -360,7 +360,7 @@ class MessageMappingRule(MappingRule):
                 'Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
 
     def is_message_mapping(self):
-        return self.ros1_message_name is not None and self.fields_1_to_2 is None
+        return self.ros1_message_name is not None
 
     def is_field_mapping(self):
         return self.fields_1_to_2 is not None
