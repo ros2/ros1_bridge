@@ -104,10 +104,10 @@ Example message mapping rule::
 Example message field mapping rule::
 
     -
-      ros1_package_name: 'pkg_name'
-      ros1_message_name: 'msg_name'
-      ros2_package_name: 'pkg_name'
-      ros2_message_name: 'msg_name'
+      ros1_package_name: 'ros1_pkg_name'
+      ros1_message_name: 'ros1_msg_name'
+      ros2_package_name: 'ros2_pkg_name'
+      ros2_message_name: 'ros2_msg_name'
       fields_1_to_2:
         foo: 'foo'
         ros1_bar: 'ros2_bar'
