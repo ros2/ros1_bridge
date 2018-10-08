@@ -22,7 +22,7 @@ include(cmake/find_ros1_package.cmake)
 
 find_package(PkgConfig)
 if(NOT PKG_CONFIG_FOUND)
-  message(STATUS "Failed to find PkgConfig, skipping...")
+  message(WARNING "Failed to find PkgConfig, skipping...")
   # call ament_package() to avoid ament_tools treating this as a plain CMake pkg
   ament_package()
   return()
@@ -30,7 +30,7 @@ endif()
 
 find_ros1_package(roscpp)
 if(NOT ros1_roscpp_FOUND)
-  message(STATUS "Failed to find ROS 1 roscpp, skipping...")
+  message(WARNING "Failed to find ROS 1 roscpp, skipping...")
   # call ament_package() to avoid ament_tools treating this as a plain CMake pkg
   ament_package()
   return()
