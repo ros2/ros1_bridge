@@ -165,11 +165,11 @@ custom_executable(dynamic_bridge
 target_link_libraries(dynamic_bridge
   ${PROJECT_NAME})
 
-custom_executable(dynamic_param_bridge
-        "src/dynamic_param_bridge.cpp"
+custom_executable(dynamic_whitelist_bridge
+        "src/dynamic_whitelist_bridge.cpp"
         ROS1_DEPENDENCIES
         TARGET_DEPENDENCIES ${ros2_message_packages})
-target_link_libraries(dynamic_param_bridge
+target_link_libraries(dynamic_whitelist_bridge
         ${PROJECT_NAME})
 
 if(TEST_ROS1_BRIDGE)
