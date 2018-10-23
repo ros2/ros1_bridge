@@ -101,7 +101,7 @@ get_flag_val(const std::vector<std::string> &args, const std::string &option, co
 bool parse_command_options(
         int argc, char **argv, bool &output_topic_introspection,
         bool &bridge_all_1to2_topics, bool &bridge_all_2to1_topics,
-        std::string &topic_rgxp_list_param, std::string &srv_rgxp_list_param
+        std::string &topic_rgxp_list_param, std::string &srv_rgxp_list_param,
         std::string &node_suffix) {
   std::vector<std::string> args(argv, argv + argc);
 
@@ -119,11 +119,11 @@ bool parse_command_options(
     ss << "a matching subscriber." << std::endl;
     ss << " --bridge-all-2to1-topics: Bridge all ROS 2 topics to ROS 1, whether or not there is ";
     ss << "a matching subscriber." << std::endl;
-    ss << "--topic-regex-list: ROS1 param holding the list of whitelist topic regex (default: topics_re)";
+    ss << "  --topic-regex-list: ROS1 param holding the list of whitelist topic regex (default: topics_re)";
     ss << std::endl;
-    ss << "--service-regex-list: ROS1 param holding the list of whitelist service regex (default: services_re)";
+    ss << "  --service-regex-list: ROS1 param holding the list of whitelist service regex (default: services_re)";
     ss << std::endl;
-    ss << "--node-name-suffix: Suffix used to uniquely identify this node ros12_bridge_<suffix> (default: default)";
+    ss << "  --node-suffix: Suffix used to uniquely identify this node ros12_bridge_<suffix> (default: default)";
     ss << std::endl;
     std::cout << ss.str();
     return false;
