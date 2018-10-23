@@ -66,9 +66,13 @@ struct Bridge2to1HandlesAndMessageTypes {
 
 typedef std::map<std::string, std::vector<std::regex >> WhiteListMap;
 
-bool check_inregex_list(const std::vector<std::regex> &regex_list, const std::string &name) {
+bool check_inregex_list(const std::vector<std::regex> &regex_list, const std::string &name, std::set<std::string> &known_set) {
+  if (known_set.count(name) != 0) {
+    return true;
+  }
   for (auto const &rgxp: regex_list) {
     if (std::regex_match(name, rgxp)) {
+      known_set.insert(name);
       return true;
     }
   }
@@ -541,6 +545,8 @@ int main(int argc, char *argv[]) {
   }
   std::set<std::string> already_ignored_ros1_topics;
   std::set<std::string> already_ignored_ros1_services;
+  std::set<std::string> valid_ros1_topics;
+  std::set<std::string> valid_ros1_services;
   // setup polling of ROS 1 master
   auto ros1_poll = [
           &ros1_node, ros2_node,
@@ -553,7 +559,7 @@ int main(int argc, char *argv[]) {
           &bridge_all_1to2_topics, &bridge_all_2to1_topics,
           &topic_rgxp_list_param, &srv_rgxp_list_param,
           &already_ignored_ros1_topics, &already_ignored_ros1_services,
-          &whitelist_map
+          &whitelist_map, &valid_ros1_topics, &valid_ros1_services
   ](const ros::TimerEvent &) -> void {
       // collect all topics names which have at least one publisher or subscriber beside this bridge
       std::set<std::string> active_publishers;
@@ -576,7 +582,7 @@ int main(int argc, char *argv[]) {
               continue;
             }
             if (already_ignored_ros1_topics.count(topic_name) == 0) {
-              if (check_inregex_list(whitelist_map[topic_rgxp_list_param], topic_name)) {
+              if (check_inregex_list(whitelist_map[topic_rgxp_list_param], topic_name, valid_ros1_topics)) {
                 active_publishers.insert(topic_name);
               } else {
                 fprintf(
@@ -602,7 +608,7 @@ int main(int argc, char *argv[]) {
               continue;
             }
             if (already_ignored_ros1_topics.count(topic_name) == 0) {
-              if (check_inregex_list(whitelist_map[topic_rgxp_list_param], topic_name)) {
+              if (check_inregex_list(whitelist_map[topic_rgxp_list_param], topic_name, valid_ros1_topics)) {
                 active_subscribers.insert(topic_name);
               } else {
                 fprintf(
@@ -625,7 +631,7 @@ int main(int argc, char *argv[]) {
           if (payload[2][j][0].getType() == XmlRpc::XmlRpcValue::TypeString) {
             std::string name = payload[2][j][0];
             if (already_ignored_ros1_services.count(name) == 0) {
-              if (check_inregex_list(whitelist_map[srv_rgxp_list_param], name)) {
+              if (check_inregex_list(whitelist_map[srv_rgxp_list_param], name, valid_ros1_services)) {
                 get_ros1_service_info(name, active_ros1_services);
               } else {
                 fprintf(
@@ -712,6 +718,9 @@ int main(int argc, char *argv[]) {
   // setup polling of ROS 2
   std::set<std::string> already_ignored_topics;
   std::set<std::string> already_ignored_services;
+  std::set<std::string> valid_ros2_topics;
+  std::set<std::string> valid_ros2_services;
+
   auto ros2_poll = [
           &ros1_node, ros2_node,
           &ros1_publishers, &ros1_subscribers,
@@ -723,7 +732,7 @@ int main(int argc, char *argv[]) {
           &bridge_all_1to2_topics, &bridge_all_2to1_topics,
           &already_ignored_topics, &already_ignored_services,
           &topic_rgxp_list_param, &srv_rgxp_list_param,
-          &whitelist_map
+          &whitelist_map, &valid_ros2_topics, &valid_ros2_services
   ]() -> void {
       auto ros2_topics = ros2_node->get_topic_names_and_types();
 
@@ -759,7 +768,7 @@ int main(int argc, char *argv[]) {
           continue;
         }
         if (already_ignored_topics.count(topic_name) == 0) {
-          if (!check_inregex_list(whitelist_map[topic_rgxp_list_param], topic_name)) {
+          if (!check_inregex_list(whitelist_map[topic_rgxp_list_param], topic_name, valid_ros2_topics)) {
             fprintf(
                     stderr,
                     "warning: ignoring topic '%s',as it does not match any regex \n",
@@ -823,7 +832,7 @@ int main(int argc, char *argv[]) {
           continue;
         }
         if (already_ignored_services.count(service_name) == 0) {
-          if (!check_inregex_list(whitelist_map[srv_rgxp_list_param], service_name)) {
+          if (!check_inregex_list(whitelist_map[srv_rgxp_list_param], service_name, valid_ros2_services)) {
             fprintf(
                     stderr,
                     "warning: ignoring topic '%s',as it does not match any regex \n",
