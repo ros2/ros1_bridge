@@ -68,9 +68,7 @@ typedef std::map<std::string, std::vector<std::regex >> WhiteListMap;
 
 bool check_inregex_list(const std::vector<std::regex> &regex_list, const std::string &name) {
   for (auto const &rgxp: regex_list) {
-    fprintf(stderr, "Trying to match  '%s' with '%s'\n", name.c_str());
     if (std::regex_match(name, rgxp)) {
-      fprintf(stderr,"We matched");
       return true;
     }
   }
@@ -86,7 +84,8 @@ bool get_flag_option(const std::vector<std::string> &args, const std::string &op
   return it != args.end();
 }
 
-std::string get_flag_val(const std::vector<std::string> &args, const std::string &option, const std::string &default_val) {
+std::string
+get_flag_val(const std::vector<std::string> &args, const std::string &option, const std::string &default_val) {
   auto it = std::find(args.begin(), args.end(), option);
   if (it == args.end()) {
     return default_val;
@@ -102,7 +101,8 @@ std::string get_flag_val(const std::vector<std::string> &args, const std::string
 bool parse_command_options(
         int argc, char **argv, bool &output_topic_introspection,
         bool &bridge_all_1to2_topics, bool &bridge_all_2to1_topics,
-        std::string &topic_rgxp_list_param, std::string &srv_rgxp_list_param) {
+        std::string &topic_rgxp_list_param, std::string &srv_rgxp_list_param
+        std::string &node_suffix) {
   std::vector<std::string> args(argv, argv + argc);
 
   if (find_command_option(args, "-h") || find_command_option(args, "--help")) {
@@ -119,6 +119,12 @@ bool parse_command_options(
     ss << "a matching subscriber." << std::endl;
     ss << " --bridge-all-2to1-topics: Bridge all ROS 2 topics to ROS 1, whether or not there is ";
     ss << "a matching subscriber." << std::endl;
+    ss << "--topic-regex-list: ROS1 param holding the list of whitelist topic regex (default: topics_re)";
+    ss << std::endl;
+    ss << "--service-regex-list: ROS1 param holding the list of whitelist service regex (default: services_re)";
+    ss << std::endl;
+    ss << "--node-name-suffix: Suffix used to uniquely identify this node ros12_bridge_<suffix> (default: default)";
+    ss << std::endl;
     std::cout << ss.str();
     return false;
   }
@@ -153,6 +159,7 @@ bool parse_command_options(
 
   topic_rgxp_list_param = get_flag_val(args, "--topic-regex-list", "topics_re");
   srv_rgxp_list_param = get_flag_val(args, "--service-regex-list", "services_re");
+  node_suffix = get_flag_val(args, "--node-suffix", "default");
 
   return true;
 }
@@ -480,20 +487,21 @@ int main(int argc, char *argv[]) {
   //parameters
   std::string topic_rgxp_list_param;
   std::string srv_rgxp_list_param;
+  std::string node_suffix;
 
   if (!parse_command_options(
           argc, argv, output_topic_introspection, bridge_all_1to2_topics, bridge_all_2to1_topics,
-          topic_rgxp_list_param, srv_rgxp_list_param)) {
+          topic_rgxp_list_param, srv_rgxp_list_param, node_suffix)) {
     return 0;
   }
 
   // ROS 1 node
-  ros::init(argc, argv, "ros_bridge");
+  ros::init(argc, argv, "ros12_bridge_" + node_suffix);
   ros::NodeHandle ros1_node;
 
   // ROS 2 node
   rclcpp::init(argc, argv);
-  auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
+  auto ros2_node = rclcpp::Node::make_shared("ros12_bridge_" + node_suffix);
 
   // mapping of available topic names to type names
   std::map<std::string, std::string> ros1_publishers;
@@ -523,7 +531,6 @@ int main(int argc, char *argv[]) {
             rgxps.getType() == XmlRpc::XmlRpcValue::TypeArray) {
       for (size_t i = 0; i < static_cast<size_t>(rgxps.size()); ++i) {
         std::string rgxp_str = static_cast<std::string>(rgxps[i]);
-        fprintf(stderr, "FUCC '%s' MAAAAAAAAAAAAAAAAAAA\n",rgxp_str.c_str() );
         element.second.push_back(std::regex(rgxp_str));
       }
     } else {
@@ -569,7 +576,7 @@ int main(int argc, char *argv[]) {
               continue;
             }
             if (already_ignored_ros1_topics.count(topic_name) == 0) {
-              if (check_inregex_list(whitelist_map[topic_rgxp_list_param], topic_name)){
+              if (check_inregex_list(whitelist_map[topic_rgxp_list_param], topic_name)) {
                 active_publishers.insert(topic_name);
               } else {
                 fprintf(
@@ -595,7 +602,7 @@ int main(int argc, char *argv[]) {
               continue;
             }
             if (already_ignored_ros1_topics.count(topic_name) == 0) {
-              if (check_inregex_list(whitelist_map[topic_rgxp_list_param], topic_name)){
+              if (check_inregex_list(whitelist_map[topic_rgxp_list_param], topic_name)) {
                 active_subscribers.insert(topic_name);
               } else {
                 fprintf(
@@ -618,7 +625,7 @@ int main(int argc, char *argv[]) {
           if (payload[2][j][0].getType() == XmlRpc::XmlRpcValue::TypeString) {
             std::string name = payload[2][j][0];
             if (already_ignored_ros1_services.count(name) == 0) {
-              if (check_inregex_list(whitelist_map[srv_rgxp_list_param], name)){
+              if (check_inregex_list(whitelist_map[srv_rgxp_list_param], name)) {
                 get_ros1_service_info(name, active_ros1_services);
               } else {
                 fprintf(
@@ -752,7 +759,7 @@ int main(int argc, char *argv[]) {
           continue;
         }
         if (already_ignored_topics.count(topic_name) == 0) {
-          if (!check_inregex_list(whitelist_map[topic_rgxp_list_param], topic_name)){
+          if (!check_inregex_list(whitelist_map[topic_rgxp_list_param], topic_name)) {
             fprintf(
                     stderr,
                     "warning: ignoring topic '%s',as it does not match any regex \n",
@@ -816,7 +823,7 @@ int main(int argc, char *argv[]) {
           continue;
         }
         if (already_ignored_services.count(service_name) == 0) {
-          if (!check_inregex_list(whitelist_map[srv_rgxp_list_param], service_name)){
+          if (!check_inregex_list(whitelist_map[srv_rgxp_list_param], service_name)) {
             fprintf(
                     stderr,
                     "warning: ignoring topic '%s',as it does not match any regex \n",
