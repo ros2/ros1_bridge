@@ -19,10 +19,12 @@
 #include <memory>
 #include <string>
 
+
 #include "rmw/rmw.h"
 
 // include ROS 1 message event
 #include "ros/message.h"
+#include "ros/this_node.h"
 
 #include "rcutils/logging_macros.h"
 
@@ -128,9 +130,10 @@ protected:
       return;
     }
 
-    std::string key = "callerid";
-    if (connection_header->find(key) != connection_header->end()) {
-      if (connection_header->at(key) == "/ros_bridge") {
+    const auto caller = connection_header->find("callerid");
+    const auto node_name = ros::this_node::getName();
+    if (caller != connection_header->end()) {
+      if (caller->second == node_name) {
         return;
       }
     }
@@ -140,7 +143,7 @@ protected:
     auto ros2_msg = std::make_shared<ROS2_T>();
     convert_1_to_2(*ros1_msg, *ros2_msg);
     RCUTILS_LOG_INFO_ONCE_NAMED(
-      "ros1_bridge",
+      node_name.c_str(),
       "Passing message from ROS 1 %s to ROS 2 %s (showing msg only once per type)",
       ros1_type_name.c_str(), ros2_type_name.c_str());
     typed_ros2_pub->publish(ros2_msg);
@@ -171,8 +174,9 @@ protected:
 
     ROS1_T ros1_msg;
     convert_2_to_1(*ros2_msg, ros1_msg);
+    const auto node_name = ros::this_node::getName();
     RCUTILS_LOG_INFO_ONCE_NAMED(
-      "ros1_bridge",
+      node_name.c_str(),
       "Passing message from ROS 2 %s to ROS 1 %s (showing msg only once per type)",
       ros1_type_name.c_str(), ros2_type_name.c_str());
     ros1_pub.publish(ros1_msg);
