@@ -141,12 +141,17 @@ protected:
     const boost::shared_ptr<ROS1_T const> & ros1_msg = ros1_msg_event.getConstMessage();
 
     auto ros2_msg = std::make_shared<ROS2_T>();
-    convert_1_to_2(*ros1_msg, *ros2_msg);
-    RCUTILS_LOG_INFO_ONCE_NAMED(
-      node_name.c_str(),
-      "Passing message from ROS 1 %s to ROS 2 %s (showing msg only once per type)",
-      ros1_type_name.c_str(), ros2_type_name.c_str());
-    typed_ros2_pub->publish(ros2_msg);
+    try {
+      convert_1_to_2(*ros1_msg, *ros2_msg);
+      typed_ros2_pub->publish(ros2_msg);
+      RCUTILS_LOG_INFO_ONCE_NAMED(
+              node_name.c_str(),
+              "Passing message from ROS 1 %s to ROS 2 %s (showing msg only once per type)",
+              ros1_type_name.c_str(), ros2_type_name.c_str());
+    } catch (std::runtime_error &e) {
+      RCUTILS_LOG_ERROR("Error converting ROS1=>ROS2 msg. Caller: %s ;Node: %s ;ROS1_Type: %s ;ROS2_Type: %s \nError: %s",
+      caller, node_name, ros1_type_name, ros2_type_name, e.what());
+    }
   }
 
   static
@@ -173,13 +178,18 @@ protected:
     }
 
     ROS1_T ros1_msg;
-    convert_2_to_1(*ros2_msg, ros1_msg);
     const auto node_name = ros::this_node::getName();
-    RCUTILS_LOG_INFO_ONCE_NAMED(
-      node_name.c_str(),
-      "Passing message from ROS 2 %s to ROS 1 %s (showing msg only once per type)",
-      ros1_type_name.c_str(), ros2_type_name.c_str());
-    ros1_pub.publish(ros1_msg);
+    try {
+      convert_2_to_1(*ros2_msg, ros1_msg);
+      RCUTILS_LOG_INFO_ONCE_NAMED(
+              node_name.c_str(),
+              "Passing message from ROS 2 %s to ROS 1 %s (showing msg only once per type)",
+              ros1_type_name.c_str(), ros2_type_name.c_str());
+      ros1_pub.publish(ros1_msg);
+    } catch (std::runtime_error &e) {
+      RCUTILS_LOG_ERROR("Error converting ROS2=>ROS1 msg. Node: %s ;ROS2_Type: %s ;ROS1_Type: %s \nError: %s",
+                         node_name, ros2_type_name, ros1_type_name, e.what());
+    }
   }
 
 public:

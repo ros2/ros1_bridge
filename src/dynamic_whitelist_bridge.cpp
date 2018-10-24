@@ -123,11 +123,11 @@ bool parse_command_options(
     ss << "a matching subscriber." << std::endl;
     ss << " --bridge-all-2to1-topics: Bridge all ROS 2 topics to ROS 1, whether or not there is ";
     ss << "a matching subscriber." << std::endl;
-    ss << "  --topic-regex-list: ROS1 param holding the list of whitelist topic regex (default: topics_re)";
+    ss << " --topic-regex-list: ROS1 param holding the list of whitelist topic regex (default: topics_re)";
     ss << std::endl;
-    ss << "  --service-regex-list: ROS1 param holding the list of whitelist service regex (default: services_re)";
+    ss << " --service-regex-list: ROS1 param holding the list of whitelist service regex (default: services_re)";
     ss << std::endl;
-    ss << "  --node-suffix: Suffix used to uniquely identify this node ros12_bridge_<suffix> (default: default)";
+    ss << " --node-suffix: Suffix used to uniquely identify this node ros12_bridge_<suffix> (default: default)";
     ss << std::endl;
     std::cout << ss.str();
     return false;
