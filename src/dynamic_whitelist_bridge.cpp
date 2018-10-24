@@ -775,7 +775,10 @@ int main(int argc, char *argv[]) {
                     topic_name.c_str()
             );
             already_ignored_topics.insert(topic_name);
+            continue;
           }
+        } else {
+          continue;
         }
 
         auto publisher_count = ros2_node->count_publishers(topic_name);
@@ -839,7 +842,10 @@ int main(int argc, char *argv[]) {
                     service_name.c_str()
             );
             already_ignored_services.insert(service_name);
+            continue;
           }
+        } else {
+          continue;
         }
 
         // TODO(wjwwood): this should be common functionality in the C++ rosidl package
