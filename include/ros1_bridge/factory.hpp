@@ -58,7 +58,7 @@ public:
     const std::string & topic_name,
     size_t queue_size)
   {
-    rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_default;
+    rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_sensor_data;
     custom_qos_profile.depth = queue_size;
     return node->create_publisher<ROS2_T>(topic_name, custom_qos_profile);
   }
