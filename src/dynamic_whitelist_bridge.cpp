@@ -636,7 +636,7 @@ int main(int argc, char *argv[]) {
               } else {
                 fprintf(
                         stderr,
-                        "warning: ignoring topic '%s',as it does not match any regex \n",
+                        "warning: ignoring service '%s',as it does not match any regex \n",
                         name.c_str()
                 );
                 already_ignored_ros1_services.insert(name);
