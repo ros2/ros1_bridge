@@ -171,7 +171,7 @@ protected:
           return;  // do not publish messages from bridge itself
         }
       } else {
-        auto msg = std::string("Failed to compare gids: ") + rmw_get_error_string_safe();
+        auto msg = std::string("Failed to compare gids: ") + rmw_get_error_string().str;
         rmw_reset_error();
         throw std::runtime_error(msg);
       }
