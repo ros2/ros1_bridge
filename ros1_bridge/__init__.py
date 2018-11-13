@@ -203,11 +203,13 @@ def get_ros2_messages():
         pkgs.append(package_name)
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
-        message_names = [n[4:-4] for n in interfaces if n.startswith('msg/') and n.endswith('.msg')]
+        message_names =
+            [n[:-4] for n in interfaces if n.startswith('msg/') and n.endswith('.msg')]
         message_names.extend(
             [n[4:-4] for n in interfaces if n.startswith('srv/') and n.endswith('.msg')])
         message_names.extend(
             [n[7:-4] for n in interfaces if n.startswith('action/') and n.endswith('.msg')])
+
         for message_name in message_names:
             msgs.append(Message(package_name, message_name, prefix_path))
         # check package manifest for mapping rules
@@ -256,7 +258,11 @@ def get_ros2_services():
         pkgs.append(package_name)
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
-        service_names = [i[:-4] for i in interfaces if i.endswith('.srv')]
+        service_names =
+            [i[4:-4] for i in interfaces if i.startswith('srv/') and i.endswith('.srv')]
+        service_names.extend(
+            [i[7:-4] for i in interfaces if i.startswith('action/') and i.endswith('.srv')])
+
         for service_name in service_names:
             srvs.append(Message(package_name, service_name, prefix_path))
         # check package manifest for mapping rules
