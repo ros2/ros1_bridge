@@ -203,7 +203,7 @@ def get_ros2_messages():
         pkgs.append(package_name)
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
-        message_names =
+        message_names = \
             [i[4:-4] for i in interfaces if i.startswith('msg/') and i.endswith('.msg')]
 
         for message_name in message_names:
@@ -254,7 +254,7 @@ def get_ros2_services():
         pkgs.append(package_name)
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
-        service_names =
+        service_names = \
             [i[4:-4] for i in interfaces if i.startswith('srv/') and i.endswith('.srv')]
 
         for service_name in service_names:
