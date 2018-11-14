@@ -204,7 +204,7 @@ def get_ros2_messages():
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
         message_names =
-            [n[:-4] for n in interfaces if n.startswith('msg/') and n.endswith('.msg')]
+            [n[4:-4] for n in interfaces if n.startswith('msg/') and n.endswith('.msg')]
         message_names.extend(
             [n[4:-4] for n in interfaces if n.startswith('srv/') and n.endswith('.msg')])
         message_names.extend(
@@ -669,9 +669,13 @@ def load_ros1_service(ros1_srv, rospack=None):
 
 
 def load_ros2_message(ros2_msg):
-    message_path = os.path.join(
-        ros2_msg.prefix_path, 'share', ros2_msg.package_name, 'msg',
-        ros2_msg.message_name + '.msg')
+    message_path = None
+    for message_location in ['msg', 'srv', 'action']:
+        message_path = os.path.join(
+            ros2_msg.prefix_path, 'share', ros2_msg.package_name, message_location,
+            ros2_msg.message_name + '.msg')
+        if os.path.isfile(message_path):
+            break
     try:
         spec = rosidl_parser.parse_message_file(ros2_msg.package_name, message_path)
     except rosidl_parser.InvalidSpecification:
@@ -680,9 +684,13 @@ def load_ros2_message(ros2_msg):
 
 
 def load_ros2_service(ros2_srv):
-    srv_path = os.path.join(
-        ros2_srv.prefix_path, 'share', ros2_srv.package_name, 'srv',
-        ros2_srv.message_name + '.srv')
+    srv_path = None
+    for srv_location in ['srv', 'action']:
+        srv_path = os.path.join(
+            ros2_srv.prefix_path, 'share', ros2_srv.package_name, srv_location,
+            ros2_srv.message_name + '.srv')
+        if os.path.isfile(srv_path):
+            break
     try:
         spec = rosidl_parser.parse_service_file(ros2_srv.package_name, srv_path)
     except rosidl_parser.InvalidSpecification:
