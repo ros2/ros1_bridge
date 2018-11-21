@@ -105,6 +105,13 @@ public:
       topic_name, callback, custom_qos_profile, nullptr, true);
   }
 
+  void convert_1_to_2(const void * ros1_msg, void * ros2_msg) override
+  {
+    auto typed_ros1_msg = static_cast<const ROS1_T *>(ros1_msg);
+    auto typed_ros2_msg = static_cast<ROS2_T *>(ros2_msg);
+    convert_1_to_2(*typed_ros1_msg, *typed_ros2_msg);
+  }
+
 protected:
   static
   void ros1_callback(

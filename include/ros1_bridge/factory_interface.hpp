@@ -75,6 +75,10 @@ public:
     size_t queue_size,
     ros::Publisher ros1_pub,
     rclcpp::PublisherBase::SharedPtr ros2_pub) = 0;
+
+  virtual
+  void
+  convert_1_to_2(const void * ros1_msg, void * ros2_msg) = 0;
 };
 
 class ServiceFactoryInterface
