@@ -112,6 +112,13 @@ public:
     convert_1_to_2(*typed_ros1_msg, *typed_ros2_msg);
   }
 
+  void convert_2_to_1(const void * ros2_msg, void * ros1_msg) override
+  {
+    auto typed_ros2_msg = static_cast<const ROS2_T *>(ros2_msg);
+    auto typed_ros1_msg = static_cast<ROS1_T *>(ros1_msg);
+    convert_2_to_1(*typed_ros2_msg, *typed_ros1_msg);
+  }
+
 protected:
   static
   void ros1_callback(

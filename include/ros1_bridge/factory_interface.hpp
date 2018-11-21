@@ -79,6 +79,10 @@ public:
   virtual
   void
   convert_1_to_2(const void * ros1_msg, void * ros2_msg) = 0;
+
+  virtual
+  void
+  convert_2_to_1(const void * ros2_msg, void * ros1_msg) = 0;
 };
 
 class ServiceFactoryInterface
