@@ -127,7 +127,7 @@ Example service mapping rule matching a specific pair of services with the same 
       ros2_service_name: 'ros2_srv_name'
 
 Example service mapping rule matching a specific pair of services with a custom mapping between the fields.
-The mapping can optionally only define ``request_fields_1_to_2`` or ``response_fields_1_to_2`` if the other part has the sae fields::
+The mapping can optionally only define ``request_fields_1_to_2`` or ``response_fields_1_to_2`` if the other part has the same fields::
 
     -
       ros1_package_name: 'ros1_pkg_name'
