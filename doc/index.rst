@@ -87,21 +87,21 @@ The yaml files must also be installed in the ``CMakeLists.txt``::
 Example mapping rules file
 --------------------------
 
-Example package mapping rule::
+Example package mapping rule matching all messages with the same names and fields within a pair of packages::
 
     -
       ros1_package_name: 'ros1_pkg_name'
       ros2_package_name: 'ros2_pkg_name'
 
-Example message mapping rule::
+Example message mapping rule matching a specific pair of messages with the same fields::
 
     -
-      ros1_package_name: 'pkg_name'
+      ros1_package_name: 'ros1_pkg_name'
       ros1_message_name: 'ros1_msg_name'
-      ros2_package_name: 'pkg_name'
+      ros2_package_name: 'ros2_pkg_name'
       ros2_message_name: 'ros2_msg_name'
 
-Example message field mapping rule::
+Example message field mapping rule a specific pair of messages with a custom mapping between the fields::
 
     -
       ros1_package_name: 'ros1_pkg_name'
@@ -112,10 +112,31 @@ Example message field mapping rule::
         foo: 'foo'
         ros1_bar: 'ros2_bar'
 
-Example service mapping rule::
+Example service mapping rule matching all services with the same names and fields within a pair of packages::
 
     -
-      ros1_package_name: 'pkg_name'
+      ros1_package_name: 'ros1_pkg_name'
+      ros2_package_name: 'ros2_pkg_name'
+
+Example service mapping rule matching a specific pair of services with the same fields::
+
+    -
+      ros1_package_name: 'ros1_pkg_name'
       ros1_service_name: 'ros1_srv_name'
-      ros2_package_name: 'pkg_name'
+      ros2_package_name: 'ros2_pkg_name'
       ros2_service_name: 'ros2_srv_name'
+
+Example service mapping rule matching a specific pair of services with a custom mapping between the fields.
+The mapping can optionally only define ``request_fields_1_to_2`` or ``response_fields_1_to_2`` if the other part has the same fields::
+
+    -
+      ros1_package_name: 'ros1_pkg_name'
+      ros1_service_name: 'ros1_srv_name'
+      ros2_package_name: 'ros2_pkg_name'
+      ros2_service_name: 'ros2_srv_name'
+      request_fields_1_to_2:
+        foo: 'foo'
+        ros1_bar: 'ros2_bar'
+      response_fields_1_to_2:
+        foo: 'foo'
+        ros1_bar: 'ros2_bar'

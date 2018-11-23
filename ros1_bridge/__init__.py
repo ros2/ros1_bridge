@@ -65,8 +65,9 @@ import rosmsg  # noqa
 
 
 def generate_cpp(output_path, template_dir):
-    data = generate_messages()
-    data.update(generate_services())
+    rospack = rospkg.RosPack()
+    data = generate_messages(rospack)
+    data.update(generate_services(rospack))
 
     template_file = os.path.join(template_dir, 'get_mappings.cpp.em')
     output_file = os.path.join(output_path, 'get_mappings.cpp')
@@ -109,8 +110,7 @@ def generate_cpp(output_path, template_dir):
             expand_template(template_file, data_pkg, output_file)
 
 
-def generate_messages():
-    rospack = rospkg.RosPack()
+def generate_messages(rospack=None):
     ros1_msgs = get_ros1_messages(rospack=rospack)
     ros2_package_names, ros2_msgs, mapping_rules = get_ros2_messages()
 
@@ -130,7 +130,7 @@ def generate_messages():
             mappings.append(Mapping(ros1_msg[0], ros2_msg[0]))
 
     for ros1_msg, ros2_msg in message_pairs:
-        mapping = determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, rospack=rospack)
+        mapping = determine_field_mapping(ros1_msg, ros2_msg, mapping_rules)
         if mapping:
             mappings.append(mapping)
 
@@ -171,8 +171,8 @@ def generate_messages():
     }
 
 
-def generate_services():
-    ros1_srvs = get_ros1_services()
+def generate_services(rospack=None):
+    ros1_srvs = get_ros1_services(rospack=rospack)
     ros2_pkgs, ros2_srvs, mapping_rules = get_ros2_services()
     services = determine_common_services(ros1_srvs, ros2_srvs, mapping_rules)
     return {
@@ -381,15 +381,33 @@ class ServiceMappingRule(MappingRule):
     __slots__ = [
         'ros1_service_name',
         'ros2_service_name',
+        'request_fields_1_to_2',
+        'response_fields_1_to_2',
     ]
 
     def __init__(self, data, expected_package_name):
         super().__init__(data, expected_package_name)
         self.ros1_service_name = None
         self.ros2_service_name = None
+        self.request_fields_1_to_2 = None
+        self.response_fields_1_to_2 = None
         if all(n in data for n in ('ros1_service_name', 'ros2_service_name')):
             self.ros1_service_name = data['ros1_service_name']
             self.ros2_service_name = data['ros2_service_name']
+            expected_keys = 4
+            if 'request_fields_1_to_2' in data:
+                self.request_fields_1_to_2 = OrderedDict()
+                for ros1_field_name, ros2_field_name in data['request_fields_1_to_2'].items():
+                    self.request_fields_1_to_2[ros1_field_name] = ros2_field_name
+                expected_keys += 1
+            if 'response_fields_1_to_2' in data:
+                self.response_fields_1_to_2 = OrderedDict()
+                for ros1_field_name, ros2_field_name in data['response_fields_1_to_2'].items():
+                    self.response_fields_1_to_2[ros1_field_name] = ros2_field_name
+                expected_keys += 1
+            elif len(data) > expected_keys:
+                raise RuntimeError(
+                    'Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
         elif len(data) > 2:
             raise RuntimeError(
                 'Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
@@ -562,8 +580,8 @@ def update_ros1_field_information(ros1_field, package_name):
         ros1_field.msg_name = parts[1]
 
 
-def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, rospack=None):
-    ros1_spec = load_ros1_message(ros1_msg, rospack=rospack)
+def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules):
+    ros1_spec = load_ros1_message(ros1_msg)
     if not ros1_spec:
         return None
     ros2_spec = load_ros2_message(ros2_msg)
@@ -638,10 +656,7 @@ def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, rospack=None):
     return mapping
 
 
-def load_ros1_message(ros1_msg, rospack=None):
-    if not rospack:
-        rospack = rospkg.RosPack()
-
+def load_ros1_message(ros1_msg):
     msg_context = genmsg.MsgContext.create_default()
     message_path = os.path.join(ros1_msg.prefix_path, ros1_msg.message_name + '.msg')
     try:
@@ -652,10 +667,7 @@ def load_ros1_message(ros1_msg, rospack=None):
     return spec
 
 
-def load_ros1_service(ros1_srv, rospack=None):
-    if not rospack:
-        rospack = rospkg.RosPack()
-
+def load_ros1_service(ros1_srv):
     srv_context = genmsg.MsgContext.create_default()
     srv_path = os.path.join(ros1_srv.prefix_path, ros1_srv.message_name + '.srv')
     srv_name = '%s/%s' % (ros1_srv.package_name, ros1_srv.message_name)
