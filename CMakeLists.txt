@@ -63,6 +63,8 @@ endif()
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
 
+ament_export_dependencies(roscpp)
+
 ament_python_install_package(${PROJECT_NAME})
 
 ament_package()
