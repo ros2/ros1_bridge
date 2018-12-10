@@ -441,7 +441,7 @@ def determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules):
 
     # add manual package mapping rules
     for rule in mapping_rules:
-        if not rule.is_package_mapping:
+        if not rule.is_package_mapping():
             continue
         if rule.ros1_package_name not in ros1_package_names:
             continue
