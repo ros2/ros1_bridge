@@ -512,15 +512,18 @@ def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
                 break
             for i, ros1_field in enumerate(ros1_fields[direction]):
                 ros1_type = ros1_field[0]
-                ros2_type = str(ros2_fields[direction][i].type)
+                ros2_type = ros2_fields[direction][i].type
                 ros1_name = ros1_field[1]
                 ros2_name = ros2_fields[direction][i].name
-                if ros1_type != ros2_type or ros1_name != ros2_name:
+                if ros1_type != str(ros2_type) or ros1_name != ros2_name:
                     match = False
                     break
+                ros2_cpptype = ros2_type.pkg_name + "::msg::" + ros2_type.type if ros2_type.pkg_name else ""
                 output[direction].append({
-                    'basic': False if '/' in ros1_type else True,
-                    'array': True if '[]' in ros1_type else False,
+                    'basic': not ros2_type.pkg_name,
+                    'array': ros2_type.is_array,
+                    'dynamic_array': not ros2_type.array_size and not ros2_type.is_upper_bound,
+                    'upper_bound_array': ros2_type.array_size if ros2_type.is_upper_bound else -1,
                     'ros1': {
                         'name': ros1_name,
                         'type': ros1_type.rstrip('[]'),
@@ -528,8 +531,8 @@ def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
                     },
                     'ros2': {
                         'name': ros2_name,
-                        'type': ros2_type.rstrip('[]'),
-                        'cpptype': ros2_type.rstrip('[]').replace('/', '::msg::')
+                        'type': ros2_type.type,
+                        'cpptype': ros2_cpptype
                     }
                 })
         if match:
