@@ -44,8 +44,12 @@ find_ros1_interface_packages(ros1_message_packages)
 
 set(prefixed_ros1_message_packages "")
 foreach(ros1_message_package ${ros1_message_packages})
-  find_ros1_package(${ros1_message_package} REQUIRED)
-  list(APPEND prefixed_ros1_message_packages "ros1_${ros1_message_package}")
+  # TODO(karsten1987): This is currently a workaround to work with ROS 2 classloader
+  # rather than ROS 1 classloader.
+  if(NOT "${ros1_message_package}" STREQUAL "nodelet")
+    find_ros1_package(${ros1_message_package} REQUIRED)
+    list(APPEND prefixed_ros1_message_packages "ros1_${ros1_message_package}")
+  endif()
 endforeach()
 
 set(TEST_ROS1_BRIDGE FALSE)
