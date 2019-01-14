@@ -22,7 +22,7 @@ include(cmake/find_ros1_package.cmake)
 
 find_package(PkgConfig)
 if(NOT PKG_CONFIG_FOUND)
-  message(STATUS "Failed to find PkgConfig, skipping...")
+  message(WARNING "Failed to find PkgConfig, skipping...")
   # call ament_package() to avoid ament_tools treating this as a plain CMake pkg
   ament_package()
   return()
@@ -30,7 +30,7 @@ endif()
 
 find_ros1_package(roscpp)
 if(NOT ros1_roscpp_FOUND)
-  message(STATUS "Failed to find ROS 1 roscpp, skipping...")
+  message(WARNING "Failed to find ROS 1 roscpp, skipping...")
   # call ament_package() to avoid ament_tools treating this as a plain CMake pkg
   ament_package()
   return()
@@ -44,8 +44,12 @@ find_ros1_interface_packages(ros1_message_packages)
 
 set(prefixed_ros1_message_packages "")
 foreach(ros1_message_package ${ros1_message_packages})
-  find_ros1_package(${ros1_message_package} REQUIRED)
-  list(APPEND prefixed_ros1_message_packages "ros1_${ros1_message_package}")
+  # TODO(karsten1987): This is currently a workaround to work with ROS 2 classloader
+  # rather than ROS 1 classloader.
+  if(NOT "${ros1_message_package}" STREQUAL "nodelet")
+    find_ros1_package(${ros1_message_package} REQUIRED)
+    list(APPEND prefixed_ros1_message_packages "ros1_${ros1_message_package}")
+  endif()
 endforeach()
 
 set(TEST_ROS1_BRIDGE FALSE)
