@@ -45,9 +45,10 @@ public:
   create_ros1_publisher(
     ros::NodeHandle node,
     const std::string & topic_name,
-    size_t queue_size)
+    size_t queue_size,
+    bool latch = false)
   {
-    return node.advertise<ROS1_T>(topic_name, queue_size);
+    return node.advertise<ROS1_T>(topic_name, queue_size, latch);
   }
 
   rclcpp::PublisherBase::SharedPtr
@@ -59,6 +60,15 @@ public:
     rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_default;
     custom_qos_profile.depth = queue_size;
     return node->create_publisher<ROS2_T>(topic_name, custom_qos_profile);
+  }
+
+  rclcpp::PublisherBase::SharedPtr
+  create_ros2_publisher(
+    rclcpp::Node::SharedPtr node,
+    const std::string & topic_name,
+    const rmw_qos_profile_t & qos_profile)
+  {
+    return node->create_publisher<ROS2_T>(topic_name, qos_profile);
   }
 
   ros::Subscriber
@@ -92,6 +102,17 @@ public:
   {
     rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_sensor_data;
     custom_qos_profile.depth = queue_size;
+    return create_ros2_subscriber(node, topic_name, custom_qos_profile, ros1_pub, ros2_pub);
+  }
+
+  rclcpp::SubscriptionBase::SharedPtr
+  create_ros2_subscriber(
+    rclcpp::Node::SharedPtr node,
+    const std::string & topic_name,
+    const rmw_qos_profile_t & qos,
+    ros::Publisher ros1_pub,
+    rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr)
+  {
     const std::string & ros1_type_name = ros1_type_name_;
     const std::string & ros2_type_name = ros2_type_name_;
     // TODO(wjwwood): use a lambda until create_subscription supports std/boost::bind.
@@ -102,7 +123,7 @@ public:
           msg, msg_info, ros1_pub, ros1_type_name, ros2_type_name, ros2_pub);
       };
     return node->create_subscription<ROS2_T>(
-      topic_name, callback, custom_qos_profile, nullptr, true);
+      topic_name, callback, qos, nullptr, true);
   }
 
   void convert_1_to_2(const void * ros1_msg, void * ros2_msg) override
