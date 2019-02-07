@@ -50,7 +50,8 @@ public:
   create_ros1_publisher(
     ros::NodeHandle node,
     const std::string & topic_name,
-    size_t queue_size) = 0;
+    size_t queue_size,
+    bool latch = false) = 0;
 
   virtual
   rclcpp::PublisherBase::SharedPtr
@@ -58,6 +59,13 @@ public:
     rclcpp::Node::SharedPtr node,
     const std::string & topic_name,
     size_t queue_size) = 0;
+
+  virtual
+  rclcpp::PublisherBase::SharedPtr
+  create_ros2_publisher(
+    rclcpp::Node::SharedPtr node,
+    const std::string & topic_name,
+    const rmw_qos_profile_t & qos_profile) = 0;
 
   virtual
   ros::Subscriber
@@ -74,7 +82,16 @@ public:
     const std::string & topic_name,
     size_t queue_size,
     ros::Publisher ros1_pub,
-    rclcpp::PublisherBase::SharedPtr ros2_pub) = 0;
+    rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr) = 0;
+
+  virtual
+  rclcpp::SubscriptionBase::SharedPtr
+  create_ros2_subscriber(
+    rclcpp::Node::SharedPtr node,
+    const std::string & topic_name,
+    const rmw_qos_profile_t & qos_profile,
+    ros::Publisher ros1_pub,
+    rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr) = 0;
 
   virtual
   void
