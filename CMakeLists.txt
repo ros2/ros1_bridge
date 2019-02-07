@@ -135,6 +135,7 @@ custom_executable(simple_bridge "src/simple_bridge.cpp"
 add_library(${PROJECT_NAME} SHARED
   "src/builtin_interfaces_factories.cpp"
   "src/convert_builtin_interfaces.cpp"
+  "src/bridge.cpp"
   ${generated_files})
 ament_target_dependencies(${PROJECT_NAME}
   ${prefixed_ros1_message_packages}
