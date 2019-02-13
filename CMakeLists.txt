@@ -69,7 +69,9 @@ ament_export_libraries(${PROJECT_NAME})
 
 ament_python_install_package(${PROJECT_NAME})
 
-ament_package()
+ament_package(
+  CONFIG_EXTRAS cmake/find_ros1_package.cmake cmake/find_ros1_interface_packages.cmake
+)
 
 set(generated_path "${CMAKE_BINARY_DIR}/generated")
 set(generated_files "${generated_path}/get_factory.cpp")
