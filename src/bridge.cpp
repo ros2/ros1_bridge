@@ -36,7 +36,7 @@ create_bridge_from_1_to_2(
     ros2_node, ros2_topic_name, publisher_queue_size);
 
   auto ros1_sub = factory->create_ros1_subscriber(
-    ros1_node, ros1_topic_name, subscriber_queue_size, ros2_pub);
+    ros1_node, ros1_topic_name, subscriber_queue_size, ros2_pub, ros2_node->get_logger());
 
   Bridge1to2Handles handles;
   handles.ros1_subscriber = ros1_sub;
@@ -78,7 +78,7 @@ create_bidirectional_bridge(
   const std::string & topic_name,
   size_t queue_size)
 {
-  printf("create bidirectional bridge for topic [%s]\n", topic_name.c_str());
+  RCLCPP_INFO(ros2_node->get_logger(), "create bidirectional bridge for topic " + topic_name);
   BridgeHandles handles;
   handles.bridge1to2 = create_bridge_from_1_to_2(
     ros1_node, ros2_node,
