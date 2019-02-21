@@ -60,6 +60,12 @@ if(BUILD_TESTING)
   find_ros1_package(roslaunch)
   ament_lint_auto_find_test_dependencies()
   if(ros1_diagnostic_msgs_FOUND AND ros1_roslaunch_FOUND)
+    # ensure that the ROS 2 diagnostic_msgs was found by find_package
+    # and not the ROS 1 package
+    set(_ros1_diagnostic_msgs_DIR "${ros1_diagnostic_msgs_PREFIX}/share/diagnostic_msgs/cmake")
+    if("${diagnostic_msgs_DIR}" STREQUAL "${_ros1_diagnostic_msgs_DIR}")
+      message(FATAL_ERROR "Failed to find ROS 2 package 'diagnostic_msgs' $ENV{CMAKE_PREFIX_PATH}")
+    endif()
     set(TEST_ROS1_BRIDGE TRUE)
   endif()
 endif()
