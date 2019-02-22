@@ -20,14 +20,7 @@ macro(find_ros1_package name)
       "${ARG_UNPARSED_ARGUMENTS}")
   endif()
 
-  find_package(PkgConfig)
-  if(NOT PKG_CONFIG_FOUND)
-    message(WARNING "Failed to find PkgConfig, skipping...")
-    # call ament_package() to avoid ament_tools treating this
-    # as a plain CMake pkg
-    ament_package()
-    return()
-  endif()
+  find_package(PkgConfig REQUIRED)
   # the error message of pkg_check_modules for not found required modules
   # doesn't include the module name which is not helpful
   pkg_check_modules(ros1_${name} ${name})
