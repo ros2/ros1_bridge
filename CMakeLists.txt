@@ -32,7 +32,9 @@ find_ros1_package(roscpp)
 if(NOT ros1_roscpp_FOUND)
   message(WARNING "Failed to find ROS 1 roscpp, skipping...")
   # call ament_package() to avoid ament_tools treating this as a plain CMake pkg
-  ament_package()
+  ament_package(
+    CONFIG_EXTRAS cmake/find_ros1_package.cmake cmake/find_ros1_interface_packages.cmake
+  )
   return()
 endif()
 
