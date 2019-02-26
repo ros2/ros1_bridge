@@ -18,7 +18,7 @@ find_package(rmw_implementation_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
 
 # find ROS 1 packages
-list(APPEND ros1_cmake_macros cmake/find_ros1_package.cmake cmake/find_ros1_interface_packages.cmake)
+set(cmake_extras_files cmake/find_ros1_package.cmake cmake/find_ros1_interface_packages.cmake)
 include(cmake/find_ros1_package.cmake)
 
 find_package(PkgConfig)
@@ -34,7 +34,7 @@ if(NOT ros1_roscpp_FOUND)
   message(WARNING "Failed to find ROS 1 roscpp, skipping...")
   # call ament_package() to avoid ament_tools treating this as a plain CMake pkg
   ament_package(
-    CONFIG_EXTRAS ${ros1_cmake_macros}
+    CONFIG_EXTRAS ${cmake_extras_files}
   )
   return()
 endif()
@@ -73,7 +73,7 @@ ament_export_libraries(${PROJECT_NAME})
 ament_python_install_package(${PROJECT_NAME})
 
 ament_package(
-  CONFIG_EXTRAS ${ros1_cmake_macros}
+  CONFIG_EXTRAS ${cmake_extras_files}
 )
 
 set(generated_path "${CMAKE_BINARY_DIR}/generated")
