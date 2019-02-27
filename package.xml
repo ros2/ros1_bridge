@@ -21,6 +21,8 @@
   <build_depend>rmw_implementation_cmake</build_depend>
   <build_depend>std_msgs</build_depend>
 
+  <buildtool_export_depend>pkg-config</buildtool_export_depend>
+
   <exec_depend>builtin_interfaces</exec_depend>
   <exec_depend>python3-yaml</exec_depend>
   <exec_depend>rclcpp</exec_depend>
