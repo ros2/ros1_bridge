@@ -13,12 +13,16 @@
 # limitations under the License.
 
 import os
+import re
 
-from launch.legacy import LaunchDescriptor
-from launch.legacy.exit_handler import ignore_signal_exit_handler
-from launch.legacy.launcher import DefaultLauncher
-from launch.legacy.output_handler import ConsoleOutput
-from launch_testing import InMemoryHandler
+from launch import LaunchDescription
+from launch import LaunchService
+from launch.actions import ExecuteProcess
+from launch_testing import LaunchTestService
+from launch_testing.output import create_output_lines_filter
+from launch_testing.output import create_output_regex_test
+
+
 from ros2run.api import get_executable_path
 
 
@@ -38,84 +42,147 @@ TEST_BRIDGE_ROS2_SERVER = '@TEST_BRIDGE_ROS2_SERVER@'
 TEST_BRIDGE_RMW = '@TEST_BRIDGE_RMW@'
 
 
+def get_default_launch_test_description(name):
+    launch_description = LaunchDescription()
+    launch_test = LaunchTestService()
+
+    # ROS 1 core
+    launch_test.add_fixture_action(
+        launch_description, ExecuteProcess(
+            cmd=[TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_ROSCORE],
+            name=name + '__roscore',
+        ), exit_allowed=True
+    )
+
+    # dynamic bridge
+    launch_test.add_fixture_action(
+        launch_description, ExecuteProcess(
+            cmd=[TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_DYNAMIC_BRIDGE],
+            name=name + '__dynamic_bridge',
+        )
+    )
+
+    return launch_description, launch_test
+
+
 def test_dynamic_bridge_msg_1to2():
     name = 'test_dynamic_bridge_msg_1to2'
-    launch(
-        name,
-        ('ros1talker', [TEST_BRIDGE_ROS1_ENV] + TEST_BRIDGE_ROS1_TALKER),
-        ('ros2listener', [TEST_BRIDGE_ROS2_LISTENER]),
-        exit_handler2=ignore_signal_exit_handler,
-        expected_output2=[b'I heard.+'])
+
+    launch_description, launch_test = get_default_launch_test_description(name)
+
+    launch_test.add_fixture_action(
+        launch_description, ExecuteProcess(
+            cmd=[TEST_BRIDGE_ROS1_ENV] + TEST_BRIDGE_ROS1_TALKER,
+            name=name + '__ros1talker',
+        )
+    )
+
+    action = launch_test.add_fixture_action(
+        launch_description, ExecuteProcess(
+            cmd=[TEST_BRIDGE_ROS2_LISTENER],
+            name=name + '__ros2listener',
+            output='screen'
+        ), exit_allowed=True
+    )
+
+    launch_test.add_output_test(
+        launch_description, action,
+        output_test=create_output_regex_test(
+            expected_patterns=[re.compile(b'I heard.+')]
+        ),
+        output_filter=create_output_lines_filter(
+            filtered_rmw_implementation=TEST_BRIDGE_RMW,
+        )
+    )
+
+    launch(launch_test, launch_description)
 
 
 def test_dynamic_bridge_msg_2to1():
     name = 'test_dynamic_bridge_msg_2to1'
-    env2 = dict(os.environ)
-    env2['PYTHONUNBUFFERED'] = '1'
-    launch(
-        name,
-        ('ros2talker', [TEST_BRIDGE_ROS2_TALKER]),
-        ('ros1listener', [TEST_BRIDGE_ROS1_ENV] + TEST_BRIDGE_ROS1_LISTENER),
-        env2=env2,
-        exit_handler2=ignore_signal_exit_handler,
-        expected_output2=[b'I heard.+'])
+
+    launch_description, launch_test = get_default_launch_test_description(name)
+
+    launch_test.add_fixture_action(
+        launch_description, ExecuteProcess(
+            cmd=[TEST_BRIDGE_ROS2_TALKER],
+            name=name + '__ros2talker',
+        )
+    )
+
+    env = dict(os.environ)
+    env['PYTHONUNBUFFERED'] = '1'
+    action = launch_test.add_fixture_action(
+        launch_description, ExecuteProcess(
+            cmd=[TEST_BRIDGE_ROS1_ENV] + TEST_BRIDGE_ROS1_LISTENER,
+            name=name + '__ros1listener',
+            env=env,
+            output='screen'
+        ), exit_allowed=True
+    )
+
+    launch_test.add_output_test(
+        launch_description, action,
+        output_test=create_output_regex_test(
+            expected_patterns=[re.compile(b'I heard.+')]
+        ),
+        output_filter=create_output_lines_filter(
+            filtered_rmw_implementation=TEST_BRIDGE_RMW,
+        ),
+        side_effect='shutdown',
+    )
+
+    launch(launch_test, launch_description)
 
 
 def test_dynamic_bridge_srv_1to2():
     name = 'test_dynamic_bridge_srv_1to2'
-    launch(
-        name,
-        ('ros1server', [TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_ROS1_SERVER]),
-        ('ros2client', [TEST_BRIDGE_ROS2_CLIENT]))
+
+    launch_description, launch_test = get_default_launch_test_description(name)
+
+    launch_test.add_fixture_action(
+        launch_description, ExecuteProcess(
+            cmd=[TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_ROS1_SERVER],
+            name=name + '__ros1server',
+        )
+    )
+
+    launch_test.add_test_action(
+        launch_description, ExecuteProcess(
+            cmd=[TEST_BRIDGE_ROS2_CLIENT],
+            name=name + '__ros2client',
+        )
+    )
+
+    launch(launch_test, launch_description)
 
 
 def test_dynamic_bridge_srv_2to1():
     name = 'test_dynamic_bridge_srv_2to1'
-    launch(
-        name,
-        ('ros2server', [TEST_BRIDGE_ROS2_SERVER]),
-        ('ros1client', [TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_ROS1_CLIENT]))
 
+    launch_description, launch_test = get_default_launch_test_description(name)
 
-def launch(name, process1, process2, env1=None, env2=None, exit_handler2=None, expected_output2=None):
-    launch_descriptor = LaunchDescriptor()
-
-    # ROS 1 core
-    launch_descriptor.add_process(
-        cmd=[TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_ROSCORE],
-        name=name + '__roscore',
-        exit_handler=ignore_signal_exit_handler,
-    )
-    # dynamic bridge
-    launch_descriptor.add_process(
-        cmd=[TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_DYNAMIC_BRIDGE],
-        name=name + '__dynamic_bridge',
+    launch_test.add_fixture_action(
+        launch_description, ExecuteProcess(
+            cmd=[TEST_BRIDGE_ROS2_SERVER],
+            name=name + '__ros2server',
+        )
     )
 
-    launch_descriptor.add_process(
-        cmd=process1[1],
-        name=name + '__' + process1[0],
-        env=env1)
+    launch_test.add_test_action(
+        launch_description, ExecuteProcess(
+            cmd=[TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_ROS1_CLIENT],
+            name=name + '__ros1client',
+        )
+    )
 
-    process_name = name + '__' + process2[0]
-    output_handlers = None
-    if expected_output2 is not None:
-        output_handlers = [
-            ConsoleOutput(),
-            InMemoryHandler(
-                process_name, launch_descriptor, expected_output2,
-                regex_match=True, exit_on_match=True,
-                filtered_rmw_implementation=TEST_BRIDGE_RMW)]
-    launch_descriptor.add_process(
-        cmd=process2[1],
-        name=process_name,
-        env=env2,
-        exit_handler=exit_handler2,
-        output_handlers=output_handlers)
+    launch(launch_test, launch_description)
 
-    launcher = DefaultLauncher()
-    launcher.add_launch_descriptor(launch_descriptor)
-    rc = launcher.launch()
+
+def launch(launch_test, launch_description):
+    launch_service = LaunchService()
+    launch_service.include_launch_description(launch_description)
+    rc = launch_test.run(launch_service)
 
     assert rc == 0, \
         "The launch file failed with exit code '%s'" % str(rc)
