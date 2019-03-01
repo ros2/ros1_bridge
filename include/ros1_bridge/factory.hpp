@@ -152,15 +152,15 @@ protected:
       std::dynamic_pointer_cast<typename rclcpp::Publisher<ROS2_T>>(ros2_pub);
 
     if (!typed_ros2_pub) {
-      throw std::runtime_error("Invalid type " + ros2_type_name + " for ROS2 publisher " +
+      throw std::runtime_error(
+              "Invalid type " + ros2_type_name + " for ROS 2 publisher " +
               ros2_pub->get_topic_name());
     }
 
     const boost::shared_ptr<ros::M_string> & connection_header =
       ros1_msg_event.getConnectionHeaderPtr();
     if (!connection_header) {
-      RCLCPP_WARN(logger, "Dropping ROS1 message %s without connection header",
-        ros1_type_name.c_str());
+      RCLCPP_WARN(logger, "Dropping ROS 1 message %s without connection header", ros1_type_name);
       return;
     }
 
@@ -175,9 +175,9 @@ protected:
 
     auto ros2_msg = std::make_shared<ROS2_T>();
     convert_1_to_2(*ros1_msg, *ros2_msg);
-    RCLCPP_INFO_ONCE(logger,
-      "Passing message from ROS1 %s to ROS2 %s (showing msg only once per type)",
-      ros1_type_name.c_str(), ros2_type_name.c_str());
+    RCLCPP_INFO_ONCE(
+      logger, "Passing message from ROS 1 %s to ROS 2 %s (showing msg only once per type)",
+      ros1_type_name, ros2_type_name);
     typed_ros2_pub->publish(ros2_msg);
   }
 
@@ -207,9 +207,9 @@ protected:
 
     ROS1_T ros1_msg;
     convert_2_to_1(*ros2_msg, ros1_msg);
-    RCLCPP_INFO_ONCE(logger,
-      "Passing message from ROS2 %s to ROS1 %s (showing msg only once per type)",
-      ros2_type_name.c_str(), ros1_type_name.c_str());
+    RCLCPP_INFO_ONCE(
+      logger, "Passing message from ROS 2 %s to ROS 1 %s (showing msg only once per type)",
+      ros2_type_name, ros1_type_name);
     ros1_pub.publish(ros1_msg);
   }
 
@@ -241,7 +241,7 @@ public:
   using ROS2Response = typename ROS2_T::Response;
 
   void forward_2_to_1(
-    ros::ServiceClient & client, rclcpp::Logger logger, const std::shared_ptr<rmw_request_id_t>,
+    ros::ServiceClient client, rclcpp::Logger logger, const std::shared_ptr<rmw_request_id_t>,
     const std::shared_ptr<ROS2Request> request, std::shared_ptr<ROS2Response> response)
   {
     ROS1_T srv;
@@ -250,7 +250,7 @@ public:
     if (client.call(srv)) {
       translate_1_to_2(srv.response, *response);
     } else {
-      throw std::runtime_error("Failed to get response from ROS1 service " + service_name);
+      throw std::runtime_error("Failed to get response from ROS 1 service " + service_name);
     }
   }
 
@@ -261,17 +261,17 @@ public:
     auto service_name = std::string(cli->get_service_name());
     auto client = std::dynamic_pointer_cast<rclcpp::Client<ROS2_T>>(cli);
     if (!client) {
-      RCLCPP_ERROR(logger, "Failed to get ROS2 client " + service_name);
+      RCLCPP_ERROR(logger, "Failed to get ROS 2 client %s", service_name);
       return false;
     }
     auto request2 = std::make_shared<ROS2Request>();
     translate_1_to_2(request1, *request2);
-    while (!client->wait_for_service(std::chrono::seconds(5))) {
+    while (!client->wait_for_service(std::chrono::seconds(1))) {
       if (!rclcpp::ok()) {
-        RCLCPP_ERROR(logger, "Interrupted while waiting for ROS2 service " + service_name);
+        RCLCPP_ERROR(logger, "Interrupted while waiting for ROS 2 service %s", service_name);
         return false;
       }
-      RCLCPP_WARN(logger, "Waiting for ROS2 service " + service_name + "...");
+      RCLCPP_WARN(logger, "Waiting for ROS2 service %s...", service_name);
     }
     auto timeout = std::chrono::seconds(5);
     auto future = client->async_send_request(request2);
@@ -280,7 +280,7 @@ public:
       auto response2 = future.get();
       translate_2_to_1(*response2, response1);
     } else {
-      RCLCPP_ERROR(logger, "Failed to get response from ROS2 service " + service_name);
+      RCLCPP_ERROR(logger, "Failed to get response from ROS 2 service %s", service_name);
       return false;
     }
     return true;
