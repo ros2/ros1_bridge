@@ -245,12 +245,11 @@ public:
     const std::shared_ptr<ROS2Request> request, std::shared_ptr<ROS2Response> response)
   {
     ROS1_T srv;
-    auto service_name = client.getService();
     translate_2_to_1(*request, srv.request);
     if (client.call(srv)) {
       translate_1_to_2(srv.response, *response);
     } else {
-      throw std::runtime_error("Failed to get response from ROS 1 service " + service_name);
+      throw std::runtime_error("Failed to get response from ROS 1 service " + client.getService());
     }
   }
 
@@ -258,20 +257,19 @@ public:
     rclcpp::ClientBase::SharedPtr cli, rclcpp::Logger logger,
     const ROS1Request & request1, ROS1Response & response1)
   {
-    auto service_name = std::string(cli->get_service_name());
     auto client = std::dynamic_pointer_cast<rclcpp::Client<ROS2_T>>(cli);
     if (!client) {
-      RCLCPP_ERROR(logger, "Failed to get ROS 2 client %s", service_name);
+      RCLCPP_ERROR(logger, "Failed to get ROS 2 client %s", cli->get_service_name());
       return false;
     }
     auto request2 = std::make_shared<ROS2Request>();
     translate_1_to_2(request1, *request2);
     while (!client->wait_for_service(std::chrono::seconds(1))) {
       if (!rclcpp::ok()) {
-        RCLCPP_ERROR(logger, "Interrupted while waiting for ROS 2 service %s", service_name);
+        RCLCPP_ERROR(logger, "Interrupted while waiting for ROS 2 service %s", cli->get_service_name());
         return false;
       }
-      RCLCPP_WARN(logger, "Waiting for ROS2 service %s...", service_name);
+      RCLCPP_WARN(logger, "Waiting for ROS 2 service %s...", cli->get_service_name());
     }
     auto timeout = std::chrono::seconds(5);
     auto future = client->async_send_request(request2);
@@ -280,7 +278,7 @@ public:
       auto response2 = future.get();
       translate_2_to_1(*response2, response1);
     } else {
-      RCLCPP_ERROR(logger, "Failed to get response from ROS 2 service %s", service_name);
+      RCLCPP_ERROR(logger, "Failed to get response from ROS 2 service %s", cli->get_service_name());
       return false;
     }
     return true;
