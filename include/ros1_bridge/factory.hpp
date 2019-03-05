@@ -266,7 +266,8 @@ public:
     translate_1_to_2(request1, *request2);
     while (!client->wait_for_service(std::chrono::seconds(1))) {
       if (!rclcpp::ok()) {
-        RCLCPP_ERROR(logger, "Interrupted while waiting for ROS 2 service %s", cli->get_service_name());
+        RCLCPP_ERROR(
+          logger, "Interrupted while waiting for ROS 2 service %s", cli->get_service_name());
         return false;
       }
       RCLCPP_WARN(logger, "Waiting for ROS 2 service %s...", cli->get_service_name());
