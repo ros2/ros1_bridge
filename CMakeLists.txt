@@ -67,6 +67,8 @@ if(BUILD_TESTING)
     # and not the ROS 1 package
     set(_ros1_diagnostic_msgs_DIR "${ros1_diagnostic_msgs_PREFIX}/share/diagnostic_msgs/cmake")
     if("${diagnostic_msgs_DIR}" STREQUAL "${_ros1_diagnostic_msgs_DIR}")
+      # invalidate the cached result to retry finding the package next time
+      unset(diagnostic_msgs_DIR CACHE)
       message(FATAL_ERROR "Failed to find ROS 2 package 'diagnostic_msgs'")
     endif()
     set(TEST_ROS1_BRIDGE TRUE)
