@@ -186,9 +186,9 @@ void update_bridge(
   std::lock_guard <std::mutex> lock(g_bridge_mutex);
 
   // create 1to2 bridges
-  for (auto ros1_publisher : ros1_publishers) {
+  for (const auto& ros1_publisher : ros1_publishers) {
     // identify topics available as ROS 1 publishers as well as ROS 2 subscribers
-    auto topic_name = ros1_publisher.first;
+    const std::string& topic_name = ros1_publisher.first;
     std::string ros1_type_name = ros1_publisher.second;
     std::string ros2_type_name;
 
@@ -211,15 +211,16 @@ void update_bridge(
     }
 
     // check if 1to2 bridge for the topic exists
-    if (bridges_1to2.find(topic_name) != bridges_1to2.end()) {
-      auto bridge = bridges_1to2.find(topic_name)->second;
+    auto it = bridges_1to2.find(topic_name);
+    if (it != bridges_1to2.end()) {
+      const auto& bridge = it->second;
       if (bridge.ros1_type_name == ros1_type_name && bridge.ros2_type_name == ros2_type_name) {
         // skip if bridge with correct types is already in place
         continue;
       }
       // remove existing bridge with previous types
-      bridges_1to2.erase(topic_name);
-      printf("replace 1to2 bridge for topic '%s'\n", topic_name.c_str());
+      bridges_1to2.erase(it);
+      RCUTILS_LOG_INFO("replace 1to2 bridge for topic '%s'\n", topic_name.c_str());
     }
 
     Bridge1to2HandlesAndMessageTypes bridge;
@@ -231,28 +232,27 @@ void update_bridge(
               ros1_node, ros2_node,
               bridge.ros1_type_name, topic_name, 10,
               bridge.ros2_type_name, topic_name, 10);
-    } catch (std::runtime_error &e) {
-      fprintf(
-              stderr,
+    } catch (const std::runtime_error &e) {
+      RCUTILS_LOG_ERROR(
               "failed to create 1to2 bridge for topic '%s' "
               "with ROS 1 type '%s' and ROS 2 type '%s': %s\n",
               topic_name.c_str(), bridge.ros1_type_name.c_str(), bridge.ros2_type_name.c_str(), e.what());
       if (std::string(e.what()).find("No template specialization") != std::string::npos) {
-        fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
+        RCUTILS_LOG_ERROR("check the list of supported pairs with the `--print-pairs` option\n");
       }
       continue;
     }
 
     bridges_1to2[topic_name] = bridge;
-    printf(
+    RCUTILS_LOG_INFO(
             "created 1to2 bridge for topic '%s' with ROS 1 type '%s' and ROS 2 type '%s'\n",
             topic_name.c_str(), bridge.ros1_type_name.c_str(), bridge.ros2_type_name.c_str());
   }
 
   // create 2to1 bridges
-  for (auto ros2_publisher : ros2_publishers) {
+  for (const auto& ros2_publisher : ros2_publishers) {
     // identify topics available as ROS 1 subscribers as well as ROS 2 publishers
-    auto topic_name = ros2_publisher.first;
+    const std::string& topic_name = ros2_publisher.first;
     std::string ros2_type_name = ros2_publisher.second;
     std::string ros1_type_name;
 
@@ -275,16 +275,17 @@ void update_bridge(
     }
 
     // check if 2to1 bridge for the topic exists
-    if (bridges_2to1.find(topic_name) != bridges_2to1.end()) {
-      auto bridge = bridges_2to1.find(topic_name)->second;
+    auto it = bridges_2to1.find(topic_name);
+    if (it != bridges_2to1.end()) {
+      const auto& bridge = it->second;
       if ((bridge.ros1_type_name == ros1_type_name || bridge.ros1_type_name == "") &&
           bridge.ros2_type_name == ros2_type_name) {
         // skip if bridge with correct types is already in place
         continue;
       }
       // remove existing bridge with previous types
-      bridges_2to1.erase(topic_name);
-      printf("replace 2to1 bridge for topic '%s'\n", topic_name.c_str());
+      bridges_2to1.erase(it);
+      RCUTILS_LOG_INFO("replace 2to1 bridge for topic '%s'\n", topic_name.c_str());
     }
 
     Bridge2to1HandlesAndMessageTypes bridge;
@@ -296,41 +297,40 @@ void update_bridge(
               ros2_node, ros1_node,
               bridge.ros2_type_name, topic_name, 10,
               bridge.ros1_type_name, topic_name, 10);
-    } catch (std::runtime_error &e) {
-      fprintf(
-              stderr,
+    } catch (const std::runtime_error &e) {
+      RCUTILS_LOG_ERROR(
               "failed to create 2to1 bridge for topic '%s' "
               "with ROS 2 type '%s' and ROS 1 type '%s': %s\n",
               topic_name.c_str(), bridge.ros2_type_name.c_str(), bridge.ros1_type_name.c_str(), e.what());
       if (std::string(e.what()).find("No template specialization") != std::string::npos) {
-        fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
+        RCUTILS_LOG_ERROR("check the list of supported pairs with the `--print-pairs` option\n");
       }
       continue;
     }
 
     bridges_2to1[topic_name] = bridge;
-    printf(
+    RCUTILS_LOG_INFO(
             "created 2to1 bridge for topic '%s' with ROS 2 type '%s' and ROS 1 type '%s'\n",
             topic_name.c_str(), bridge.ros2_type_name.c_str(), bridge.ros1_type_name.c_str());
   }
 
   // remove obsolete bridges
   std::vector <std::string> to_be_removed_1to2;
-  for (auto it : bridges_1to2) {
-    std::string topic_name = it.first;
+  for (const auto& it : bridges_1to2) {
+    const std::string& topic_name = it.first;
     if (
             ros1_publishers.find(topic_name) == ros1_publishers.end() ||
             (!bridge_all_1to2_topics && ros2_subscribers.find(topic_name) == ros2_subscribers.end())) {
       to_be_removed_1to2.push_back(topic_name);
     }
   }
-  for (auto topic_name : to_be_removed_1to2) {
+  for (const auto& topic_name : to_be_removed_1to2) {
     bridges_1to2.erase(topic_name);
-    printf("removed 1to2 bridge for topic '%s'\n", topic_name.c_str());
+    RCUTILS_LOG_INFO("removed 1to2 bridge for topic '%s'\n", topic_name.c_str());
   }
 
   std::vector <std::string> to_be_removed_2to1;
-  for (auto it : bridges_2to1) {
+  for (const auto& it : bridges_2to1) {
     std::string topic_name = it.first;
     if (
             (!bridge_all_2to1_topics && ros1_subscribers.find(topic_name) == ros1_subscribers.end()) ||
@@ -338,13 +338,13 @@ void update_bridge(
       to_be_removed_2to1.push_back(topic_name);
     }
   }
-  for (auto topic_name : to_be_removed_2to1) {
+  for (const auto& topic_name : to_be_removed_2to1) {
     bridges_2to1.erase(topic_name);
-    printf("removed 2to1 bridge for topic '%s'\n", topic_name.c_str());
+    RCUTILS_LOG_INFO("removed 2to1 bridge for topic '%s'\n", topic_name.c_str());
   }
 
   // create bridges for ros1 services
-  for (auto &service : ros1_services) {
+  for (const auto &service : ros1_services) {
     auto &name = service.first;
     auto &details = service.second;
     if (
@@ -355,9 +355,9 @@ void update_bridge(
       if (factory) {
         try {
           service_bridges_2_to_1[name] = factory->service_bridge_2_to_1(ros1_node, ros2_node, name);
-          printf("Created 2 to 1 bridge for service %s\n", name.data());
-        } catch (std::runtime_error &e) {
-          fprintf(stderr, "Failed to created a bridge: %s\n", e.what());
+          RCUTILS_LOG_INFO("Created 2 to 1 bridge for service %s\n", name.data());
+        } catch (const std::runtime_error &e) {
+          RCUTILS_LOG_ERROR("Failed to created a bridge: %s\n", e.what());
         }
       } else {
         RCUTILS_LOG_WARN_ONCE_NAMED("dynamic_whitelist_bridge",
@@ -368,7 +368,7 @@ void update_bridge(
   }
 
   // create bridges for ros2 services
-  for (auto &service : ros2_services) {
+  for (const auto &service : ros2_services) {
     auto &name = service.first;
     auto &details = service.second;
     if (
@@ -379,9 +379,9 @@ void update_bridge(
       if (factory) {
         try {
           service_bridges_1_to_2[name] = factory->service_bridge_1_to_2(ros1_node, ros2_node, name);
-          printf("Created 1 to 2 bridge for service %s\n", name.data());
-        } catch (std::runtime_error &e) {
-          fprintf(stderr, "Failed to created a bridge: %s\n", e.what());
+          RCUTILS_LOG_INFO("Created 1 to 2 bridge for service %s\n", name.data());
+        } catch (const std::runtime_error &e) {
+          RCUTILS_LOG_ERROR("Failed to created a bridge: %s\n", e.what());
         }
       } else {
         RCUTILS_LOG_WARN_ONCE_NAMED("dynamic_whitelist_bridge",
@@ -394,11 +394,11 @@ void update_bridge(
   // remove obsolete ros1 services
   for (auto it = service_bridges_2_to_1.begin(); it != service_bridges_2_to_1.end();) {
     if (ros1_services.find(it->first) == ros1_services.end()) {
-      printf("Removed 2 to 1 bridge for service %s\n", it->first.data());
+      RCUTILS_LOG_INFO("Removed 2 to 1 bridge for service %s\n", it->first.data());
       try {
         it = service_bridges_2_to_1.erase(it);
-      } catch (std::runtime_error &e) {
-        fprintf(stderr, "There was an error while removing 2 to 1 bridge: %s\n", e.what());
+      } catch (const std::runtime_error &e) {
+        RCUTILS_LOG_ERROR("There was an error while removing 2 to 1 bridge: %s\n", e.what());
       }
     } else {
       ++it;
@@ -408,12 +408,12 @@ void update_bridge(
   // remove obsolete ros2 services
   for (auto it = service_bridges_1_to_2.begin(); it != service_bridges_1_to_2.end();) {
     if (ros2_services.find(it->first) == ros2_services.end()) {
-      printf("Removed 1 to 2 bridge for service %s\n", it->first.data());
+      RCUTILS_LOG_INFO("Removed 1 to 2 bridge for service %s\n", it->first.data());
       try {
         it->second.server.shutdown();
         it = service_bridges_1_to_2.erase(it);
-      } catch (std::runtime_error &e) {
-        fprintf(stderr, "There was an error while removing 1 to 2 bridge: %s\n", e.what());
+      } catch (const std::runtime_error &e) {
+        RCUTILS_LOG_ERROR("There was an error while removing 1 to 2 bridge: %s\n", e.what());
       }
     } else {
       ++it;
@@ -434,7 +434,7 @@ void get_ros1_service_info(
   std::string host;
   std::uint32_t port;
   if (!manager.lookupService(name, host, port)) {
-    fprintf(stderr, "Failed to look up %s\n", name.data());
+    RCUTILS_LOG_ERROR("Failed to look up %s\n", name.data());
     return;
   }
   ros::TransportTCPPtr transport(new ros::TransportTCP(nullptr, ros::TransportTCP::SYNCHRONOUS));
@@ -442,7 +442,7 @@ void get_ros1_service_info(
       transport->close();
   });
   if (!transport->connect(host, port)) {
-    fprintf(stderr, "Failed to connect to %s:%d\n", host.data(), port);
+    RCUTILS_LOG_ERROR("Failed to connect to %s:%d\n", host.data(), port);
     return;
   }
   ros::M_string header_out;
@@ -460,13 +460,13 @@ void get_ros1_service_info(
   uint32_t length;
   auto read = transport->read(reinterpret_cast<uint8_t *>(&length), 4);
   if (read != 4) {
-    fprintf(stderr, "Failed to read a response from a service server\n");
+    RCUTILS_LOG_ERROR("Failed to read a response from a service server\n");
     return;
   }
   std::vector <uint8_t> response(length);
   read = transport->read(response.data(), length);
   if (read < 0 || static_cast<uint32_t>(read) != length) {
-    fprintf(stderr, "Failed to read a response from a service server\n");
+    RCUTILS_LOG_ERROR("Failed to read a response from a service server\n");
     return;
   }
   std::string key = name;
@@ -475,14 +475,14 @@ void get_ros1_service_info(
   std::string error;
   auto success = header_in.parse(response.data(), length, error);
   if (!success) {
-    fprintf(stderr, "%s\n", error.data());
+    RCUTILS_LOG_ERROR("%s\n", error.data());
     return;
   }
   for (std::string field : {"type"}) {
     std::string value;
     auto success = header_in.getValue(field, value);
     if (!success) {
-      fprintf(stderr, "Failed to read '%s' from a header for '%s'\n", field.data(), key.c_str());
+      RCUTILS_LOG_ERROR("Failed to read '%s' from a header for '%s'\n", field.data(), key.c_str());
       ros1_services.erase(key);
       return;
     }
@@ -537,18 +537,17 @@ int main(int argc, char *argv[]) {
 
           };
   // resolve set params from param server
-  for (auto &element: whitelist_map) {
+  for (auto& element: whitelist_map) {
     XmlRpc::XmlRpcValue rgxps;
     if (
             ros1_node.getParam(element.first, rgxps) &&
             rgxps.getType() == XmlRpc::XmlRpcValue::TypeArray) {
       for (size_t i = 0; i < static_cast<size_t>(rgxps.size()); ++i) {
         std::string rgxp_str = static_cast<std::string>(rgxps[i]);
-        element.second.push_back(std::regex(rgxp_str));
+        element.second.emplace_back(rgxp_str);
       }
     } else {
-      fprintf(
-              stderr, "The parameter '%s' either doesn't exist or isn't an array. Ignoring regex list \n",
+      RCUTILS_LOG_ERROR("The parameter '%s' either doesn't exist or isn't an array. Ignoring regex list \n",
               element.first.c_str());
     }
   }
@@ -577,15 +576,15 @@ int main(int argc, char *argv[]) {
       XmlRpc::XmlRpcValue args, result, payload;
       args[0] = ros::this_node::getName();
       if (!ros::master::execute("getSystemState", args, result, payload, true)) {
-        fprintf(stderr, "failed to get system state from ROS 1 master\n");
+        RCUTILS_LOG_ERROR("failed to get system state from ROS 1 master\n");
         return;
       }
       // check publishers
       if (payload.size() >= 1) {
         for (int j = 0; j < payload[0].size(); ++j) {
-          std::string topic_name = payload[0][j][0];
+          const std::string& topic_name = payload[0][j][0];
           for (int k = 0; k < payload[0][j][1].size(); ++k) {
-            std::string node_name = payload[0][j][1][k];
+            const std::string& node_name = payload[0][j][1][k];
             // ignore publishers from the bridge itself
             if (node_name == ros::this_node::getName()) {
               continue;
@@ -594,9 +593,8 @@ int main(int argc, char *argv[]) {
               if (check_inregex_list(whitelist_map[topic_rgxp_list_param], topic_name, valid_ros1_topics)) {
                 active_publishers.insert(topic_name);
               } else {
-                fprintf(
-                        stderr,
-                        "warning: ignoring topic '%s',as it does not match any regex \n",
+                RCUTILS_LOG_INFO(
+                        "ignoring topic '%s',as it does not match any regex \n",
                         topic_name.c_str()
                 );
                 already_ignored_ros1_topics.insert(topic_name);
@@ -620,9 +618,8 @@ int main(int argc, char *argv[]) {
               if (check_inregex_list(whitelist_map[topic_rgxp_list_param], topic_name, valid_ros1_topics)) {
                 active_subscribers.insert(topic_name);
               } else {
-                fprintf(
-                        stderr,
-                        "warning: ignoring topic '%s',as it does not match any regex \n",
+                RCUTILS_LOG_INFO(
+                        "ignoring topic '%s',as it does not match any regex \n",
                         topic_name.c_str()
                 );
                 already_ignored_ros1_topics.insert(topic_name);
@@ -643,9 +640,8 @@ int main(int argc, char *argv[]) {
               if (check_inregex_list(whitelist_map[srv_rgxp_list_param], name, valid_ros1_services)) {
                 get_ros1_service_info(name, active_ros1_services);
               } else {
-                fprintf(
-                        stderr,
-                        "warning: ignoring service '%s',as it does not match any regex \n",
+                RCUTILS_LOG_INFO(
+                        "ignoring service '%s',as it does not match any regex \n",
                         name.c_str()
                 );
                 already_ignored_ros1_services.insert(name);
@@ -663,7 +659,7 @@ int main(int argc, char *argv[]) {
       ros::master::V_TopicInfo topics;
       bool success = ros::master::getTopics(topics);
       if (!success) {
-        fprintf(stderr, "failed to poll ROS 1 master\n");
+        RCUTILS_LOG_ERROR("failed to poll ROS 1 master\n");
         return;
       }
 
@@ -684,7 +680,7 @@ int main(int argc, char *argv[]) {
           current_ros1_subscribers[topic_name] = topic.datatype;
         }
         if (output_topic_introspection) {
-          printf("  ROS 1: %s (%s) [%s pubs, %s subs]\n",
+          RCUTILS_LOG_INFO("ROS 1: %s (%s) [%s pubs, %s subs]\n",
                  topic_name.c_str(), topic.datatype.c_str(),
                  has_publisher ? ">0" : "0", has_subscriber ? ">0" : "0");
         }
@@ -695,13 +691,13 @@ int main(int argc, char *argv[]) {
         if (current_ros1_subscribers.find(active_subscriber) == current_ros1_subscribers.end()) {
           current_ros1_subscribers[active_subscriber] = "";
           if (output_topic_introspection) {
-            printf("  ROS 1: %s (<unknown>) sub++\n", active_subscriber.c_str());
+            RCUTILS_LOG_INFO("  ROS 1: %s (<unknown>) sub++\n", active_subscriber.c_str());
           }
         }
       }
 
       if (output_topic_introspection) {
-        printf("\n");
+        RCUTILS_LOG_INFO("\n");
       }
 
       {
@@ -750,7 +746,7 @@ int main(int argc, char *argv[]) {
 
       std::map <std::string, std::string> current_ros2_publishers;
       std::map <std::string, std::string> current_ros2_subscribers;
-      for (auto topic_and_types : ros2_topics) {
+      for (const auto& topic_and_types : ros2_topics) {
         // ignore some common ROS 2 specific topics
         if (ignored_topics.find(topic_and_types.first) != ignored_topics.end()) {
           continue;
@@ -762,15 +758,14 @@ int main(int argc, char *argv[]) {
         // explicitly avoid topics with more than one type
         if (topic_and_types.second.size() > 1) {
           if (already_ignored_topics.count(topic_name) == 0) {
-            std::string types = "";
-            for (auto type : topic_and_types.second) {
-              types += type + ", ";
+            std::stringstream types;
+            for (const auto& type : topic_and_types.second) {
+              types << type << ", ";
             }
-            fprintf(
-                    stderr,
-                    "warning: ignoring topic '%s', which has more than one type: [%s]\n",
+            RCUTILS_LOG_WARN(
+                    "ignoring topic '%s', which has more than one type: [%s]\n",
                     topic_name.c_str(),
-                    types.substr(0, types.length() - 2).c_str()
+                    types.str().substr(0, types.str().length() - 2).c_str()
             );
             already_ignored_topics.insert(topic_name);
           }
@@ -778,9 +773,8 @@ int main(int argc, char *argv[]) {
         }
         if (already_ignored_topics.count(topic_name) == 0) {
           if (!check_inregex_list(whitelist_map[topic_rgxp_list_param], topic_name, valid_ros2_topics)) {
-            fprintf(
-                    stderr,
-                    "warning: ignoring topic '%s',as it does not match any regex \n",
+            RCUTILS_LOG_INFO(
+                    "ignoring topic '%s',as it does not match any regex \n",
                     topic_name.c_str()
             );
             already_ignored_topics.insert(topic_name);
@@ -815,7 +809,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (output_topic_introspection) {
-          printf("  ROS 2: %s (%s) [%ld pubs, %ld subs]\n",
+          RCUTILS_LOG_INFO("  ROS 2: %s (%s) [%ld pubs, %ld subs]\n",
                  topic_name.c_str(), topic_type.c_str(), publisher_count, subscriber_count);
         }
       }
@@ -833,9 +827,8 @@ int main(int argc, char *argv[]) {
             for (auto type : service_and_types.second) {
               types += type + ", ";
             }
-            fprintf(
-                    stderr,
-                    "warning: ignoring service '%s', which has more than one type: [%s]\n",
+            RCUTILS_LOG_INFO(
+                    "ignoring service '%s', which has more than one type: [%s]\n",
                     service_name.c_str(),
                     types.substr(0, types.length() - 2).c_str()
             );
@@ -845,9 +838,8 @@ int main(int argc, char *argv[]) {
         }
         if (already_ignored_services.count(service_name) == 0) {
           if (!check_inregex_list(whitelist_map[srv_rgxp_list_param], service_name, valid_ros2_services)) {
-            fprintf(
-                    stderr,
-                    "warning: ignoring topic '%s',as it does not match any regex \n",
+            RCUTILS_LOG_INFO(
+                    "ignoring topic '%s',as it does not match any regex \n",
                     service_name.c_str()
             );
             already_ignored_services.insert(service_name);
@@ -860,7 +852,7 @@ int main(int argc, char *argv[]) {
         // TODO(wjwwood): this should be common functionality in the C++ rosidl package
         size_t separator_position = service_type.find('/');
         if (separator_position == std::string::npos) {
-          fprintf(stderr, "invalid service type '%s', skipping...\n", service_type.c_str());
+          RCUTILS_LOG_ERROR("invalid service type '%s', skipping...\n", service_type.c_str());
           continue;
         }
         auto service_type_package_name = service_type.substr(0, separator_position);
@@ -877,7 +869,7 @@ int main(int argc, char *argv[]) {
       }
 
       if (output_topic_introspection) {
-        printf("\n");
+        RCUTILS_LOG_INFO("\n");
       }
 
       {
