@@ -20,6 +20,7 @@ macro(find_ros1_package name)
       "${ARG_UNPARSED_ARGUMENTS}")
   endif()
 
+  find_package(PkgConfig REQUIRED)
   # the error message of pkg_check_modules for not found required modules
   # doesn't include the module name which is not helpful
   pkg_check_modules(ros1_${name} ${name})
