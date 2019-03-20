@@ -167,8 +167,13 @@ def generate_messages(rospack=None):
         if ros1_msg and ros2_msg:
             mappings.append(Mapping(ros1_msg[0], ros2_msg[0]))
 
+    msg_idx = MessageIndex()
     for ros1_msg, ros2_msg in message_pairs:
-        mapping = determine_field_mapping(ros1_msg, ros2_msg, mapping_rules)
+        msg_idx.ros1_put(ros1_msg)
+        msg_idx.ros2_put(ros2_msg)
+
+    for ros1_msg, ros2_msg in message_pairs:
+        mapping = determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, msg_idx)
         if mapping:
             mappings.append(mapping)
 
@@ -610,6 +615,13 @@ def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
 
 
 def update_ros1_field_information(ros1_field, package_name):
+    """
+    :type ros1_field: genmsg.msgs.Field
+    :type package_name: string
+
+    :return: ros1_field extended with additional string attributes `pkg_name` 
+    and `msg_name` for their parent message
+    """
     parts = ros1_field.base_type.split('/')
     assert len(parts) in [1, 2]
     if len(parts) == 1:
@@ -620,7 +632,47 @@ def update_ros1_field_information(ros1_field, package_name):
         ros1_field.msg_name = parts[1]
 
 
-def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules):
+def get_ros1_selected_fields(ros1_field_selection, parent_ros1_spec, msg_idx):
+    """
+    :param ros1_field_selection: a string with message field names separated by `.`
+    :param parent_ros1_spec: a genmsg.MsgSpec for a message that contains the first field 
+    in ros1_field_selection
+    :type msg_idx: MessageIndex
+
+    :return: a tuple of genmsg.msgs.Field objets with additional attributes `pkg_name` 
+    and `msg_name` as defined by `update_ros1_field_information`, corresponding to 
+    traversing `parent_ros1_spec` recursively following `ros1_field_selection`
+
+    :throws: IndexError in case some expected field is not found while traversing 
+    `parent_ros1_spec` recursively following `ros1_field_selection`
+    """
+    selected_fields = []
+    def consume_field(field):
+        update_ros1_field_information(field, parent_ros1_spec.package)
+        selected_fields.append(field)
+
+
+    fields = ros1_field_selection.split('.')    
+    current_field = [f for f in parent_ros1_spec.parsed_fields()
+                       if re.match('^{}([.]?)'.format(f.name), fields[0])][0]
+    consume_field(current_field)
+    for field in fields[1:]:
+        parent_ros1_spec = load_ros1_message(msg_idx.ros1_get_from_field(current_field))
+        current_field = [f for f in parent_ros1_spec.parsed_fields() if f.name == field][0]
+        consume_field(current_field)
+
+    return tuple(selected_fields)
+
+def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, msg_idx):
+    """
+    Return the first mapping object for ros1_msg and ros2_msg found in mapping_rules, 
+    and otherwise defined implicitly, or None if no mapping is found 
+
+    :type ros1_msg: Message
+    :type ros2_msg: Message
+    :type mapping_rules: list of MessageMappingRule
+    :type msg_idx: MessageIndex
+    """
     ros1_spec = load_ros1_message(ros1_msg)
     if not ros1_spec:
         return None
@@ -641,13 +693,13 @@ def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules):
                 rule.ros2_message_name != ros2_msg.message_name:
             continue
 
-        for ros1_field_name, ros2_field_name in rule.fields_1_to_2.items():
+        for ros1_field_selection, ros2_field_name in rule.fields_1_to_2.items():
             try:
-                ros1_field = \
-                    [f for f in ros1_spec.parsed_fields() if f.name == ros1_field_name][0]
+                ros1_selected_fields = \
+                    get_ros1_selected_fields(ros1_field_selection, ros1_spec, msg_idx)
             except IndexError:
                 print(
-                    "A manual mapping refers to an invalid field '%s' " % ros1_field_name +
+                    "A manual mapping refers to an invalid field '%s' " % ros1_field_selection +
                     "in the ROS 1 message '%s/%s'" %
                     (rule.ros1_package_name, rule.ros1_message_name),
                     file=sys.stderr)
@@ -662,8 +714,7 @@ def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules):
                     (rule.ros2_package_name, rule.ros2_message_name),
                     file=sys.stderr)
                 continue
-            update_ros1_field_information(ros1_field, ros1_msg.package_name)
-            mapping.add_field_pair(ros1_field, ros2_field)
+            mapping.add_field_pair(ros1_selected_fields, ros2_field)
         return mapping
 
     # apply name based mapping of fields
@@ -694,7 +745,6 @@ def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules):
                 return None
 
     return mapping
-
 
 def load_ros1_message(ros1_msg):
     msg_context = genmsg.MsgContext.create_default()
@@ -765,9 +815,16 @@ class Mapping:
         self.fields_2_to_1 = OrderedDict()
         self.depends_on_ros2_messages = set()
 
-    def add_field_pair(self, ros1_field, ros2_field):
-        self.fields_1_to_2[ros1_field] = ros2_field
-        self.fields_2_to_1[ros2_field] = ros1_field
+    def add_field_pair(self, ros1_fields, ros2_field):
+        """
+        :type ros1_fields: either a genmsg.msgs.Field objets with additional attributes `pkg_name` 
+    and `msg_name` as defined by `update_ros1_field_information`, or a tuple of values of that type
+        :type ros2_field: rosidl_adapter.parser.Field
+        """
+        if not type(ros1_fields) is tuple:
+            ros1_fields = (ros1_fields,)
+        self.fields_1_to_2[ros1_fields] = ros2_field
+        self.fields_2_to_1[ros2_field] = ros1_fields
         if ros2_field.type.pkg_name and ros2_field.type.pkg_name != 'builtin_interfaces':
             self.depends_on_ros2_messages.add(
                 Message(ros2_field.type.pkg_name, ros2_field.type.type))
@@ -781,3 +838,33 @@ def camel_case_to_lower_case_underscore(value):
     # which is preseded by a lower case letter or number
     value = re.sub('([a-z0-9])([A-Z])', '\\1_\\2', value)
     return value.lower()
+
+class MessageIndex:
+    """
+    Maintains 2 indices from (package_name, message_name) to Message, 
+    one for ROS 1 messages and another for ROS 2 messages
+    """
+    def __init__(self):
+        self._ros1_idx = {}
+        self._ros2_idx = {}
+
+    def ros1_put(self, msg):
+        """
+        Add msg to the ROS1 index
+        """
+        self._ros1_idx[(msg.package_name, msg.message_name)] = msg
+
+    def ros2_put(self, msg):
+        """
+        Add msg to the ROS2 index
+        """
+        self._ros2_idx[(msg.package_name, msg.message_name)] = msg
+    
+    def ros1_get_from_field(self, field):
+        """
+        :type field: genmsg.msgs.Field with additional fields `pkg_name`
+        and `msg_name` as added by `update_ros1_field_information`
+        :return: the message indexed for the fields `pkg_name` and
+        `msg_name` of `field`
+        """
+        return self._ros1_idx[(field.pkg_name, field.msg_name)]
