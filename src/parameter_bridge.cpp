@@ -73,7 +73,7 @@ int main(int argc, char * argv[])
 
       try {
         ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
-          ros1_node, ros2_node, type_name, type_name, topic_name, queue_size);
+          ros1_node, ros2_node, "", type_name, topic_name, queue_size);
         all_handles.push_back(handles);
       } catch (std::runtime_error & e) {
         fprintf(
