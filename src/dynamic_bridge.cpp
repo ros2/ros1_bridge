@@ -455,13 +455,13 @@ int main(int argc, char * argv[])
     return 0;
   }
 
-  // ROS 1 node
-  ros::init(argc, argv, "ros_bridge");
-  ros::NodeHandle ros1_node;
-
   // ROS 2 node
   rclcpp::init(argc, argv);
   auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
+
+  // ROS 1 node
+  ros::init(argc, argv, "ros_bridge");
+  ros::NodeHandle ros1_node;
 
   // mapping of available topic names to type names
   std::map<std::string, std::string> ros1_publishers;
