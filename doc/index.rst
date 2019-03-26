@@ -40,7 +40,11 @@ Each mapping rule can have one of three types:
 
 3. A field mapping rule is defined by the attributes of a message mapping rule and:
 
-   - a dictionary ``fields_1_to_2`` mapping ROS 1 field names to ROS 2 field names.
+   - a dictionary ``fields_1_to_2`` mapping ROS 1 field selections to ROS 2 field selections. A field selection
+     is a sequence of field names separated by `.`, that specifies the path to a field starting from a message. 
+     For example starting from the message `rosgraph_msgs/Log` the field selection `header.stamp` specifies a 
+     path that goes through the field `header` of `rosgraph_msgs/Log`, that has a message of type `std_msgs/Header`,
+     and ending up in the field `stamp` of `std_msgs/Header`, that has type `time`.
      All fields must be listed explicitly - not listed fields are not mapped implicitly when their names match.
 
 Each mapping rule file contains a list of mapping rules.
