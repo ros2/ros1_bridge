@@ -315,6 +315,8 @@ void update_bridge(
   }
 
   // remove obsolete bridges
+  //Below appears to cause stability issues on unreliable networks.
+  /*
   std::vector <std::string> to_be_removed_1to2;
   for (const auto& it : bridges_1to2) {
     const std::string& topic_name = it.first;
@@ -328,7 +330,8 @@ void update_bridge(
     bridges_1to2.erase(topic_name);
     RCUTILS_LOG_INFO("removed 1to2 bridge for topic '%s'\n", topic_name.c_str());
   }
-
+  */
+  /*
   std::vector <std::string> to_be_removed_2to1;
   for (const auto& it : bridges_2to1) {
     std::string topic_name = it.first;
@@ -342,6 +345,7 @@ void update_bridge(
     bridges_2to1.erase(topic_name);
     RCUTILS_LOG_INFO("removed 2to1 bridge for topic '%s'\n", topic_name.c_str());
   }
+  */
 
   // create bridges for ros1 services
   for (const auto &service : ros1_services) {
