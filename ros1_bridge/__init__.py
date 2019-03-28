@@ -220,7 +220,7 @@ def get_ros2_messages():
                 continue
             rule_file = os.path.join(package_path, export.attributes['mapping_rules'])
             with open(rule_file, 'r') as h:
-                content = yaml.load(h)
+                content = yaml.safe_load(h)
             if not isinstance(content, list):
                 print(
                     "The content of the mapping rules in '%s' is not a list" % rule_file,
@@ -273,7 +273,7 @@ def get_ros2_services():
                 continue
             rule_file = os.path.join(package_path, export.attributes['mapping_rules'])
             with open(rule_file, 'r') as h:
-                content = yaml.load(h)
+                content = yaml.safe_load(h)
             if not isinstance(content, list):
                 print(
                     "The content of the mapping rules in '%s' is not a list" % rule_file,
