@@ -237,11 +237,9 @@ void ServiceFactory<
 @[        if field["array"]]@
 @[          if field["dynamic_array"]]@
   // ensure array size
-@[            if field["upper_bound_array"] > 0]@
+@[            if field["upper_bound_array"] > 0 && frm == "1"]@
   // check boundary
-@[              if frm == "1"]@
-                  assert(req@(frm).@(field["ros1"]["name"]).size() <= @(field["upper_bound_array"]));
-@[              end if]@
+                assert(req@(frm).@(field["ros1"]["name"]).size() <= @(field["upper_bound_array"]));
 @[            end if]@
   // dynamic arrays must be resized
   req@(to).@(field["ros" + to]["name"]).resize(req@(frm).@(field["ros" + frm]["name"]).size());
