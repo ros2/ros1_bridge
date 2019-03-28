@@ -544,7 +544,7 @@ def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
                 if ros1_type != str(ros2_type) or ros1_name != ros2_name:
                     match = False
                     break
-                ros2_cpptype = ros2_type.pkg_name + "::msg::" + ros2_type.type if ros2_type.pkg_name else ""
+                ros2_cpptype = ros2_type.pkg_name + '::msg::' + ros2_type.type if ros2_type.pkg_name else ''
                 output[direction].append({
                     'basic': not ros2_type.pkg_name,
                     'array': ros2_type.is_array,
