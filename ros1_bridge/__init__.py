@@ -548,8 +548,8 @@ def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
                 output[direction].append({
                     'basic': not ros2_type.pkg_name,
                     'array': ros2_type.is_array,
-                    'dynamic_array': not ros2_type.array_size and not ros2_type.is_upper_bound,
-                    'upper_bound_array': ros2_type.array_size if ros2_type.is_upper_bound else -1,
+                    'dynamic_array': ros2_type.is_array and not ros2_type.array_size and not ros2_type.is_upper_bound,
+                    'upper_bound_array': ros2_type.array_size if ros2_type.is_upper_bound else None,
                     'ros1': {
                         'name': ros1_name,
                         'type': ros1_type.rstrip('[]'),
