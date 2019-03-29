@@ -68,8 +68,8 @@ int main(int argc, char * argv[])
       }
       printf(
         "Trying to create bidirectional bridge for topic ''%s' "
-        "with ROS 1 type '%s' and ROS 2 type '%s'\n",
-        topic_name.c_str(), type_name.c_str(), type_name.c_str());
+        "with ROS 2 type '%s'\n",
+        topic_name.c_str(), type_name.c_str());
 
       try {
         ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
@@ -79,8 +79,8 @@ int main(int argc, char * argv[])
         fprintf(
           stderr,
           "failed to create bidirectional bridge for topic '%s' "
-          "with ROS 1 type '%s' and ROS 2 type '%s': %s\n",
-          topic_name.c_str(), type_name.c_str(), type_name.c_str(), e.what());
+          "with ROS 2 type '%s': %s\n",
+          topic_name.c_str(), type_name.c_str(), e.what());
       }
     }
   } else {
