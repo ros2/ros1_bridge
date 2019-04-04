@@ -160,7 +160,8 @@ protected:
     const boost::shared_ptr<ros::M_string> & connection_header =
       ros1_msg_event.getConnectionHeaderPtr();
     if (!connection_header) {
-      RCLCPP_WARN(logger, "Dropping ROS 1 message %s without connection header", ros1_type_name);
+      RCLCPP_WARN(
+        logger, "Dropping ROS 1 message %s without connection header", ros1_type_name.c_str());
       return;
     }
 
@@ -177,7 +178,7 @@ protected:
     convert_1_to_2(*ros1_msg, *ros2_msg);
     RCLCPP_INFO_ONCE(
       logger, "Passing message from ROS 1 %s to ROS 2 %s (showing msg only once per type)",
-      ros1_type_name, ros2_type_name);
+      ros1_type_name.c_str(), ros2_type_name.c_str());
     typed_ros2_pub->publish(ros2_msg);
   }
 
@@ -209,7 +210,7 @@ protected:
     convert_2_to_1(*ros2_msg, ros1_msg);
     RCLCPP_INFO_ONCE(
       logger, "Passing message from ROS 2 %s to ROS 1 %s (showing msg only once per type)",
-      ros2_type_name, ros1_type_name);
+      ros2_type_name.c_str(), ros1_type_name.c_str());
     ros1_pub.publish(ros1_msg);
   }
 
