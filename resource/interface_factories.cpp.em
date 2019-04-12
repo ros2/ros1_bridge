@@ -1,11 +1,12 @@
-// generated from ros1_bridge/resource/pkg_factories.cpp.em
+// generated from ros1_bridge/resource/interface_factories.cpp.em
 
 @###############################################
 @#
-@# Factory template specializations based on
-@# message types of a single ROS 2 package
+@# Factory template specializations for a
+@# specific message type
 @#
-@# EmPy template for generating <pkgname>_factories.cpp
+@# EmPy template for generating
+@# <pkgname>__<type>__<interfacename>__factories.cpp
 @#
 @###############################################
 @# Start of Template
@@ -20,19 +21,22 @@
 @{
 from ros1_bridge import camel_case_to_lower_case_underscore
 }@
-#include "rclcpp/rclcpp.hpp"
 #include "@(ros2_package_name)_factories.hpp"
+
+#include <algorithm>
+
+#include "rclcpp/rclcpp.hpp"
 
 // include builtin interfaces
 #include <ros1_bridge/convert_builtin_interfaces.hpp>
 
 // include ROS 1 services
-@[for service in services]@
+@[for service in mapped_services]@
 #include <@(service["ros1_package"])/@(service["ros1_name"]).h>
 @[end for]@
 
 // include ROS 2 services
-@[for service in services]@
+@[for service in mapped_services]@
 #include <@(service["ros2_package"])/srv/@(camel_case_to_lower_case_underscore(service["ros2_name"])).hpp>
 @[end for]@
 
@@ -40,14 +44,15 @@ namespace ros1_bridge
 {
 
 std::shared_ptr<FactoryInterface>
-get_factory_@(ros2_package_name)(const std::string & ros1_type_name, const std::string & ros2_type_name)
+get_factory_@(ros2_package_name)__@(interface_type)__@(interface.message_name)(const std::string & ros1_type_name, const std::string & ros2_type_name)
 {
-@[if not mappings]@
+@[if not mapped_msgs]@
   (void)ros1_type_name;
   (void)ros2_type_name;
-@[end if]@
+@[else]@
   // mapping from string to specialized template
-@[for m in mappings]@
+@[end if]@
+@[for m in mapped_msgs]@
   if (
     (ros1_type_name == "@(m.ros1_msg.package_name)/@(m.ros1_msg.message_name)" ||
      ros1_type_name == "") &&
@@ -64,8 +69,37 @@ get_factory_@(ros2_package_name)(const std::string & ros1_type_name, const std::
   return std::shared_ptr<FactoryInterface>();
 }
 
+std::unique_ptr<ServiceFactoryInterface>
+get_service_factory_@(ros2_package_name)__@(interface_type)__@(interface.message_name)(const std::string & ros_id, const std::string & package_name, const std::string & service_name)
+{
+@[if not mapped_services]@
+  (void)ros_id;
+  (void)package_name;
+  (void)service_name;
+@[end if]@
+@[for service in mapped_services]@
+  if (
+    (
+      ros_id == "ros1" &&
+      package_name == "@(service["ros1_package"])" &&
+      service_name == "@(service["ros1_name"])"
+    ) || (
+      ros_id == "ros2" &&
+      package_name == "@(service["ros2_package"])" &&
+      service_name == "@(service["ros2_name"])"
+    )
+  ) {
+    return std::unique_ptr<ServiceFactoryInterface>(new ServiceFactory<
+      @(service["ros1_package"])::@(service["ros1_name"]),
+      @(service["ros2_package"])::srv::@(service["ros2_name"])
+    >);
+  }
+@[end for]@
+  return nullptr;
+}
+@
 // conversion functions for available interfaces
-@[for m in mappings]@
+@[for m in mapped_msgs]@
 
 template<>
 void
@@ -214,10 +248,10 @@ Factory<
 @[    end if]@
 @[  end for]@
 }
-
 @[end for]@
+@
+@[for service in mapped_services]@
 
-@[for service in services]@
 @[  for frm, to in [("1", "2"), ("2", "1")]]@
 @[    for type in ["Request", "Response"]]@
 template <>
@@ -263,33 +297,4 @@ void ServiceFactory<
 @[    end for]@
 @[  end for]@
 @[end for]@
-
-std::unique_ptr<ServiceFactoryInterface>
-get_service_factory_@(ros2_package_name)(const std::string & ros_id, const std::string & package_name, const std::string & service_name)
-{
-@[if not services]@
-  (void)ros_id;
-  (void)package_name;
-  (void)service_name;
-@[end if]@
-@[for service in services]@
-  if (
-    (
-      ros_id == "ros1" &&
-      package_name == "@(service["ros1_package"])" &&
-      service_name == "@(service["ros1_name"])"
-    ) || (
-      ros_id == "ros2" &&
-      package_name == "@(service["ros2_package"])" &&
-      service_name == "@(service["ros2_name"])"
-    )
-  ) {
-    return std::unique_ptr<ServiceFactoryInterface>(new ServiceFactory<
-      @(service["ros1_package"])::@(service["ros1_name"]),
-      @(service["ros2_package"])::srv::@(service["ros2_name"])
-    >);
-  }
-@[end for]@
-  return nullptr;
-}
 }  // namespace ros1_bridge
