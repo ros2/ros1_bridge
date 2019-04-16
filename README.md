@@ -48,9 +48,6 @@ Before continuing you should have the prerequisites for building ROS 2 from sour
 In the past, building this package required patches to ROS 1, but in the latest releases that is no longer the case.
 If you run into trouble first make sure you have at least version `1.11.16` of `ros_comm` and `rosbag`.
 
-Also, building the ROS 1 bridge can consume a tremendous amount of memory (almost 4 GB of free RAM per thread while compiling) to the point that it can easily overwhelm a computer if done with parallel compilation enabled.
-As such, we recommend first building everything else as usual, then coming back to build the ROS 1 bridge without parallel compilation.
-
 The bridge uses `pkg-config` to find ROS 1 packages.
 ROS 2 packages are found through CMake using `find_package()`.
 Therefore the `CMAKE_PREFIX_PATH` must not contain paths from ROS 1 which would overlay ROS 2 packages.
