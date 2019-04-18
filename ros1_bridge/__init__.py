@@ -23,8 +23,8 @@ from catkin_pkg.package import parse_package
 import genmsg
 import genmsg.msg_loader
 
+import rosidl_adapter.parser
 from rosidl_cmake import expand_template
-import rosidl_parser
 
 import yaml
 
@@ -723,8 +723,8 @@ def load_ros2_message(ros2_msg):
         ros2_msg.prefix_path, 'share', ros2_msg.package_name, 'msg',
         ros2_msg.message_name + '.msg')
     try:
-        spec = rosidl_parser.parse_message_file(ros2_msg.package_name, message_path)
-    except rosidl_parser.InvalidSpecification:
+        spec = rosidl_adapter.parser.parse_message_file(ros2_msg.package_name, message_path)
+    except rosidl_adapter.parser.InvalidSpecification:
         return None
     return spec
 
@@ -734,8 +734,8 @@ def load_ros2_service(ros2_srv):
         ros2_srv.prefix_path, 'share', ros2_srv.package_name, 'srv',
         ros2_srv.message_name + '.srv')
     try:
-        spec = rosidl_parser.parse_service_file(ros2_srv.package_name, srv_path)
-    except rosidl_parser.InvalidSpecification:
+        spec = rosidl_adapter.parser.parse_service_file(ros2_srv.package_name, srv_path)
+    except rosidl_adapter.parser.InvalidSpecification:
         return None
     return spec
 
@@ -746,7 +746,7 @@ def FieldHash(self):
 
 
 genmsg.msgs.Field.__hash__ = FieldHash
-rosidl_parser.Field.__hash__ = FieldHash
+rosidl_adapter.parser.Field.__hash__ = FieldHash
 
 
 class Mapping:
