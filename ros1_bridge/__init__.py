@@ -23,8 +23,8 @@ from catkin_pkg.package import parse_package
 import genmsg
 import genmsg.msg_loader
 
-from rosidl_cmake import expand_template
 import rosidl_adapter.parser
+from rosidl_cmake import expand_template
 
 import yaml
 
