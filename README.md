@@ -8,8 +8,6 @@ The bridge provided with the prebuilt ROS 2 binaries includes support for common
 See [the documentation](doc/index.rst) for more details on how ROS 1 and ROS 2 interfaces are associated with each other.
 If you would like to use a bridge with other interfaces (including your own custom types), you will have to build the bridge from source (instructions below).
 
-*Note:* For binary releases up to and including `release-alpha8`, some of the interfaces in `common_interfaces` are skipped - check the git tag of the release in question to see which interfaces were built.
-
 For efficiency reasons, topics will only be bridged when matching publisher-subscriber pairs are active for a topic on either side of the bridge.
 You can use the `--bridge-all-2to1-topics` option to bridge all ROS 2 topics to ROS 1 so that tools such as `rostopic list` and `rqt` will see the topics even if there are no matching ROS 1 subscribers.
 Run `ros2 run ros1_bridge dynamic_bridge -- --help` for more options.
@@ -52,11 +50,10 @@ The bridge uses `pkg-config` to find ROS 1 packages.
 ROS 2 packages are found through CMake using `find_package()`.
 Therefore the `CMAKE_PREFIX_PATH` must not contain paths from ROS 1 which would overlay ROS 2 packages.
 
-Here are the steps (for Linux and OSX; you probably don't have ROS 1 installed on Windows).
+Here are the steps for Linux and OSX.
 
-You should first build everything but the ROS 1 bridge with normal make arguments.
-We don't recommend having your ROS 1 environment sourced during this step as it can add OpenCV 3 to your path.
-The ROS 2 image demos you build in this step would then use OpenCV 3 and require it to be on your path when you run them, while the standard installation on Ubuntu Xenial is OpenCV 2.
+You should first build everything but the ROS 1 bridge with normal colcon arguments.
+We don't recommend having your ROS 1 environment sourced during this step as it can add other libraries to the path.
 
 ```
 colcon build --symlink-install --packages-skip ros1_bridge
