@@ -220,22 +220,38 @@ endif()
 
 macro(targets)
   configure_file(
-    test/test_dynamic_bridge.py.in
-    test_dynamic_bridge${target_suffix}.py.genexp
+    test/test_topics_across_dynamic_bridge.py.in
+    test_topics_across_dynamic_bridge${target_suffix}.py.genexp
     @ONLY
   )
   file(GENERATE
-    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test_dynamic_bridge${target_suffix}_$<CONFIG>.py"
-    INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_dynamic_bridge${target_suffix}.py.genexp"
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test_topics_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
+    INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_topics_across_dynamic_bridge${target_suffix}.py.genexp"
   )
-  ament_add_pytest_test(test_dynamic_bridge${target_suffix}
-    "${CMAKE_CURRENT_BINARY_DIR}/test_dynamic_bridge${target_suffix}_$<CONFIG>.py"
+  add_launch_test(
+    "${CMAKE_CURRENT_BINARY_DIR}/test_topics_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
+    TARGET test_topics_across_dynamic_bridge${target_suffix}
+    ENV RMW_IMPLEMENTAION=${rmw_implementaion}
+    TIMEOUT 60)
+
+  configure_file(
+    test/test_services_across_dynamic_bridge.py.in
+    test_services_across_dynamic_bridge${target_suffix}.py.genexp
+    @ONLY
+  )
+  file(GENERATE
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
+    INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}.py.genexp"
+  )
+  add_launch_test(
+    "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
+    TARGET test_services_across_dynamic_bridge${target_suffix}
     ENV RMW_IMPLEMENTAION=${rmw_implementaion}
     TIMEOUT 60)
 endmacro()
 
 if(TEST_ROS1_BRIDGE)
-  find_package(ament_cmake_pytest REQUIRED)
+  find_package(launch_testing_ament_cmake REQUIRED)
 
   add_executable(test_ros1_client "test/test_ros1_client.cpp")
   ament_target_dependencies(test_ros1_client "ros1_roscpp")
