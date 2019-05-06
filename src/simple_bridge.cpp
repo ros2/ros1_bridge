@@ -64,9 +64,9 @@ void ros1ChatterCallback(const ros::MessageEvent<std_msgs::String const> & ros1_
   const boost::shared_ptr<std_msgs::String const> & ros1_msg = ros1_msg_event.getConstMessage();
   printf("I heard from ROS 1: [%s]\n", ros1_msg->data.c_str());
 
-  auto ros2_msg = std::make_shared<std_msgs::msg::String>();
-  ros2_msg->data = ros1_msg->data;
-  printf("Passing along to ROS 2: [%s]\n", ros2_msg->data.c_str());
+  std_msgs::msg::String ros2_msg;
+  ros2_msg.data = ros1_msg->data;
+  printf("Passing along to ROS 2: [%s]\n", ros2_msg.data.c_str());
   ros2_pub->publish(ros2_msg);
 }
 
