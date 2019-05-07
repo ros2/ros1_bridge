@@ -18,7 +18,6 @@
 #include <map>
 #include <memory>
 #include <string>
-#include <utility>
 
 // include ROS 1
 #include "ros/node_handle.h"
