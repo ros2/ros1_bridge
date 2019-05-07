@@ -37,10 +37,10 @@ void chatterCallback(const std_msgs::String::ConstPtr & ros1_msg)
 {
   std::cout << "I heard: [" << ros1_msg->data << "]" << std::endl;
 
-  auto ros2_msg = std::make_shared<std_msgs::msg::String>();
+  auto ros2_msg = std::make_unique<std_msgs::msg::String>();
   ros2_msg->data = ros1_msg->data;
   std::cout << "Passing along: [" << ros2_msg->data << "]" << std::endl;
-  pub->publish(ros2_msg);
+  pub->publish(std::move(ros2_msg));
 }
 
 int main(int argc, char * argv[])
