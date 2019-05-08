@@ -49,7 +49,7 @@ int main(int argc, char * argv[])
   // ROS 2 node and publisher
   rclcpp::init(argc, argv);
   auto node = rclcpp::Node::make_shared("talker");
-  pub = node->create_publisher<std_msgs::msg::String>("chatter");
+  pub = node->create_publisher<std_msgs::msg::String>("chatter", 10);
 
   // ROS 1 node and subscriber
   ros::init(argc, argv, "listener");

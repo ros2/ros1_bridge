@@ -59,9 +59,7 @@ public:
     const std::string & topic_name,
     size_t queue_size)
   {
-    rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_default;
-    custom_qos_profile.depth = queue_size;
-    return node->create_publisher<ROS2_T>(topic_name, custom_qos_profile);
+    return node->create_publisher<ROS2_T>(topic_name, rclcpp::QoS(rclcpp::KeepLast(queue_size)));
   }
 
   rclcpp::PublisherBase::SharedPtr
@@ -70,7 +68,9 @@ public:
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile)
   {
-    return node->create_publisher<ROS2_T>(topic_name, qos_profile);
+    auto qos = rclcpp::QoS(rclcpp::KeepAll());
+    qos.get_rmw_qos_profile() = qos_profile;
+    return node->create_publisher<ROS2_T>(topic_name, qos);
   }
 
   ros::Subscriber
@@ -121,8 +121,10 @@ public:
     callback = std::bind(
       &Factory<ROS1_T, ROS2_T>::ros2_callback, std::placeholders::_1, std::placeholders::_2,
       ros1_pub, ros1_type_name_, ros2_type_name_, node->get_logger(), ros2_pub);
+    auto rclcpp_qos = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos));
+    rclcpp_qos.get_rmw_qos_profile() = qos;
     return node->create_subscription<ROS2_T>(
-      topic_name, callback, qos, nullptr, true);
+      topic_name, rclcpp_qos, callback, nullptr, true);
   }
 
   void convert_1_to_2(const void * ros1_msg, void * ros2_msg) override
