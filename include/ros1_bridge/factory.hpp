@@ -123,8 +123,10 @@ public:
       ros1_pub, ros1_type_name_, ros2_type_name_, node->get_logger(), ros2_pub);
     auto rclcpp_qos = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos));
     rclcpp_qos.get_rmw_qos_profile() = qos;
+    rclcpp::SubscriptionOptions options;
+    options.ignore_local_publications = true;
     return node->create_subscription<ROS2_T>(
-      topic_name, rclcpp_qos, callback, nullptr, true);
+      topic_name, rclcpp_qos, callback, options);
   }
 
   void convert_1_to_2(const void * ros1_msg, void * ros2_msg) override
