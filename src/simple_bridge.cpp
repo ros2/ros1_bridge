@@ -89,8 +89,10 @@ int main(int argc, char * argv[])
     "chatter", 10, ros1ChatterCallback);
 
   // ROS 2 subscriber
+  rclcpp::SubscriptionOptions options;
+  options.ignore_local_publications = true;
   auto ros2_sub = ros2_node->create_subscription<std_msgs::msg::String>(
-    "chatter", rclcpp::SensorDataQoS(), ros2ChatterCallback, nullptr, true);
+    "chatter", rclcpp::SensorDataQoS(), ros2ChatterCallback, options);
 
   // ROS 1 asynchronous spinner
   ros::AsyncSpinner async_spinner(1);
