@@ -256,7 +256,6 @@ ros1_field_selection = '.'.join((str(field.name) for field in ros1_fields))
 @[    end if]@
 @[  end for]@
 }
-
 @[end for]@
 @
 @[for service in mapped_services]@
