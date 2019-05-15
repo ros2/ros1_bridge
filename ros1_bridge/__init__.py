@@ -834,9 +834,9 @@ class Mapping:
         :type ros2_field: either a rosidl_adapter.parser.Field object, or a tuple objects of
         that type
         """
-        if not type(ros1_fields) is tuple:
+        if not isinstance(ros1_fields, tuple):
             ros1_fields = (ros1_fields,)
-        if not type(ros2_fields) is tuple:
+        if not isinstance(ros2_fields, tuple):
             ros2_fields = (ros2_fields, )
         self.fields_1_to_2[ros1_fields] = ros2_fields
         self.fields_2_to_1[ros2_fields] = ros1_fields
