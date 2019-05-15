@@ -615,15 +615,6 @@ def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
 
 
 def update_ros1_field_information(ros1_field, package_name):
-    """
-    Add information about the package and message to a ROS 1 field.
-
-    :type ros1_field: genmsg.msgs.Field
-    :type package_name: string
-
-    :return: ros1_field extended with additional string attributes `pkg_name`
-    and `msg_name` for their parent message
-    """
     parts = ros1_field.base_type.split('/')
     assert len(parts) in [1, 2]
     if len(parts) == 1:
@@ -678,18 +669,15 @@ def get_ros2_selected_fields(ros2_field_selection, parent_ros2_spec, msg_idx):
         selected_fields.append(current_field)
     return tuple(selected_fields)
 
-
 def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, msg_idx):
     """
-    Find the mapping object for a pair of ROS 1 and ROS 2 messages.
+    Return the first mapping object for ros1_msg and ros2_msg found in mapping_rules,
+    and otherwise defined implicitly, or None if no mapping is found
 
     :type ros1_msg: Message
     :type ros2_msg: Message
     :type mapping_rules: list of MessageMappingRule
     :type msg_idx: MessageIndex
-
-    :return: the first mapping object for ros1_msg and ros2_msg found in mapping_rules,
-    and otherwise defined implicitly, or None if no mapping is found.
     """
     ros1_spec = load_ros1_message(ros1_msg)
     if not ros1_spec:
@@ -717,9 +705,9 @@ def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, msg_idx):
                     get_ros1_selected_fields(ros1_field_selection, ros1_spec, msg_idx)
             except IndexError:
                 print(
-                    "A manual mapping refers to an invalid field selection '%s' "
-                    % ros1_field_selection + "in the ROS 1 message '%s/%s'"
-                    % (rule.ros1_package_name, rule.ros1_message_name),
+                    "A manual mapping refers to an invalid field '%s' " % ros1_field_name +
+                    "in the ROS 1 message '%s/%s'" %
+                    (rule.ros1_package_name, rule.ros1_message_name),
                     file=sys.stderr)
                 continue
             try:
@@ -727,11 +715,12 @@ def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, msg_idx):
                     get_ros2_selected_fields(ros2_field_selection, ros2_spec, msg_idx)
             except IndexError:
                 print(
-                    "A manual mapping refers to an invalid field selection '%s' "
-                    % ros2_field_selection + "in the ROS 2 message '%s/%s'"
-                    % (rule.ros2_package_name, rule.ros2_message_name),
+                    "A manual mapping refers to an invalid field '%s' " % ros2_field_name +
+                    "in the ROS 2 message '%s/%s'" %
+                    (rule.ros2_package_name, rule.ros2_message_name),
                     file=sys.stderr)
                 continue
+            #update_ros1_field_information(ros1_selected_fields, ros1_msg.package_name)
             mapping.add_field_pair(ros1_selected_fields, ros2_selected_fields)
         return mapping
 
@@ -864,7 +853,6 @@ def camel_case_to_lower_case_underscore(value):
     # which is preseded by a lower case letter or number
     value = re.sub('([a-z0-9])([A-Z])', '\\1_\\2', value)
     return value.lower()
-
 
 class MessageIndex:
     """
