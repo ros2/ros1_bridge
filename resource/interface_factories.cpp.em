@@ -56,7 +56,7 @@ get_factory_@(ros2_package_name)__@(interface_type)__@(interface.message_name)(c
   if (
     (ros1_type_name == "@(m.ros1_msg.package_name)/@(m.ros1_msg.message_name)" ||
      ros1_type_name == "") &&
-    ros2_type_name == "@(m.ros2_msg.package_name)/@(interface_type)/@(m.ros2_msg.message_name)")
+    ros2_type_name == "@(m.ros2_msg.package_name)/msg/@(m.ros2_msg.message_name)")
   {
     return std::make_shared<
       Factory<
@@ -86,7 +86,7 @@ get_service_factory_@(ros2_package_name)__@(interface_type)__@(interface.message
     ) || (
       ros_id == "ros2" &&
       package_name == "@(service["ros2_package"])" &&
-      service_name == "@(service["ros2_name"])"
+      service_name == "srv/@(service["ros2_name"])"
     )
   ) {
     return std::unique_ptr<ServiceFactoryInterface>(new ServiceFactory<
