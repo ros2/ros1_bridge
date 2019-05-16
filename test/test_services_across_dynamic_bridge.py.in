@@ -84,4 +84,8 @@ class TestServicesAcrossDynamicBridgeAfterShutdown(unittest.TestCase):
         """Test that both executables finished gracefully."""
         launch_testing.asserts.assertExitCodes(proc_info, process=rosbridge_process)
         launch_testing.asserts.assertExitCodes(proc_info, process=server_process)
-        launch_testing.asserts.assertExitCodes(proc_info, process=client_process)
+        launch_testing.asserts.assertExitCodes(
+            proc_info,
+            [launch_testing.asserts.EXIT_OK],
+            client_process
+        )
