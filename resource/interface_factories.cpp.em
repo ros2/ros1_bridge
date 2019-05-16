@@ -114,59 +114,63 @@ Factory<
   (void)ros1_msg;
   (void)ros2_msg;
 @[  end if]@
-@[  for ros1_field, ros2_field in m.fields_1_to_2.items()]@
-@[    if not ros2_field.type.is_array]@
+@[  for ros1_fields, ros2_fields in m.fields_1_to_2.items()]@
+@{
+ros1_field_selection = '.'.join((str(field.name) for field in ros1_fields))
+ros2_field_selection = '.'.join((str(field.name) for field in ros2_fields))
+}
+@[    if not ros2_fields[-1].type.is_array]@
   // convert non-array field
-@[      if not ros2_field.type.pkg_name]@
+@[      if not ros2_fields[-1].type.pkg_name]@
   // convert primitive field
-  ros2_msg.@(ros2_field.name) = ros1_msg.@(ros1_field.name);
-@[      elif ros2_field.type.pkg_name == 'builtin_interfaces']@
+  ros2_msg.@(ros2_field_selection) = ros1_msg.@(ros1_field_selection);
+@[      elif ros2_fields[-1].type.pkg_name == 'builtin_interfaces']@
   // convert builtin field
-  ros1_bridge::convert_1_to_2(ros1_msg.@(ros1_field.name), ros2_msg.@(ros2_field.name));
+  ros1_bridge::convert_1_to_2(ros1_msg.@(ros1_field_selection), ros2_msg.@(ros2_field_selection));
 @[      else]@
   // convert sub message field
   Factory<
-    @(ros1_field.pkg_name)::@(ros1_field.msg_name),
-    @(ros2_field.type.pkg_name)::msg::@(ros2_field.type.type)
+    @(ros1_fields[-1].pkg_name)::@(ros1_fields[-1].msg_name),
+    @(ros2_fields[-1].type.pkg_name)::msg::@(ros2_fields[-1].type.type)
   >::convert_1_to_2(
-    ros1_msg.@(ros1_field.name), ros2_msg.@(ros2_field.name));
+    ros1_msg.@(ros1_field_selection), ros2_msg.@(ros2_field_selection));
 @[      end if]@
 @[    else]@
   // convert array field
-@[      if not ros2_field.type.array_size or ros2_field.type.is_upper_bound]@
+@[      if not ros2_fields[-1].type.array_size or ros2_fields[-1].type.is_upper_bound]@
   // ensure array size
-@[        if ros2_field.type.is_upper_bound]@
+@[        if ros2_fields[-1].type.is_upper_bound]@
   // check boundary
-  assert(ros1_msg.@(ros1_field.name).size() <= @(ros2_field.type.array_size));
+  assert(ros1_msg.@(ros1_field_selection).size() <= @(ros2_fields[-1].type.array_size));
 @[        end if]@
   // dynamic arrays must be resized
-  ros2_msg.@(ros2_field.name).resize(ros1_msg.@(ros1_field.name).size());
+  ros2_msg.@(ros2_field_selection).resize(ros1_msg.@(ros1_field_selection).size());
 @[      end if]@
-@[      if not ros2_field.type.pkg_name]@
+@[      if not ros2_fields[-1].type.pkg_name]@
   // convert primitive array elements
   std::copy(
-    ros1_msg.@(ros1_field.name).begin(),
-    ros1_msg.@(ros1_field.name).end(),
-    ros2_msg.@(ros2_field.name).begin());
+    ros1_msg.@(ros1_field_selection).begin(),
+    ros1_msg.@(ros1_field_selection).end(),
+    ros2_msg.@(ros2_field_selection).begin());
 @[      else]@
   // copy element wise since the type is different
   {
-    auto ros1_it = ros1_msg.@(ros1_field.name).begin();
-    auto ros2_it = ros2_msg.@(ros2_field.name).begin();
+    auto ros1_it = ros1_msg.@(ros1_field_selection).begin();
+    auto ros2_it = ros2_msg.@(ros2_field_selection).begin();
     for (
       ;
-      ros1_it != ros1_msg.@(ros1_field.name).end() &&
-      ros2_it != ros2_msg.@(ros2_field.name).end();
+      ros1_it != ros1_msg.@(ros1_field_selection).end() &&
+      ros2_it != ros2_msg.@(ros2_field_selection).end();
       ++ros1_it, ++ros2_it
     )
     {
       // convert sub message element
-@[        if ros2_field.type.pkg_name == 'builtin_interfaces']@
+@[        if ros2_fields[-1].type.pkg_name == 'builtin_interfaces']@
       ros1_bridge::convert_1_to_2(*ros1_it, *ros2_it);
 @[        else]@
       Factory<
-        @(ros1_field.pkg_name)::@(ros1_field.msg_name),
-        @(ros2_field.type.pkg_name)::msg::@(ros2_field.type.type)
+        @(ros1_fields[-1].pkg_name)::@(ros1_fields[-1].msg_name),
+        @(ros2_fields[-1].type.pkg_name)::msg::@(ros2_fields[-1].type.type)
       >::convert_1_to_2(
         *ros1_it, *ros2_it);
 @[        end if]@
@@ -190,55 +194,59 @@ Factory<
   (void)ros2_msg;
   (void)ros1_msg;
 @[  end if]@
-@[  for ros2_field, ros1_field in m.fields_2_to_1.items()]@
-@[    if not ros2_field.type.is_array]@
+@[  for ros2_fields, ros1_fields in m.fields_2_to_1.items()]@
+@{
+ros2_field_selection = '.'.join((str(field.name) for field in ros2_fields))
+ros1_field_selection = '.'.join((str(field.name) for field in ros1_fields))
+}
+@[    if not ros2_fields[-1].type.is_array]@
   // convert non-array field
-@[      if not ros2_field.type.pkg_name]@
+@[      if not ros2_fields[-1].type.pkg_name]@
   // convert primitive field
-  ros1_msg.@(ros1_field.name) = ros2_msg.@(ros2_field.name);
-@[      elif ros2_field.type.pkg_name == 'builtin_interfaces']@
+  ros1_msg.@(ros1_field_selection) = ros2_msg.@(ros2_field_selection);
+@[      elif ros2_fields[-1].type.pkg_name == 'builtin_interfaces']@
   // convert builtin field
-  ros1_bridge::convert_2_to_1(ros2_msg.@(ros2_field.name), ros1_msg.@(ros1_field.name));
+  ros1_bridge::convert_2_to_1(ros2_msg.@(ros2_field_selection), ros1_msg.@(ros1_field_selection));
 @[      else]@
   // convert sub message field
   Factory<
-    @(ros1_field.pkg_name)::@(ros1_field.msg_name),
-    @(ros2_field.type.pkg_name)::msg::@(ros2_field.type.type)
+    @(ros1_fields[-1].pkg_name)::@(ros1_fields[-1].msg_name),
+    @(ros2_fields[-1].type.pkg_name)::msg::@(ros2_fields[-1].type.type)
   >::convert_2_to_1(
-    ros2_msg.@(ros2_field.name), ros1_msg.@(ros1_field.name));
+    ros2_msg.@(ros2_field_selection), ros1_msg.@(ros1_field_selection));
 @[      end if]@
 @[    else]@
   // convert array field
-@[      if not ros2_field.type.array_size or ros2_field.type.is_upper_bound]@
+@[      if not ros2_fields[-1].type.array_size or ros2_fields[-1].type.is_upper_bound]@
   // ensure array size
   // dynamic arrays must be resized
-  ros1_msg.@(ros1_field.name).resize(ros2_msg.@(ros2_field.name).size());
+  ros1_msg.@(ros1_field_selection).resize(ros2_msg.@(ros2_field_selection).size());
 @[      end if]@
-@[      if not ros2_field.type.pkg_name]@
+@[      if not ros2_fields[-1].type.pkg_name]@
   // convert primitive array elements
   std::copy(
-    ros2_msg.@(ros2_field.name).begin(),
-    ros2_msg.@(ros2_field.name).end(),
-    ros1_msg.@(ros1_field.name).begin());
+    ros2_msg.@(ros2_field_selection).begin(),
+    ros2_msg.@(ros2_field_selection).end(),
+    ros1_msg.@(ros1_field_selection).begin());
 @[      else]@
   // copy element wise since the type is different
   {
-    auto ros2_it = ros2_msg.@(ros2_field.name).begin();
-    auto ros1_it = ros1_msg.@(ros1_field.name).begin();
+    auto ros2_it = ros2_msg.@(ros2_field_selection).begin();
+    auto ros1_it = ros1_msg.@(ros1_field_selection).begin();
     for (
       ;
-      ros2_it != ros2_msg.@(ros2_field.name).end() &&
-      ros1_it != ros1_msg.@(ros1_field.name).end();
+      ros2_it != ros2_msg.@(ros2_field_selection).end() &&
+      ros1_it != ros1_msg.@(ros1_field_selection).end();
       ++ros2_it, ++ros1_it
     )
     {
       // convert sub message element
-@[        if ros2_field.type.pkg_name == 'builtin_interfaces']@
+@[        if ros2_fields[-1].type.pkg_name == 'builtin_interfaces']@
       ros1_bridge::convert_2_to_1(*ros2_it, *ros1_it);
 @[        else]@
       Factory<
-        @(ros1_field.pkg_name)::@(ros1_field.msg_name),
-        @(ros2_field.type.pkg_name)::msg::@(ros2_field.type.type)
+        @(ros1_fields[-1].pkg_name)::@(ros1_fields[-1].msg_name),
+        @(ros2_fields[-1].type.pkg_name)::msg::@(ros2_fields[-1].type.type)
       >::convert_2_to_1(
         *ros2_it, *ros1_it);
 @[        end if]@
