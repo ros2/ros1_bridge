@@ -222,10 +222,11 @@ if(TEST_ROS1_BRIDGE)
   set(TEST_BRIDGE_DYNAMIC_BRIDGE "$<TARGET_FILE:dynamic_bridge>")
   set(TEST_BRIDGE_ROS2_CLIENT "$<TARGET_FILE:test_ros2_client_cpp>")
   set(TEST_BRIDGE_ROS2_SERVER "$<TARGET_FILE:test_ros2_server_cpp>")
-  set(TEST_BRIDGE_RMW ${rmw_implementation})
 endif()
 
 macro(targets)
+  set(TEST_BRIDGE_RMW ${rmw_implementation})
+
   configure_file(
     test/test_topics_across_dynamic_bridge.py.in
     test_topics_across_dynamic_bridge${target_suffix}.py.genexp
@@ -238,7 +239,7 @@ macro(targets)
   add_launch_test(
     "${CMAKE_CURRENT_BINARY_DIR}/test_topics_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
     TARGET test_topics_across_dynamic_bridge${target_suffix}
-    ENV RMW_IMPLEMENTAION=${rmw_implementaion}
+    ENV RMW_IMPLEMENTATION=${rmw_implementation}
     TIMEOUT 60)
 
   configure_file(
@@ -253,7 +254,7 @@ macro(targets)
   add_launch_test(
     "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
     TARGET test_services_across_dynamic_bridge${target_suffix}
-    ENV RMW_IMPLEMENTAION=${rmw_implementaion}
+    ENV RMW_IMPLEMENTATION=${rmw_implementation}
     TIMEOUT 60)
 endmacro()
 
