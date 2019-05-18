@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstring>
 #include <map>
 #include <memory>
 #include <set>
@@ -35,6 +36,8 @@
 // include ROS 2
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/scope_exit.hpp"
+
+#include "rcutils/get_env.h"
 
 #include "ros1_bridge/bridge.hpp"
 
@@ -456,7 +459,23 @@ int main(int argc, char * argv[])
   }
 
   // ROS 2 node
-  rclcpp::init(argc, argv);
+
+  // TODO(hidmic): remove when Fast-RTPS supports registering multiple
+  //               typesupports for the same topic in the same process.
+  //               See https://github.com/ros2/rmw_fastrtps/issues/265.
+  std::vector<char *> args(argv, argv + argc);
+  char log_disable_rosout[] = "__log_disable_rosout:=true";
+
+  const char * rmw_implementation = "";
+  const char * error = rcutils_get_env("RMW_IMPLEMENTATION", &rmw_implementation);
+  if (NULL != error) {
+    throw std::runtime_error(error);
+  }
+  if (0 == strcmp(rmw_implementation, "") || NULL != strstr(rmw_implementation, "fastrtps")) {
+    args.push_back(log_disable_rosout);
+  }
+  rclcpp::init(args.size(), args.data());
+
   auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
 
   // ROS 1 node
