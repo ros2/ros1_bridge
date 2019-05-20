@@ -35,6 +35,7 @@
   <test_depend>demo_nodes_cpp</test_depend>
   <test_depend>diagnostic_msgs</test_depend>
   <test_depend>launch</test_depend>
+  <test_depend>launch_testing</test_depend>
   <test_depend>ros2run</test_depend>
 
   <group_depend>rosidl_interface_packages</group_depend>
