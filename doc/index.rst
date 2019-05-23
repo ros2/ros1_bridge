@@ -22,10 +22,12 @@ In the third step fields are associated with each other.
 If one of the two associated messages has fields which is are not part of the other message they are being ignored.
 If both messages have fields the other message does not contain it is assumed that the mapping is incomplete and no association is established.
 
+If the package name, message name, and all field names and types are the same between a ROS 1 package and a ROS 2 package, then the messages will automatically be associated with each other without additional specification. The bridge needs to be recompiled, after the ROS 1 and ROS 2 packages have been compiled and sourced, each in a separate workspace, for a total of three workspaces.
+
 How can I specify custom mapping rule for messages?
 ---------------------------------------------------
 
-Additional mapping rules can be provided by a ROS 2 package using a `yaml` file.
+Additional mapping rules can be provided by a ROS 2 package using a ``yaml`` file.
 Each mapping rule can have one of three types:
 
 1. A package mapping rule is defined by:
@@ -41,10 +43,10 @@ Each mapping rule can have one of three types:
 3. A field mapping rule is defined by the attributes of a message mapping rule and:
 
    - a dictionary ``fields_1_to_2`` mapping ROS 1 field selections to ROS 2 field selections.
-     A field selection is a sequence of field names separated by `.`, that specifies the path to a field starting from a message.
-     For example starting from the message `rosgraph_msgs/Log` the field selection `header.stamp` specifies a
-     path that goes through the field `header` of `rosgraph_msgs/Log`, that has a message of type `std_msgs/Header`,
-     and ending up in the field `stamp` of `std_msgs/Header`, that has type `time`.
+     A field selection is a sequence of field names separated by ``.``, that specifies the path to a field starting from a message.
+     For example starting from the message ``rosgraph_msgs/Log`` the field selection ``header.stamp`` specifies a
+     path that goes through the field ``header`` of ``rosgraph_msgs/Log``, that has a message of type ``std_msgs/Header``,
+     and ending up in the field ``stamp`` of ``std_msgs/Header``, that has type ``time``.
      All fields must be listed explicitly - not listed fields are not mapped implicitly when their names match.
 
 Each mapping rule file contains a list of mapping rules.
@@ -144,3 +146,102 @@ The mapping can optionally only define ``request_fields_1_to_2`` or ``response_f
       response_fields_1_to_2:
         foo: 'foo'
         ros1_bar: 'ros2_bar'
+
+
+How does the bridge know about custom interfaces?
+-------------------------------------------------
+
+The ROS 1 and ROS 2 packages need to be in separate workspaces, so that each workspace can be sourced with its correponding ROS version. The bridge should be in its own workspace, as it will need to source both ROS 1 and ROS 2 versions.
+
+Example workspace setup
+-----------------------
+
+Here we will call the ROS 1 workspace ``ros1_msgs_ws``, the ROS 2 workspace ``ros2_msgs_ws``, the workspace containing the bridge ``bridge_ws``.
+For simplification, we will use matching names for the packages, messages, and fields of the custom interfaces on the ROS 1 and ROS 2 sides. We will call the actual package ``bridge_msgs`` in both the ROS 1 and the ROS 2 workspaces. That is, the name defined in ``CMakeLists.txt`` and ``package.xml`` in the package.
+
+The directory layout looks like this::
+
+    .
+    ├─ ros1_msgs_ws
+    │  └─ src
+    │     └─ bridge_msgs
+    │        └─ msg
+    │           └─ JointCommand.msg
+    ├─ ros2_msgs_ws
+    │  └─ src
+    │     └─ bridge_msgs
+    │        ├─ msg
+    │        │  └─ JointCommand.msg
+    │        └─ # YAML file if your custom interfaces have non-matching names
+    └─ bridge_ws
+       └─ src
+          └─ ros1_bridge
+
+The content of JointCommand.msg::
+
+    float64 position
+
+The workspaces can be compiled as follows.
+
+First, build the ROS 1 messages::
+
+    # Shell 1 (ROS 1)
+    . /opt/ros/melodic/setup.bash
+    # Or, on OSX, something like:
+    # . ~/ros_catkin_ws/install_isolated/setup.bash
+    cd <workspace-parent-path>/ros1_msgs_ws
+    catkin_make_isolated --install
+
+Then build the ROS 2 messages::
+
+    # Shell 2 (ROS 2)
+    . /opt/ros/crystal/setup.bash
+    cd <workspace-parent-path>/ros2_msgs_ws
+    colcon build --packages-select bridge_msgs
+
+Then build the bridge::
+
+    # Shell 3 (ROS 1 and ROS 2)
+    . /opt/ros/melodic/setup.bash
+    . /opt/ros/crystal/setup.bash
+    . <workspace-parent-path>/ros1_msgs_ws/install_isolated/setup.bash
+    . <workspace-parent-path>/ros2_msgs_ws/install/local_setup.bash
+    cd <workspace-parent-path>/bridge_ws
+    colcon build --packages-select ros1_bridge --cmake-force-configure
+
+Verify the custom types were recognized by the bridge, by printing all pairs of bridged types::
+
+    ros2 run ros1_bridge dynamic_bridge --print-pairs
+
+The custom types should be listed.
+
+Run the bridge, reusing shells from above::
+
+    # Shell 1 (ROS 1)
+    roscore
+
+    # Shell 2 (ROS 2)
+    . <workspace-parent-path>/ros2_msgs_ws/install/local_setup.bash
+    ros2 topic pub /joint_command bridge_msgs/JointCommand "{position: 0.123}"
+
+    # Shell 3 (ROS 1 and ROS 2)
+    . <workspace-parent-path>/bridge_ws/install/local_setup.bash
+    ros2 run ros1_bridge dynamic_bridge --bridge-all-topics
+
+    # Shell 4 (ROS 1)
+    . /opt/ros/melodic/setup.bash
+    . <workspace-parent-path>/ros1_msgs_ws/install_isolated/setup.bash
+    # Verify the topic is listed
+    rostopic list
+    rostopic echo /joint_command
+
+Known Issues
+------------
+
+   - Currently, ``--bridge-all-topics`` may be needed to bridge correctly. Once the mapping is established with the ROS master, it may be possible to rerun the bridge without bridging all topics, in order to selectively bridge topics. However, this is not guaranteed.
+TODO: Make an Issue on ros1_bridge about this.
+   - ``/rosout`` logging, which maps from ``rosgraph_msgs/Log`` to ``rcl_interfaces/Log``, requires `field selection<https://github.com/ros2/ros1_bridge/pull/174>`_. This `works with OpenSplice and Connext<https://github.com/ros2/rcl_interfaces/pull/67>`_, but `not with Fast-RTPS<https://github.com/ros2/rcl_interfaces/issues/61>`_. For it to work with Fast-RTPS, `this bug<https://github.com/ros2/rmw_fastrtps/issues/265>`_ needs to be fixed. As a workaround, run the subscriber with ``__log_disable_rosout:=true``.
+
+
+
+
