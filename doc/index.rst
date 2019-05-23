@@ -209,11 +209,9 @@ Then build the bridge::
     cd <workspace-parent-path>/bridge_ws
     colcon build --packages-select ros1_bridge --cmake-force-configure
 
-Verify the custom types were recognized by the bridge, by printing all pairs of bridged types::
+Verify the custom types were recognized by the bridge, by printing all pairs of bridged types. The custom types should be listed::
 
     ros2 run ros1_bridge dynamic_bridge --print-pairs
-
-The custom types should be listed.
 
 Run the bridge, reusing shells from above::
 
@@ -238,6 +236,5 @@ Run the bridge, reusing shells from above::
 Known Issues
 ------------
 
-   - Currently, ``--bridge-all-topics`` may be needed to bridge correctly. Once the mapping is established with the ROS master, it may be possible to rerun the bridge without bridging all topics, in order to selectively bridge topics. However, this is not guaranteed.
-   - ``/rosout`` logging, which maps from ``rosgraph_msgs/Log`` to ``rcl_interfaces/Log``, requires `field selection<https://github.com/ros2/ros1_bridge/pull/174>`_. This `works with OpenSplice and Connext<https://github.com/ros2/rcl_interfaces/pull/67>`_, but `not with Fast-RTPS<https://github.com/ros2/rcl_interfaces/issues/61>`_. For it to work with Fast-RTPS, `this bug<https://github.com/ros2/rmw_fastrtps/issues/265>`_ needs to be fixed. As a workaround, run the subscriber with ``__log_disable_rosout:=true``.
-
+- Currently, ``--bridge-all-topics`` may be needed to bridge correctly. Once the mapping is established with the ROS master, it may be possible to rerun the bridge without bridging all topics, in order to selectively bridge topics. However, this is not guaranteed.
+- ``/rosout`` logging, which maps from ``rosgraph_msgs/Log`` to ``rcl_interfaces/Log``, requires `field selection <https://github.com/ros2/ros1_bridge/pull/174>`_. This `works with OpenSplice and Connext <https://github.com/ros2/rcl_interfaces/pull/67>`_, but `not with Fast-RTPS <https://github.com/ros2/rcl_interfaces/issues/61>`_. For it to work with Fast-RTPS, `this bug <https://github.com/ros2/rmw_fastrtps/issues/265>`_ needs to be fixed. As a workaround, run the subscriber with ``__log_disable_rosout:=true``.
