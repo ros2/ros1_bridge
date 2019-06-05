@@ -39,7 +39,7 @@ from ros1_bridge import camel_case_to_lower_case_underscore
 namespace ros1_bridge
 {
 
-std::shared_ptr<FactoryInterface>
+std::shared_ptr<FactoryInterface>git push --force-with-lease origin services-static-bridge
 get_factory_@(ros2_package_name)(const std::string & ros1_type_name, const std::string & ros2_type_name)
 {
 @[if not mappings]@
@@ -237,7 +237,7 @@ void ServiceFactory<
 @[        if field["array"]]@
 @[          if field["dynamic_array"]]@
   // ensure array size
-@[            if field["upper_bound_array"] != None && frm == "1"]@
+@[            if field["upper_bound_array"] is not None && frm == "1"]@
   // check boundary
                 assert(req@(frm).@(field["ros1"]["name"]).size() <= @(field["upper_bound_array"]));
 @[            end if]@
