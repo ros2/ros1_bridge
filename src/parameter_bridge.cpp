@@ -110,7 +110,7 @@ int main(int argc, char * argv[])
       std::string package_name = static_cast<std::string>(services_1_to_2[i]["package"]);
       std::string type_name = static_cast<std::string>(services_1_to_2[i]["type"]);
       printf(
-        "Trying to create bridge for ROS2 service '%s' "
+        "Trying to create bridge for ROS 2 service '%s' "
         "with package '%s' and type '%s'\n",
         service_name.c_str(), package_name.c_str(), type_name.c_str());
 
@@ -123,14 +123,14 @@ int main(int argc, char * argv[])
         } catch (std::runtime_error & e) {
           fprintf(
             stderr,
-            "failed to create bridge ROS1 service '%s' "
+            "failed to create bridge ROS 1 service '%s' "
             "with package '%s' and type '%s': %s\n",
             service_name.c_str(), type_name.c_str(), type_name.c_str(), e.what());
         }
       } else {
         fprintf(
           stderr,
-          "failed to create bridge ROS1 service '%s' "
+          "failed to create bridge ROS 1 service '%s' "
           "no conversion for package '%s' and type '%s'\n",
           service_name.c_str(), package_name.c_str(), type_name.c_str());
       }
@@ -152,7 +152,7 @@ int main(int argc, char * argv[])
       std::string package_name = static_cast<std::string>(services_2_to_1[i]["package"]);
       std::string type_name    = static_cast<std::string>(services_2_to_1[i]["type"]);
       printf(
-        "Trying to create bridge for ROS1 service '%s' "
+        "Trying to create bridge for ROS 1 service '%s' "
         "with package '%s' and type '%s'\n",
         service_name.c_str(), package_name.c_str(), type_name.c_str());
 
@@ -165,14 +165,14 @@ int main(int argc, char * argv[])
         } catch (std::runtime_error & e) {
           fprintf(
             stderr,
-            "failed to create bridge ROS2 service '%s' "
+            "failed to create bridge ROS 2 service '%s' "
             "with package '%s' and type '%s': %s\n",
             service_name.c_str(), type_name.c_str(), type_name.c_str(), e.what());
         }
       } else {
         fprintf(
           stderr,
-          "failed to create bridge ROS2 service '%s' "
+          "failed to create bridge ROS 2 service '%s' "
           "no conversion for package '%s' and type '%s'\n",
           service_name.c_str(), package_name.c_str(), type_name.c_str());
       }
