@@ -78,7 +78,7 @@ int main(int argc, char * argv[])
         queue_size = 100;
       }
       printf(
-        "Trying to create bidirectional bridge for topic ''%s'' "
+        "Trying to create bidirectional bridge for topic ''%s' "
         "with ROS 1 type '%s' and ROS 2 type '%s'\n",
         topic_name.c_str(), type_name.c_str(), type_name.c_str());
 
