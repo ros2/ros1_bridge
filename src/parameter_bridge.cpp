@@ -30,11 +30,6 @@
 
 #include "ros1_bridge/bridge.hpp"
 
-namespace ros1_bridge
-{
-std::unique_ptr<ros1_bridge::ServiceFactoryInterface>
-get_service_factory(const std::string &, const std::string &, const std::string &);
-}
 
 int main(int argc, char * argv[])
 {
@@ -83,7 +78,7 @@ int main(int argc, char * argv[])
         queue_size = 100;
       }
       printf(
-        "Trying to create bidirectional bridge for topic '%s' "
+        "Trying to create bidirectional bridge for topic ''%s'' "
         "with ROS 1 type '%s' and ROS 2 type '%s'\n",
         topic_name.c_str(), type_name.c_str(), type_name.c_str());
 
@@ -113,9 +108,9 @@ int main(int argc, char * argv[])
     for (size_t i = 0; i < static_cast<size_t>(services_1_to_2.size()); ++i) {
       std::string service_name = static_cast<std::string>(services_1_to_2[i]["service"]);
       std::string package_name = static_cast<std::string>(services_1_to_2[i]["package"]);
-      std::string type_name    = static_cast<std::string>(services_1_to_2[i]["type"]);
+      std::string type_name = static_cast<std::string>(services_1_to_2[i]["type"]);
       printf(
-        "Trying to create bridge for ROS1 service '%s' "
+        "Trying to create bridge for ROS2 service '%s' "
         "with package '%s' and type '%s'\n",
         service_name.c_str(), package_name.c_str(), type_name.c_str());
 
@@ -157,7 +152,7 @@ int main(int argc, char * argv[])
       std::string package_name = static_cast<std::string>(services_2_to_1[i]["package"]);
       std::string type_name    = static_cast<std::string>(services_2_to_1[i]["type"]);
       printf(
-        "Trying to create bridge for ROS2 service '%s' "
+        "Trying to create bridge for ROS1 service '%s' "
         "with package '%s' and type '%s'\n",
         service_name.c_str(), package_name.c_str(), type_name.c_str());
 
