@@ -39,7 +39,7 @@ from ros1_bridge import camel_case_to_lower_case_underscore
 namespace ros1_bridge
 {
 
-std::shared_ptr<FactoryInterface>git push --force-with-lease origin services-static-bridge
+std::shared_ptr<FactoryInterface>
 get_factory_@(ros2_package_name)(const std::string & ros1_type_name, const std::string & ros2_type_name)
 {
 @[if not mappings]@
