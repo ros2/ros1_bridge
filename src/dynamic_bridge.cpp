@@ -702,7 +702,7 @@ int main(int argc, char * argv[])
         }
 
         if (output_topic_introspection) {
-          printf("  ROS 2: %s (%s) [%ld pubs, %ld subs]\n",
+          printf("  ROS 2: %s (%s) [%zu pubs, %zu subs]\n",
             topic_name.c_str(), topic_type.c_str(), publisher_count, subscriber_count);
         }
       }
