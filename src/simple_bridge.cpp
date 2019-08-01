@@ -64,9 +64,9 @@ void ros1ChatterCallback(const ros::MessageEvent<std_msgs::String const> & ros1_
   const boost::shared_ptr<std_msgs::String const> & ros1_msg = ros1_msg_event.getConstMessage();
   printf("I heard from ROS 1: [%s]\n", ros1_msg->data.c_str());
 
-  auto ros2_msg = std::make_shared<std_msgs::msg::String>();
-  ros2_msg->data = ros1_msg->data;
-  printf("Passing along to ROS 2: [%s]\n", ros2_msg->data.c_str());
+  std_msgs::msg::String ros2_msg;
+  ros2_msg.data = ros1_msg->data;
+  printf("Passing along to ROS 2: [%s]\n", ros2_msg.data.c_str());
   ros2_pub->publish(ros2_msg);
 }
 
@@ -82,15 +82,17 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
   auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
   ros2_pub = ros2_node->create_publisher<std_msgs::msg::String>(
-    "chatter", rmw_qos_profile_sensor_data);
+    "chatter", rclcpp::SensorDataQoS());
 
   // ROS 1 subscriber
   ros::Subscriber ros1_sub = ros1_node.subscribe(
     "chatter", 10, ros1ChatterCallback);
 
   // ROS 2 subscriber
+  rclcpp::SubscriptionOptions options;
+  options.ignore_local_publications = true;
   auto ros2_sub = ros2_node->create_subscription<std_msgs::msg::String>(
-    "chatter", ros2ChatterCallback, rmw_qos_profile_sensor_data, nullptr, true);
+    "chatter", rclcpp::SensorDataQoS(), ros2ChatterCallback, options);
 
   // ROS 1 asynchronous spinner
   ros::AsyncSpinner async_spinner(1);

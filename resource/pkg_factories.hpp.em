@@ -24,15 +24,18 @@
 @{
 from ros1_bridge import camel_case_to_lower_case_underscore
 }@
+#include <memory>
+#include <string>
+
 #include <ros1_bridge/factory.hpp>
 
 // include ROS 1 messages
-@[for ros1_msg in ros1_msgs]@
+@[for ros1_msg in mapped_ros1_msgs]@
 #include <@(ros1_msg.package_name)/@(ros1_msg.message_name).h>
 @[end for]@
 
 // include ROS 2 messages
-@[for ros2_msg in ros2_msgs]@
+@[for ros2_msg in mapped_ros2_msgs]@
 #include <@(ros2_msg.package_name)/msg/@(camel_case_to_lower_case_underscore(ros2_msg.message_name)).hpp>
 @[end for]@
 
@@ -41,9 +44,19 @@ namespace ros1_bridge
 
 std::shared_ptr<FactoryInterface>
 get_factory_@(ros2_package_name)(const std::string & ros1_type_name, const std::string & ros2_type_name);
+@[for m in ros2_msg_types]@
+
+std::shared_ptr<FactoryInterface>
+get_factory_@(ros2_package_name)__msg__@(m.message_name)(const std::string & ros1_type_name, const std::string & ros2_type_name);
+@[end for]@
 
 std::unique_ptr<ServiceFactoryInterface>
 get_service_factory_@(ros2_package_name)(const std::string & ros_id, const std::string & package_name, const std::string & service_name);
+@[for s in ros2_srv_types]@
+
+std::unique_ptr<ServiceFactoryInterface>
+get_service_factory_@(ros2_package_name)__srv__@(s.message_name)(const std::string & ros_id, const std::string & package_name, const std::string & service_name);
+@[end for]@
 
 // conversion functions for available interfaces
 @[for m in mappings]@

@@ -14,6 +14,7 @@
 
 #include <iostream>
 #include <memory>
+#include <utility>
 
 // include ROS 1
 #ifdef __clang__
@@ -37,10 +38,10 @@ void chatterCallback(const std_msgs::String::ConstPtr & ros1_msg)
 {
   std::cout << "I heard: [" << ros1_msg->data << "]" << std::endl;
 
-  auto ros2_msg = std::make_shared<std_msgs::msg::String>();
+  auto ros2_msg = std::make_unique<std_msgs::msg::String>();
   ros2_msg->data = ros1_msg->data;
   std::cout << "Passing along: [" << ros2_msg->data << "]" << std::endl;
-  pub->publish(ros2_msg);
+  pub->publish(std::move(ros2_msg));
 }
 
 int main(int argc, char * argv[])
@@ -48,7 +49,7 @@ int main(int argc, char * argv[])
   // ROS 2 node and publisher
   rclcpp::init(argc, argv);
   auto node = rclcpp::Node::make_shared("talker");
-  pub = node->create_publisher<std_msgs::msg::String>("chatter");
+  pub = node->create_publisher<std_msgs::msg::String>("chatter", 10);
 
   // ROS 1 node and subscriber
   ros::init(argc, argv, "listener");

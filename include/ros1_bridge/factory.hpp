@@ -18,6 +18,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 
 #include "rmw/rmw.h"
 #include "rclcpp/rclcpp.hpp"
@@ -58,9 +59,7 @@ public:
     const std::string & topic_name,
     size_t queue_size)
   {
-    rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_default;
-    custom_qos_profile.depth = queue_size;
-    return node->create_publisher<ROS2_T>(topic_name, custom_qos_profile);
+    return node->create_publisher<ROS2_T>(topic_name, rclcpp::QoS(rclcpp::KeepLast(queue_size)));
   }
 
   rclcpp::PublisherBase::SharedPtr
@@ -69,7 +68,9 @@ public:
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile)
   {
-    return node->create_publisher<ROS2_T>(topic_name, qos_profile);
+    auto qos = rclcpp::QoS(rclcpp::KeepAll());
+    qos.get_rmw_qos_profile() = qos_profile;
+    return node->create_publisher<ROS2_T>(topic_name, qos);
   }
 
   ros::Subscriber
@@ -120,8 +121,12 @@ public:
     callback = std::bind(
       &Factory<ROS1_T, ROS2_T>::ros2_callback, std::placeholders::_1, std::placeholders::_2,
       ros1_pub, ros1_type_name_, ros2_type_name_, node->get_logger(), ros2_pub);
+    auto rclcpp_qos = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos));
+    rclcpp_qos.get_rmw_qos_profile() = qos;
+    rclcpp::SubscriptionOptions options;
+    options.ignore_local_publications = true;
     return node->create_subscription<ROS2_T>(
-      topic_name, callback, qos, nullptr, true);
+      topic_name, rclcpp_qos, callback, options);
   }
 
   void convert_1_to_2(const void * ros1_msg, void * ros2_msg) override
@@ -160,7 +165,8 @@ protected:
     const boost::shared_ptr<ros::M_string> & connection_header =
       ros1_msg_event.getConnectionHeaderPtr();
     if (!connection_header) {
-      RCLCPP_WARN(logger, "Dropping ROS 1 message %s without connection header", ros1_type_name);
+      RCLCPP_WARN(
+        logger, "Dropping ROS 1 message %s without connection header", ros1_type_name.c_str());
       return;
     }
 
@@ -173,12 +179,12 @@ protected:
 
     const boost::shared_ptr<ROS1_T const> & ros1_msg = ros1_msg_event.getConstMessage();
 
-    auto ros2_msg = std::make_shared<ROS2_T>();
+    auto ros2_msg = std::make_unique<ROS2_T>();
     convert_1_to_2(*ros1_msg, *ros2_msg);
     RCLCPP_INFO_ONCE(
       logger, "Passing message from ROS 1 %s to ROS 2 %s (showing msg only once per type)",
-      ros1_type_name, ros2_type_name);
-    typed_ros2_pub->publish(ros2_msg);
+      ros1_type_name.c_str(), ros2_type_name.c_str());
+    typed_ros2_pub->publish(std::move(ros2_msg));
   }
 
   static
@@ -209,7 +215,7 @@ protected:
     convert_2_to_1(*ros2_msg, ros1_msg);
     RCLCPP_INFO_ONCE(
       logger, "Passing message from ROS 2 %s to ROS 1 %s (showing msg only once per type)",
-      ros2_type_name, ros1_type_name);
+      ros2_type_name.c_str(), ros1_type_name.c_str());
     ros1_pub.publish(ros1_msg);
   }
 
