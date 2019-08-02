@@ -43,7 +43,7 @@ int main(int argc, char * argv[])
   // bridge one example topic
   std::string topic_name = "chatter";
   std::string ros1_type_name = "std_msgs/String";
-  std::string ros2_type_name = "std_msgs/String";
+  std::string ros2_type_name = "std_msgs/msg/String";
   size_t queue_size = 10;
 
   auto handles = ros1_bridge::create_bidirectional_bridge(
