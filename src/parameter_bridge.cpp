@@ -96,7 +96,8 @@ int main(int argc, char * argv[])
     }
   } else {
     fprintf(
-      stderr, "The parameter '%s' either doesn't exist or isn't an array\n", topics_parameter_name);
+      stderr,
+      "The parameter '%s' either doesn't exist or isn't an array\n", topics_parameter_name);
   }
 
   // ROS 1 Services in ROS 2
@@ -118,7 +119,8 @@ int main(int argc, char * argv[])
         "ros2", package_name, type_name);
       if (factory) {
         try {
-          service_bridges_1_to_2.push_back(factory->service_bridge_1_to_2(ros1_node, ros2_node, service_name));
+          service_bridges_1_to_2.push_back(factory->service_bridge_1_to_2(
+            ros1_node, ros2_node, service_name));
           printf("Created 1 to 2 bridge for service %s\n", service_name.c_str());
         } catch (std::runtime_error & e) {
           fprintf(
@@ -138,7 +140,9 @@ int main(int argc, char * argv[])
 
   } else {
     fprintf(
-      stderr, "The parameter '%s' either doesn't exist or isn't an array\n", services_1_to_2_parameter_name);
+      stderr,
+      "The parameter '%s' either doesn't exist or isn't an array\n",
+      services_1_to_2_parameter_name);
   }
   
   // ROS 2 Services in ROS 1
@@ -160,7 +164,8 @@ int main(int argc, char * argv[])
         "ros1", package_name, type_name);
       if (factory) {
         try {
-          service_bridges_2_to_1.push_back(factory->service_bridge_2_to_1(ros1_node, ros2_node, service_name));
+          service_bridges_2_to_1.push_back(
+            factory->service_bridge_2_to_1(ros1_node, ros2_node, service_name));
           printf("Created 2 to 1 bridge for service %s\n", service_name.c_str());
         } catch (std::runtime_error & e) {
           fprintf(
@@ -180,7 +185,9 @@ int main(int argc, char * argv[])
 
   } else {
     fprintf(
-      stderr, "The parameter '%s' either doesn't exist or isn't an array\n", services_2_to_1_parameter_name);
+      stderr,
+      "The parameter '%s' either doesn't exist or isn't an array\n",
+      services_2_to_1_parameter_name);
   }
   
   // ROS 1 asynchronous spinner
