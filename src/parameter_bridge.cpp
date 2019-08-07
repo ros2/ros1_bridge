@@ -120,7 +120,7 @@ int main(int argc, char * argv[])
       if (factory) {
         try {
           service_bridges_1_to_2.push_back(factory->service_bridge_1_to_2(
-            ros1_node, ros2_node, service_name));
+              ros1_node, ros2_node, service_name));
           printf("Created 1 to 2 bridge for service %s\n", service_name.c_str());
         } catch (std::runtime_error & e) {
           fprintf(
@@ -144,7 +144,7 @@ int main(int argc, char * argv[])
       "The parameter '%s' either doesn't exist or isn't an array\n",
       services_1_to_2_parameter_name);
   }
-  
+
   // ROS 2 Services in ROS 1
   XmlRpc::XmlRpcValue services_2_to_1;
   if (
@@ -189,7 +189,7 @@ int main(int argc, char * argv[])
       "The parameter '%s' either doesn't exist or isn't an array\n",
       services_2_to_1_parameter_name);
   }
-  
+
   // ROS 1 asynchronous spinner
   ros::AsyncSpinner async_spinner(1);
   async_spinner.start();
