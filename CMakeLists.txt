@@ -88,21 +88,44 @@ set(generated_path "${CMAKE_BINARY_DIR}/generated")
 set(generated_files "${generated_path}/get_factory.cpp")
 list(APPEND generated_files "${generated_path}/get_mappings.cpp")
 
-# generate per package compilation units to keep the memory usage low
-ament_index_get_resources(ros2_message_packages "rosidl_interfaces")
-foreach(message_package ${ros2_message_packages})
-  find_package(${message_package} QUIET REQUIRED)
-  message(STATUS "Found ${message_package}: ${${message_package}_VERSION} (${${message_package}_DIR})")
-  if(NOT "${message_package}" STREQUAL "builtin_interfaces")
-    list(APPEND generated_files "${generated_path}/${message_package}_factories.cpp")
+# generate per interface compilation units to keep the memory usage low
+ament_index_get_resources(ros2_interface_packages "rosidl_interfaces")
+foreach(package_name ${ros2_interface_packages})
+  find_package(${package_name} QUIET REQUIRED)
+  message(STATUS "Found ${package_name}: ${${package_name}_VERSION} (${${package_name}_DIR})")
+  if(NOT "${package_name}" STREQUAL "builtin_interfaces")
+    list(APPEND generated_files "${generated_path}/${package_name}_factories.cpp")
+    list(APPEND generated_files "${generated_path}/${package_name}_factories.hpp")
+    foreach(interface_file ${${package_name}_INTERFACE_FILES})
+      file(TO_CMAKE_PATH "${interface_file}" interface_name)
+      get_filename_component(interface_basename "${interface_name}" NAME_WE)
+      # skipping actions and request and response messages of services
+      if(NOT "${interface_name}" MATCHES "^(msg|srv)/" OR "${interface_basename}" MATCHES "_(Request|Response)$")
+        continue()
+      endif()
+      string(REPLACE "/" "__" interface_name "${interface_name}")
+      get_filename_component(interface_name "${interface_name}" NAME_WE)
+      list(APPEND generated_files "${generated_path}/${package_name}__${interface_name}__factories.cpp")
+    endforeach()
   endif()
 endforeach()
+
+set(target_dependencies
+  "bin/ros1_bridge_generate_factories"
+  "resource/get_factory.cpp.em"
+  "resource/get_mappings.cpp.em"
+  "resource/interface_factories.cpp.em"
+  "resource/pkg_factories.cpp.em"
+  "resource/pkg_factories.hpp.em"
+  "ros1_bridge/__init__.py")
 
 add_custom_command(
   OUTPUT ${generated_files}
   COMMAND ${PYTHON_EXECUTABLE} bin/ros1_bridge_generate_factories
     --output-path "${generated_path}" --template-dir resource
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+  DEPENDS ${target_dependencies}
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMENT "Generating factories for interface types")
 
 if(NOT WIN32)
   # ignore warning in ROS 1 message headers
@@ -152,7 +175,7 @@ add_library(${PROJECT_NAME} SHARED
   ${generated_files})
 ament_target_dependencies(${PROJECT_NAME}
   ${prefixed_ros1_message_packages}
-  ${ros2_message_packages}
+  ${ros2_interface_packages}
   "rclcpp"
   "ros1_roscpp"
   "ros1_std_msgs")
@@ -165,7 +188,7 @@ install(TARGETS ${PROJECT_NAME}
 custom_executable(static_bridge
   "src/static_bridge.cpp"
   ROS1_DEPENDENCIES
-  TARGET_DEPENDENCIES ${ros2_message_packages})
+  TARGET_DEPENDENCIES ${ros2_interface_packages})
 target_link_libraries(static_bridge
   ${PROJECT_NAME})
 
@@ -179,7 +202,7 @@ target_link_libraries(parameter_bridge
 custom_executable(dynamic_bridge
   "src/dynamic_bridge.cpp"
   ROS1_DEPENDENCIES
-  TARGET_DEPENDENCIES ${ros2_message_packages})
+  TARGET_DEPENDENCIES ${ros2_interface_packages})
 target_link_libraries(dynamic_bridge
   ${PROJECT_NAME})
 
@@ -192,27 +215,44 @@ if(TEST_ROS1_BRIDGE)
   set(TEST_BRIDGE_DYNAMIC_BRIDGE "$<TARGET_FILE:dynamic_bridge>")
   set(TEST_BRIDGE_ROS2_CLIENT "$<TARGET_FILE:test_ros2_client_cpp>")
   set(TEST_BRIDGE_ROS2_SERVER "$<TARGET_FILE:test_ros2_server_cpp>")
-  set(TEST_BRIDGE_RMW ${rmw_implementation})
 endif()
 
 macro(targets)
+  set(TEST_BRIDGE_RMW ${rmw_implementation})
+
   configure_file(
-    test/test_dynamic_bridge.py.in
-    test_dynamic_bridge${target_suffix}.py.genexp
+    test/test_topics_across_dynamic_bridge.py.in
+    test_topics_across_dynamic_bridge${target_suffix}.py.genexp
     @ONLY
   )
   file(GENERATE
-    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test_dynamic_bridge${target_suffix}_$<CONFIG>.py"
-    INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_dynamic_bridge${target_suffix}.py.genexp"
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test_topics_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
+    INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_topics_across_dynamic_bridge${target_suffix}.py.genexp"
   )
-  ament_add_pytest_test(test_dynamic_bridge${target_suffix}
-    "${CMAKE_CURRENT_BINARY_DIR}/test_dynamic_bridge${target_suffix}_$<CONFIG>.py"
-    ENV RMW_IMPLEMENTAION=${rmw_implementaion}
+  add_launch_test(
+    "${CMAKE_CURRENT_BINARY_DIR}/test_topics_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
+    TARGET test_topics_across_dynamic_bridge${target_suffix}
+    ENV RMW_IMPLEMENTATION=${rmw_implementation}
+    TIMEOUT 60)
+
+  configure_file(
+    test/test_services_across_dynamic_bridge.py.in
+    test_services_across_dynamic_bridge${target_suffix}.py.genexp
+    @ONLY
+  )
+  file(GENERATE
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
+    INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}.py.genexp"
+  )
+  add_launch_test(
+    "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
+    TARGET test_services_across_dynamic_bridge${target_suffix}
+    ENV RMW_IMPLEMENTATION=${rmw_implementation}
     TIMEOUT 60)
 endmacro()
 
 if(TEST_ROS1_BRIDGE)
-  find_package(ament_cmake_pytest REQUIRED)
+  find_package(launch_testing_ament_cmake REQUIRED)
 
   add_executable(test_ros1_client "test/test_ros1_client.cpp")
   ament_target_dependencies(test_ros1_client "ros1_roscpp")
