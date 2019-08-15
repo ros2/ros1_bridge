@@ -13,8 +13,6 @@
 @# Context:
 @#  - ros2_package_name (str)
 @#    The ROS 2 package name of this file
-@#  - mappings (list of ros1_bridge.Mapping)
-@#    Mapping between messages as well as their fields
 @###############################################
 @
 #include "@(ros2_package_name)_factories.hpp"

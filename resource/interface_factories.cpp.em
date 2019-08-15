@@ -14,8 +14,10 @@
 @# Context:
 @#  - ros2_package_name (str)
 @#    The ROS 2 package name of this file
-@#  - mappings (list of ros1_bridge.Mapping)
+@#  - mapped_msgs (list of ros1_bridge.Mapping)
 @#    Mapping between messages as well as their fields
+@#  - mapped_services (list of hashes)
+@#    Mapping between services as well as their fields
 @###############################################
 @
 @{
