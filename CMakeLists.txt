@@ -225,15 +225,39 @@ if(TEST_ROS1_BRIDGE)
 endif()
 
 macro(targets)
-  configure_file(
+    set(TEST_BRIDGE_RMW ${rmw_implementation})
+
+    configure_file(
+            test/test_topics_across_dynamic_bridge.py.in
+            test_topics_across_dynamic_bridge${target_suffix}.py.genexp
+            @ONLY
+    )
+    file(GENERATE
+            OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test_topics_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
+            INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_topics_across_dynamic_bridge${target_suffix}.py.genexp"
+            )
+    add_launch_test(
+            "${CMAKE_CURRENT_BINARY_DIR}/test_topics_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
+            TARGET test_topics_across_dynamic_bridge${target_suffix}
+            ENV RMW_IMPLEMENTATION=${rmw_implementation}
+            TIMEOUT 60)
+    configure_file(
+    test/test_services_across_dynamic_bridge.py.in
+    test_services_across_dynamic_bridge${target_suffix}.py.genexp
     test/test_dynamic_bridge.py.in
     test_dynamic_bridge${target_suffix}.py.genexp
     @ONLY
   )
   file(GENERATE
+    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
+    INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}.py.genexp"
     OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test_dynamic_bridge${target_suffix}_$<CONFIG>.py"
     INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_dynamic_bridge${target_suffix}.py.genexp"
   )
+  add_launch_test(
+     "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
+     TARGET test_services_across_dynamic_bridge${target_suffix}
+     ENV RMW_IMPLEMENTATION=${rmw_implementation}
   ament_add_pytest_test(test_dynamic_bridge${target_suffix}
     "${CMAKE_CURRENT_BINARY_DIR}/test_dynamic_bridge${target_suffix}_$<CONFIG>.py"
     ENV RMW_IMPLEMENTAION=${rmw_implementaion}
@@ -241,6 +265,7 @@ macro(targets)
 endmacro()
 
 if(TEST_ROS1_BRIDGE)
+  find_package(launch_testing_ament_cmake REQUIRED)
   find_package(ament_cmake_pytest REQUIRED)
 
   add_executable(test_ros1_client "test/test_ros1_client.cpp")
