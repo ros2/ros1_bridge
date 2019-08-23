@@ -25,6 +25,7 @@
 
 // include ROS 1 message event
 #include "ros/message.h"
+#include "ros/this_node.h"
 
 #include "rcutils/logging_macros.h"
 
@@ -170,9 +171,11 @@ protected:
       return;
     }
 
-    std::string key = "callerid";
-    if (connection_header->find(key) != connection_header->end()) {
-      if (connection_header->at(key) == "/ros_bridge") {
+
+    const auto caller = connection_header->find("callerid");
+    const std::string& node_name = ros::this_node::getName();
+    if (caller != connection_header->end()) {
+      if (caller->second == node_name) {
         return;
       }
     }
