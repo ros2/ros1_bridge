@@ -257,7 +257,7 @@ macro(targets)
   add_launch_test(
      "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
      TARGET test_services_across_dynamic_bridge${target_suffix}
-     ENV RMW_IMPLEMENTATION=${rmw_implementation}
+     ENV RMW_IMPLEMENTATION=${rmw_implementation})
   ament_add_pytest_test(test_dynamic_bridge${target_suffix}
     "${CMAKE_CURRENT_BINARY_DIR}/test_dynamic_bridge${target_suffix}_$<CONFIG>.py"
     ENV RMW_IMPLEMENTAION=${rmw_implementaion}
