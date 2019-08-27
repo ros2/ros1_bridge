@@ -589,13 +589,16 @@ def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
                 if ros1_type != str(ros2_type) or ros1_name != ros2_name:
                     match = False
                     break
+                if not ros2_type.array_size and not ros2_type.is_upper_bound:
+                    upper_bound_array = ros2_type.array_size if ros2_type.is_upper_bound else -1
+                else:
+                    upper_bound_array = None
                 ros2_cpptype = ros2_type.pkg_name + \
                     '::msg::' + ros2_type.type if ros2_type.pkg_name else ''
                 output[direction].append({
                     'basic': not ros2_type.pkg_name,
                     'array': ros2_type.is_array,
-                    'dynamic_array': not ros2_type.array_size and not ros2_type.is_upper_bound,
-                    'upper_bound_array': ros2_type.array_size if ros2_type.is_upper_bound else -1,
+                    'upper_bound_array': upper_bound_array,
                     'ros1': {
                         'name': ros1_name,
                         'type': ros1_type.rstrip('[]'),
