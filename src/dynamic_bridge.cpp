@@ -463,8 +463,7 @@ int main(int argc, char * argv[])
   // TODO(hidmic): remove when Fast-RTPS supports registering multiple
   //               typesupports for the same topic in the same process.
   //               See https://github.com/ros2/rmw_fastrtps/issues/265.
-  std::vector<char *> args(argv, argv + argc);
-  char log_disable_rosout[] = "__log_disable_rosout:=true";
+  std::vector<const char *> args(argv, argv + argc);
 
   const char * rmw_implementation = "";
   const char * error = rcutils_get_env("RMW_IMPLEMENTATION", &rmw_implementation);
@@ -472,7 +471,8 @@ int main(int argc, char * argv[])
     throw std::runtime_error(error);
   }
   if (0 == strcmp(rmw_implementation, "") || NULL != strstr(rmw_implementation, "fastrtps")) {
-    args.push_back(log_disable_rosout);
+    args.push_back("--ros-args");
+    args.push_back("__log_disable_rosout:=true");
   }
   rclcpp::init(args.size(), args.data());
 
