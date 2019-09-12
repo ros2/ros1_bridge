@@ -472,7 +472,7 @@ int main(int argc, char * argv[])
   }
   if (0 == strcmp(rmw_implementation, "") || NULL != strstr(rmw_implementation, "fastrtps")) {
     args.push_back("--ros-args");
-    args.push_back("__log_disable_rosout:=true");
+    args.push_back("--disable-rosout-logs");
   }
   rclcpp::init(args.size(), args.data());
 

@@ -249,4 +249,4 @@ Known Issues
 - ``/rosout`` logging, which maps from ``rosgraph_msgs/Log`` to ``rcl_interfaces/Log``, requires `field selection <https://github.com/ros2/ros1_bridge/pull/174>`_.
   This `works with OpenSplice and Connext <https://github.com/ros2/rcl_interfaces/pull/67>`_, but `not with Fast-RTPS <https://github.com/ros2/rcl_interfaces/issues/61>`_.
   For it to work with Fast-RTPS, `this bug <https://github.com/ros2/rmw_fastrtps/issues/265>`_ needs to be fixed.
-  As a workaround, run the subscriber with ``__log_disable_rosout:=true``.
+  As a workaround, run the subscriber with ``--disable-rosout-logs``.
