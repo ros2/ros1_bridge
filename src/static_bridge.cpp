@@ -80,25 +80,25 @@ int main(int argc, char * argv[])
   
   // create bridges for ros1 services
   auto request_data_relay_2to1_factory = ros1_bridge::get_service_factory(
-    "ros1", "std_srvs", "trigger");
+    "ros1", "std_srvs", "Trigger");
   if (request_data_relay_2to1_factory) {
     try {
       ros1_bridge::ServiceBridge2to1 request_data_relay_2to1 = request_data_relay_2to1_factory->service_bridge_2_to_1(ros1_node, ros2_node, "request_data_relay");
-      printf("Created 2 to 1 bridge for service %s\n", "request_data_relay");
+      printf("Created 2 to 1 bridge for service %s\n", "/request_data_relay");
     } catch (std::runtime_error & e) {
-      fprintf(stderr, "Failed to created a bridge: %s\n", "request_data_relay");
+      fprintf(stderr, "Failed to created a bridge: %s\n", "/request_data_relay");
     }
   }
 
   // create bridges for ros2 services
   auto request_data_relay_1to2_factory = ros1_bridge::get_service_factory(
-    "ros2", "std_srvs/srv", "trigger");
+    "ros2", "std_srvs", "srv/Trigger");
   if (request_data_relay_1to2_factory) {
     try {
       ros1_bridge::ServiceBridge1to2 request_data_relay_1to2 = request_data_relay_1to2_factory->service_bridge_1_to_2(ros1_node, ros2_node, "request_data_relay");
-      printf("Created 1 to 2 bridge for service %s\n", "request_data_relay");
+      printf("Created 1 to 2 bridge for service %s\n", "/request_data_relay");
     } catch (std::runtime_error & e) {
-      fprintf(stderr, "Failed to created a bridge: %s\n", "request_data_relay");
+      fprintf(stderr, "Failed to created a bridge: %s\n", "/request_data_relay");
     }
   }
   
