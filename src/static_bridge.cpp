@@ -40,13 +40,15 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
   auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
 
-  
+  std::list<ros1_bridge::ServiceBridge1to2> service_bridges_1_to_2;
+  std::list<ros1_bridge::ServiceBridge2to1> service_bridges_2_to_1;
+
   
   // bridge one example topic
   std::string topic_name = "chatter";
   std::string ros1_type_name = "std_msgs/String";
   std::string ros2_type_name = "std_msgs/msg/String";
-  size_t queue_size = 10;
+  size_t queue_size = 0;
 
   auto handles = ros1_bridge::create_bidirectional_bridge(
     ros1_node, ros2_node, ros1_type_name, ros2_type_name, topic_name, queue_size);
@@ -74,35 +76,109 @@ int main(int argc, char * argv[])
 
   auto point_cloud_handles = ros1_bridge::create_bidirectional_bridge(
     ros1_node, ros2_node, point_cloud_ros1_type_name, point_cloud_ros2_type_name, point_cloud_topic_name, queue_size);
-    
+
+  // bridge ensenso/rectified/left/image topic
+  std::string ensenso_image_topic_name = "ensenso/rectified/left/image";
+  std::string ensenso_image_ros1_type_name = "sensor_msgs/Image";
+  std::string ensenso_image_ros2_type_name = "sensor_msgs/msg/Image";
+
+  auto ensenso_image_handles = ros1_bridge::create_bidirectional_bridge(
+    ros1_node, ros2_node, ensenso_image_ros1_type_name, ensenso_image_ros2_type_name, ensenso_image_topic_name, queue_size);
+
+
+  // bridge pylon_camera_node/image_raw topic
+  std::string pylon_image_topic_name = "pylon_camera_node/image_raw";
+  std::string pylon_image_ros1_type_name = "sensor_msgs/Image";
+  std::string pylon_image_ros2_type_name = "sensor_msgs/msg/Image";
+
+  auto pylon_image_handles = ros1_bridge::create_bidirectional_bridge(
+    ros1_node, ros2_node, pylon_image_ros1_type_name, pylon_image_ros2_type_name, pylon_image_topic_name, queue_size);
+
   
-  
-  
-  // create bridges for ros1 services
-  auto request_data_relay_2to1_factory = ros1_bridge::get_service_factory(
-    "ros1", "std_srvs", "Trigger");
-  if (request_data_relay_2to1_factory) {
-    try {
-      ros1_bridge::ServiceBridge2to1 request_data_relay_2to1 = request_data_relay_2to1_factory->service_bridge_2_to_1(ros1_node, ros2_node, "request_data_relay");
-      printf("Created 2 to 1 bridge for service %s\n", "/request_data_relay");
-    } catch (std::runtime_error & e) {
-      fprintf(stderr, "Failed to created a bridge: %s\n", "/request_data_relay");
-    }
-  }
+//  // create bridges for ros1 services
+//  auto request_data_relay_2to1_factory = ros1_bridge::get_service_factory(
+//    "ros1", "std_srvs", "Trigger");
+//  if (request_data_relay_2to1_factory) {
+//    try {
+//      ros1_bridge::ServiceBridge2to1 request_data_relay_2to1 = request_data_relay_2to1_factory->service_bridge_2_to_1(ros1_node, ros2_node, "request_data_relay");
+//      printf("Created 2 to 1 bridge for service %s\n", "/request_data_relay");
+//    } catch (std::runtime_error & e) {
+//      fprintf(stderr, "Failed to created a bridge: %s\n", "/request_data_relay");
+//    }
+//  }
 
   // create bridges for ros2 services
-  auto request_data_relay_1to2_factory = ros1_bridge::get_service_factory(
-    "ros2", "std_srvs", "srv/Trigger");
-  if (request_data_relay_1to2_factory) {
+//  auto request_data_relay_1to2_factory = ros1_bridge::get_service_factory(
+//    "ros2", "std_srvs", "srv/Trigger");
+//  if (request_data_relay_1to2_factory) {
+//    try {
+//      ros1_bridge::ServiceBridge1to2 request_data_relay_1to2 = request_data_relay_1to2_factory->service_bridge_1_to_2(ros1_node, ros2_node, "request_data_relay");
+//      printf("Created 1 to 2 bridge for service %s\n", "/request_data_relay");
+//    } catch (std::runtime_error & e) {
+//      fprintf(stderr, "Failed to created a bridge: %s\n", "/request_data_relay");
+//    }
+//  }
+  
+
+  std::string request_data_relay_service_name = "/request_data_relay";
+  std::string request_data_relay_package_name = "std_srvs";
+  std::string request_data_relay_type_name = "Trigger";
+  printf(
+    "Trying to create bridge for ROS 1 service '%s' "
+    "with package '%s' and type '%s'\n",
+    request_data_relay_service_name.c_str(), request_data_relay_package_name.c_str(), request_data_relay_type_name.c_str());
+
+  auto request_data_relay_factory = ros1_bridge::get_service_factory(
+    "ros1", request_data_relay_package_name, request_data_relay_type_name);
+  if (request_data_relay_factory) {
     try {
-      ros1_bridge::ServiceBridge1to2 request_data_relay_1to2 = request_data_relay_1to2_factory->service_bridge_1_to_2(ros1_node, ros2_node, "request_data_relay");
-      printf("Created 1 to 2 bridge for service %s\n", "/request_data_relay");
+      service_bridges_2_to_1.push_back(
+        request_data_relay_factory->service_bridge_2_to_1(ros1_node, ros2_node, request_data_relay_service_name));
+      printf("Created 2 to 1 bridge for service %s\n", request_data_relay_service_name.c_str());
     } catch (std::runtime_error & e) {
-      fprintf(stderr, "Failed to created a bridge: %s\n", "/request_data_relay");
+      fprintf(
+        stderr,
+        "failed to create bridge ROS 2 service '%s' "
+        "with package '%s' and type '%s': %s\n",
+        request_data_relay_service_name.c_str(), request_data_relay_type_name.c_str(), request_data_relay_type_name.c_str(), e.what());
     }
+  } else {
+    fprintf(
+      stderr,
+      "failed to create bridge ROS 2 service '%s' "
+      "no conversion for package '%s' and type '%s'\n",
+      request_data_relay_service_name.c_str(), request_data_relay_package_name.c_str(), request_data_relay_type_name.c_str());
   }
-  
-  
+
+  std::string set_camera_info_service_name = "/pylon_camera_node/set_camera_info";
+  std::string set_camera_info_package_name = "std_srvs";
+  std::string set_camera_info_type_name = "SetCameraInfo";
+  printf(
+    "Trying to create bridge for ROS 1 service '%s' "
+    "with package '%s' and type '%s'\n",
+    set_camera_info_service_name.c_str(), set_camera_info_package_name.c_str(), set_camera_info_type_name.c_str());
+
+  auto set_camera_info_factory = ros1_bridge::get_service_factory(
+    "ros1", set_camera_info_package_name, set_camera_info_type_name);
+  if (set_camera_info_factory) {
+    try {
+      service_bridges_2_to_1.push_back(
+        set_camera_info_factory->service_bridge_2_to_1(ros1_node, ros2_node, set_camera_info_service_name));
+      printf("Created 2 to 1 bridge for service %s\n", set_camera_info_service_name.c_str());
+    } catch (std::runtime_error & e) {
+      fprintf(
+        stderr,
+        "failed to create bridge ROS 2 service '%s' "
+        "with package '%s' and type '%s': %s\n",
+        set_camera_info_service_name.c_str(), set_camera_info_type_name.c_str(), set_camera_info_type_name.c_str(), e.what());
+    }
+  } else {
+    fprintf(
+      stderr,
+      "failed to create bridge ROS 2 service '%s' "
+      "no conversion for package '%s' and type '%s'\n",
+      set_camera_info_service_name.c_str(), set_camera_info_package_name.c_str(), set_camera_info_type_name.c_str());
+  }
   
   
   // ROS 1 asynchronous spinner
