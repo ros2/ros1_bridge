@@ -22,6 +22,7 @@ from launch.actions import ExecuteProcess
 from launch.actions import OpaqueFunction
 
 import launch_testing
+import launch_testing.actions
 import launch_testing_ros
 
 from ros2run.api import get_executable_path
@@ -47,7 +48,7 @@ TEST_BRIDGE_RMW = '@TEST_BRIDGE_RMW@'
      [TEST_BRIDGE_ROS2_TALKER],
      [TEST_BRIDGE_ROS1_ENV] + TEST_BRIDGE_ROS1_LISTENER),
 ])
-def generate_test_description(test_name, talker_cmd, listener_cmd, ready_fn):
+def generate_test_description(test_name, talker_cmd, listener_cmd):
     launch_description = LaunchDescription()
 
     # ROS 1 core
@@ -76,7 +77,7 @@ def generate_test_description(test_name, talker_cmd, listener_cmd, ready_fn):
     launch_description.add_action(listener_process)
 
     launch_description.add_action(
-        OpaqueFunction(function=lambda context: ready_fn())
+        launch_testing.actions.ReadyToTest()
     )
     return launch_description, locals()
 
