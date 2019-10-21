@@ -19,6 +19,7 @@ from launch.actions import ExecuteProcess
 from launch.actions import OpaqueFunction
 
 import launch_testing
+import launch_testing.actions
 
 
 TEST_BRIDGE_ROS1_ENV = '@TEST_BRIDGE_ROS1_ENV@'
@@ -38,7 +39,7 @@ TEST_BRIDGE_ROS2_SERVER = '@TEST_BRIDGE_ROS2_SERVER@'
      [TEST_BRIDGE_ROS2_SERVER],
      [TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_ROS1_CLIENT]),
 ])
-def generate_test_description(test_name, server_cmd, client_cmd, ready_fn):
+def generate_test_description(test_name, server_cmd, client_cmd):
     launch_description = LaunchDescription()
 
     # ROS 1 core
@@ -65,15 +66,17 @@ def generate_test_description(test_name, server_cmd, client_cmd, ready_fn):
     launch_description.add_action(client_process)
 
     launch_description.add_action(
-        OpaqueFunction(function=lambda context: ready_fn())
+        launch_testing.actions.ReadyToTest()
     )
     return launch_description, locals()
 
 
 class TestServicesAcrossDynamicBridge(unittest.TestCase):
-    def test_client_process_terminates_after_a_finite_amount_of_time(self, client_process):
+    def test_client_process_terminates_after_a_finite_amount_of_time(self,
+                                                                     client_process,
+                                                                     proc_info):
         """Test that the client executables terminates after a finite amount of time."""
-        self.proc_info.assertWaitForShutdown(process=client_process, timeout=30)
+        proc_info.assertWaitForShutdown(process=client_process, timeout=30)
 
 
 @launch_testing.post_shutdown_test()
