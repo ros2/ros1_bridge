@@ -32,7 +32,7 @@ get_factory_builtin_interfaces(
   // mapping from string to specialized template
   if (
     (ros1_type_name == "std_msgs/Duration" || ros1_type_name == "") &&
-    ros2_type_name == "builtin_interfaces/Duration")
+    ros2_type_name == "builtin_interfaces/msg/Duration")
   {
     return std::make_shared<
       Factory<
@@ -43,7 +43,7 @@ get_factory_builtin_interfaces(
   }
   if (
     (ros1_type_name == "std_msgs/Time" || ros1_type_name == "") &&
-    ros2_type_name == "builtin_interfaces/Time")
+    ros2_type_name == "builtin_interfaces/msg/Time")
   {
     return std::make_shared<
       Factory<
