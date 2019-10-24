@@ -2,6 +2,13 @@
 Changelog for package ros1_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix showing duplicate keys in --print-pairs (`#225 <https://github.com/ros2/ros1_bridge/issues/225>`_)
+* fix bridging builtin_interfaces Duration and Time (`#224 <https://github.com/ros2/ros1_bridge/issues/224>`_)
+* Don't use features that will be deprecated (`#222 <https://github.com/ros2/ros1_bridge/issues/222>`_)
+* Contributors: Dirk Thomas, Peter Baughman
+
 0.8.0 (2019-09-27)
 ------------------
 * Promote special CLI rules to flags. (`#217 <https://github.com/ros2/ros1_bridge/issues/217>`_)
