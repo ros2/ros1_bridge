@@ -1,0 +1,18 @@
+name: Lint ros1_bridge
+on:
+  pull_request:
+
+jobs:
+  ament_lint:
+    runs-on: ubuntu-18.04
+    strategy:
+      fail-fast: false
+      matrix:
+        linter: [copyright, cppcheck, cpplint, flake8, pep257, uncrustify, xmllint]
+    steps:
+      - uses: actions/checkout@v1
+      - uses: ros-tooling/setup-ros2@0.0.8
+      - uses: ros-tooling/action-ros2-lint@0.0.5
+        with:
+          linter: ${{ matrix.linter }}
+          package-name: ros1_bridge

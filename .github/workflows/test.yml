@@ -1,0 +1,22 @@
+name: "Test ros1_bridge"
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  schedule:
+    # Run every hour. This helps detect flakiness,
+    # and broken external dependencies.
+    - cron:  '0 * * * *'
+
+jobs:
+  test:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: ros-tooling/setup-ros2@0.0.8
+      with:
+        required-ros-distributions: melodic
+    - uses: ros-tooling/action-ros2-ci@0.0.11
+      with:
+        package-name: ros1_bridge
+        source-ros-binary-installation: melodic
