@@ -67,7 +67,13 @@ import rosmsg  # noqa
 def generate_cpp(output_path, template_dir):
     rospack = rospkg.RosPack()
     data = generate_messages(rospack)
-    data.update(generate_services(rospack))
+    message_string_pairs = {
+        (
+            '%s/%s' % (m.ros1_msg.package_name, m.ros1_msg.message_name),
+            '%s/%s' % (m.ros2_msg.package_name, m.ros2_msg.message_name))
+        for m in data['mappings']}
+    data.update(
+        generate_services(rospack, message_string_pairs=message_string_pairs))
 
     template_file = os.path.join(template_dir, 'get_mappings.cpp.em')
     output_file = os.path.join(output_path, 'get_mappings.cpp')
@@ -215,10 +221,12 @@ def generate_messages(rospack=None):
     }
 
 
-def generate_services(rospack=None):
+def generate_services(rospack=None, message_string_pairs=None):
     ros1_srvs = get_ros1_services(rospack=rospack)
     ros2_pkgs, ros2_srvs, mapping_rules = get_ros2_services()
-    services = determine_common_services(ros1_srvs, ros2_srvs, mapping_rules)
+    services = determine_common_services(
+        ros1_srvs, ros2_srvs, mapping_rules,
+        message_string_pairs=message_string_pairs)
     return {
         'services': services,
         'ros2_package_names_srv': ros2_pkgs,
@@ -537,7 +545,12 @@ def determine_message_pairs(ros1_msgs, ros2_msgs, package_pairs, mapping_rules):
     return pairs
 
 
-def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
+def determine_common_services(
+    ros1_srvs, ros2_srvs, mapping_rules, message_string_pairs=None
+):
+    if message_string_pairs is None:
+        message_string_pairs = set()
+
     pairs = []
     services = []
     for ros1_srv in ros1_srvs:
@@ -587,8 +600,11 @@ def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
                 ros1_name = ros1_field[1]
                 ros2_name = ros2_fields[direction][i].name
                 if ros1_type != ros2_type or ros1_name != ros2_name:
-                    match = False
-                    break
+                    # if the message types have a custom mapping their names
+                    # might not be equal, therefore check the message pairs
+                    if (ros1_type, ros2_type) not in message_string_pairs:
+                        match = False
+                        break
                 output[direction].append({
                     'basic': False if '/' in ros1_type else True,
                     'array': True if '[]' in ros1_type else False,
