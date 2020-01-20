@@ -56,7 +56,6 @@ How are ROS 1 and 2 services associated with each other?
 --------------------------------------------------------
 
 Automatic mapping between ROS 1 and 2 services is performed similar to messages.
-Except that currently different field names are not supported.
 
 How can I specify custom mapping rule for services?
 ---------------------------------------------------
@@ -73,7 +72,12 @@ In case of services, each mapping rule can have one of two types:
    - a ``ros1_service_name``
    - a ``ros2_service_name``
 
-A custom field mapping is currently not supported for services.
+3. A field mapping rule is defined by the attributes of a message mapping rule and:
+
+   - a dictionary ``request_fields_1_to_2`` or ``response_fields_1_to_2`` mapping ROS 1 field selections to ROS 2 field selections.
+     A field selection is a sequence of field names separated by ``.``, that specifies the path to a field starting from a message similar to the message fields.
+     All fields must be listed explicitly - not listed fields are not mapped implicitly when their names match.
+
 
 How can I install mapping rule files?
 -------------------------------------
