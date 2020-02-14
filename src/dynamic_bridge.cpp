@@ -392,9 +392,10 @@ void get_ros1_service_info(
     return;
   }
   ros::TransportTCPPtr transport(new ros::TransportTCP(nullptr, ros::TransportTCP::SYNCHRONOUS));
-  auto transport_exit = rclcpp::make_scope_exit([transport]() {
-        transport->close();
-      });
+  auto transport_exit = rclcpp::make_scope_exit(
+    [transport]() {
+      transport->close();
+    });
   if (!transport->connect(host, port)) {
     fprintf(stderr, "Failed to connect to %s:%d\n", host.data(), port);
     return;
@@ -588,7 +589,8 @@ int main(int argc, char * argv[])
           current_ros1_subscribers[topic_name] = topic.datatype;
         }
         if (output_topic_introspection) {
-          printf("  ROS 1: %s (%s) [%s pubs, %s subs]\n",
+          printf(
+            "  ROS 1: %s (%s) [%s pubs, %s subs]\n",
             topic_name.c_str(), topic.datatype.c_str(),
             has_publisher ? ">0" : "0", has_subscriber ? ">0" : "0");
         }
@@ -702,7 +704,8 @@ int main(int argc, char * argv[])
         }
 
         if (output_topic_introspection) {
-          printf("  ROS 2: %s (%s) [%zu pubs, %zu subs]\n",
+          printf(
+            "  ROS 2: %s (%s) [%zu pubs, %zu subs]\n",
             topic_name.c_str(), topic_type.c_str(), publisher_count, subscriber_count);
         }
       }
