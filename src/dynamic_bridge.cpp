@@ -460,22 +460,7 @@ int main(int argc, char * argv[])
   }
 
   // ROS 2 node
-
-  // TODO(hidmic): remove when Fast-RTPS supports registering multiple
-  //               typesupports for the same topic in the same process.
-  //               See https://github.com/ros2/rmw_fastrtps/issues/265.
-  std::vector<const char *> args(argv, argv + argc);
-
-  const char * rmw_implementation = "";
-  const char * error = rcutils_get_env("RMW_IMPLEMENTATION", &rmw_implementation);
-  if (NULL != error) {
-    throw std::runtime_error(error);
-  }
-  if (0 == strcmp(rmw_implementation, "") || NULL != strstr(rmw_implementation, "fastrtps")) {
-    args.push_back("--ros-args");
-    args.push_back("--disable-rosout-logs");
-  }
-  rclcpp::init(args.size(), args.data());
+  rclcpp::init(argc, argv);
 
   auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
 
