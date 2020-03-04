@@ -84,24 +84,25 @@ int main(int argc, char * argv[])
       }
       printf(
         "Trying to create bidirectional bridge for topic '%s' "
-        "with ROS 1 type '%s' and ROS 2 type '%s'\n",
-        topic_name.c_str(), type_name.c_str(), type_name.c_str());
+        "with ROS 2 type '%s'\n",
+        topic_name.c_str(), type_name.c_str());
 
       try {
         ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
-          ros1_node, ros2_node, type_name, type_name, topic_name, queue_size);
+          ros1_node, ros2_node, "", type_name, topic_name, queue_size);
         all_handles.push_back(handles);
       } catch (std::runtime_error & e) {
         fprintf(
           stderr,
           "failed to create bidirectional bridge for topic '%s' "
-          "with ROS 1 type '%s' and ROS 2 type '%s': %s\n",
-          topic_name.c_str(), type_name.c_str(), type_name.c_str(), e.what());
+          "with ROS 2 type '%s': %s\n",
+          topic_name.c_str(), type_name.c_str(), e.what());
       }
     }
   } else {
     fprintf(
-      stderr, "The parameter '%s' either doesn't exist or isn't an array\n", topics_parameter_name);
+      stderr,
+      "The parameter '%s' either doesn't exist or isn't an array\n", topics_parameter_name);
   }
 
   // ROS 1 Services in ROS 2
@@ -113,9 +114,9 @@ int main(int argc, char * argv[])
     for (size_t i = 0; i < static_cast<size_t>(services_1_to_2.size()); ++i) {
       std::string service_name = static_cast<std::string>(services_1_to_2[i]["service"]);
       std::string package_name = static_cast<std::string>(services_1_to_2[i]["package"]);
-      std::string type_name    = static_cast<std::string>(services_1_to_2[i]["type"]);
+      std::string type_name = static_cast<std::string>(services_1_to_2[i]["type"]);
       printf(
-        "Trying to create bridge for ROS1 service '%s' "
+        "Trying to create bridge for ROS 2 service '%s' "
         "with package '%s' and type '%s'\n",
         service_name.c_str(), package_name.c_str(), type_name.c_str());
 
@@ -123,19 +124,21 @@ int main(int argc, char * argv[])
         "ros2", package_name, type_name);
       if (factory) {
         try {
-          service_bridges_1_to_2.push_back(factory->service_bridge_1_to_2(ros1_node, ros2_node, service_name));
+          service_bridges_1_to_2.push_back(
+            factory->service_bridge_1_to_2(
+              ros1_node, ros2_node, service_name));
           printf("Created 1 to 2 bridge for service %s\n", service_name.c_str());
         } catch (std::runtime_error & e) {
           fprintf(
             stderr,
-            "failed to create bridge ROS1 service '%s' "
+            "failed to create bridge ROS 1 service '%s' "
             "with package '%s' and type '%s': %s\n",
             service_name.c_str(), type_name.c_str(), type_name.c_str(), e.what());
         }
       } else {
         fprintf(
           stderr,
-          "failed to create bridge ROS1 service '%s' "
+          "failed to create bridge ROS 1 service '%s' "
           "no conversion for package '%s' and type '%s'\n",
           service_name.c_str(), package_name.c_str(), type_name.c_str());
       }
@@ -143,7 +146,54 @@ int main(int argc, char * argv[])
 
   } else {
     fprintf(
-      stderr, "The parameter '%s' either doesn't exist or isn't an array\n", services_1_to_2_parameter_name);
+      stderr,
+      "The parameter '%s' either doesn't exist or isn't an array\n",
+      services_1_to_2_parameter_name);
+  }
+
+  // ROS 2 Services in ROS 1
+  XmlRpc::XmlRpcValue services_2_to_1;
+  if (
+    ros1_node.getParam(services_2_to_1_parameter_name, services_2_to_1) &&
+    services_2_to_1.getType() == XmlRpc::XmlRpcValue::TypeArray)
+  {
+    for (size_t i = 0; i < static_cast<size_t>(services_2_to_1.size()); ++i) {
+      std::string service_name = static_cast<std::string>(services_2_to_1[i]["service"]);
+      std::string package_name = static_cast<std::string>(services_2_to_1[i]["package"]);
+      std::string type_name = static_cast<std::string>(services_2_to_1[i]["type"]);
+      printf(
+        "Trying to create bridge for ROS 1 service '%s' "
+        "with package '%s' and type '%s'\n",
+        service_name.c_str(), package_name.c_str(), type_name.c_str());
+
+      auto factory = ros1_bridge::get_service_factory(
+        "ros1", package_name, type_name);
+      if (factory) {
+        try {
+          service_bridges_2_to_1.push_back(
+            factory->service_bridge_2_to_1(ros1_node, ros2_node, service_name));
+          printf("Created 2 to 1 bridge for service %s\n", service_name.c_str());
+        } catch (std::runtime_error & e) {
+          fprintf(
+            stderr,
+            "failed to create bridge ROS 2 service '%s' "
+            "with package '%s' and type '%s': %s\n",
+            service_name.c_str(), type_name.c_str(), type_name.c_str(), e.what());
+        }
+      } else {
+        fprintf(
+          stderr,
+          "failed to create bridge ROS 2 service '%s' "
+          "no conversion for package '%s' and type '%s'\n",
+          service_name.c_str(), package_name.c_str(), type_name.c_str());
+      }
+    }
+
+  } else {
+    fprintf(
+      stderr,
+      "The parameter '%s' either doesn't exist or isn't an array\n",
+      services_2_to_1_parameter_name);
   }
   
   // ROS 2 Services in ROS 1

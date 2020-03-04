@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstring>
 #include <map>
 #include <memory>
 #include <set>
@@ -36,16 +37,12 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/scope_exit.hpp"
 
+#include "rcutils/get_env.h"
+
 #include "ros1_bridge/bridge.hpp"
 
 
 std::mutex g_bridge_mutex;
-
-namespace ros1_bridge
-{
-std::unique_ptr<ros1_bridge::ServiceFactoryInterface>
-get_service_factory(const std::string &, const std::string &, const std::string &);
-}
 
 struct Bridge1to2HandlesAndMessageTypes
 {
@@ -395,9 +392,10 @@ void get_ros1_service_info(
     return;
   }
   ros::TransportTCPPtr transport(new ros::TransportTCP(nullptr, ros::TransportTCP::SYNCHRONOUS));
-  auto transport_exit = rclcpp::make_scope_exit([transport]() {
-        transport->close();
-      });
+  auto transport_exit = rclcpp::make_scope_exit(
+    [transport]() {
+      transport->close();
+    });
   if (!transport->connect(host, port)) {
     fprintf(stderr, "Failed to connect to %s:%d\n", host.data(), port);
     return;
@@ -461,13 +459,14 @@ int main(int argc, char * argv[])
     return 0;
   }
 
+  // ROS 2 node
+  rclcpp::init(argc, argv);
+
+  auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
+
   // ROS 1 node
   ros::init(argc, argv, "ros_bridge");
   ros::NodeHandle ros1_node;
-
-  // ROS 2 node
-  rclcpp::init(argc, argv);
-  auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
 
   // mapping of available topic names to type names
   std::map<std::string, std::string> ros1_publishers;
@@ -575,7 +574,8 @@ int main(int argc, char * argv[])
           current_ros1_subscribers[topic_name] = topic.datatype;
         }
         if (output_topic_introspection) {
-          printf("  ROS 1: %s (%s) [%s pubs, %s subs]\n",
+          printf(
+            "  ROS 1: %s (%s) [%s pubs, %s subs]\n",
             topic_name.c_str(), topic.datatype.c_str(),
             has_publisher ? ">0" : "0", has_subscriber ? ">0" : "0");
         }
@@ -689,7 +689,8 @@ int main(int argc, char * argv[])
         }
 
         if (output_topic_introspection) {
-          printf("  ROS 2: %s (%s) [%ld pubs, %ld subs]\n",
+          printf(
+            "  ROS 2: %s (%s) [%zu pubs, %zu subs]\n",
             topic_name.c_str(), topic_type.c_str(), publisher_count, subscriber_count);
         }
       }
