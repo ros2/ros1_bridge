@@ -599,10 +599,10 @@ def determine_common_services(
                 ros2_type = ros2_fields[direction][i].type
                 ros1_name = ros1_field[1]
                 ros2_name = ros2_fields[direction][i].name
-                if ros1_type != ros2_type or ros1_name != ros2_name:
+                if ros1_type != str(ros2_type) or ros1_name != ros2_name:
                     # if the message types have a custom mapping their names
                     # might not be equal, therefore check the message pairs
-                    if (ros1_type, ros2_type) not in message_string_pairs:
+                    if (ros1_type, str(ros2_type)) not in message_string_pairs:
                         match = False
                         break
                 if not ros2_type.array_size and not ros2_type.is_upper_bound:
