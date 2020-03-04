@@ -30,11 +30,6 @@
 
 #include "ros1_bridge/bridge.hpp"
 
-namespace ros1_bridge
-{
-std::unique_ptr<ros1_bridge::ServiceFactoryInterface>
-get_service_factory(const std::string &, const std::string &, const std::string &);
-}
 
 int main(int argc, char * argv[])
 {
@@ -195,49 +190,7 @@ int main(int argc, char * argv[])
       "The parameter '%s' either doesn't exist or isn't an array\n",
       services_2_to_1_parameter_name);
   }
-  
-  // ROS 2 Services in ROS 1
-  XmlRpc::XmlRpcValue services_2_to_1;
-  if (
-    ros1_node.getParam(services_2_to_1_parameter_name, services_2_to_1) &&
-    services_2_to_1.getType() == XmlRpc::XmlRpcValue::TypeArray)
-  {
-    for (size_t i = 0; i < static_cast<size_t>(services_2_to_1.size()); ++i) {
-      std::string service_name = static_cast<std::string>(services_2_to_1[i]["service"]);
-      std::string package_name = static_cast<std::string>(services_2_to_1[i]["package"]);
-      std::string type_name    = static_cast<std::string>(services_2_to_1[i]["type"]);
-      printf(
-        "Trying to create bridge for ROS2 service '%s' "
-        "with package '%s' and type '%s'\n",
-        service_name.c_str(), package_name.c_str(), type_name.c_str());
 
-      auto factory = ros1_bridge::get_service_factory(
-        "ros1", package_name, type_name);
-      if (factory) {
-        try {
-          service_bridges_2_to_1.push_back(factory->service_bridge_2_to_1(ros1_node, ros2_node, service_name));
-          printf("Created 2 to 1 bridge for service %s\n", service_name.c_str());
-        } catch (std::runtime_error & e) {
-          fprintf(
-            stderr,
-            "failed to create bridge ROS2 service '%s' "
-            "with package '%s' and type '%s': %s\n",
-            service_name.c_str(), type_name.c_str(), type_name.c_str(), e.what());
-        }
-      } else {
-        fprintf(
-          stderr,
-          "failed to create bridge ROS2 service '%s' "
-          "no conversion for package '%s' and type '%s'\n",
-          service_name.c_str(), package_name.c_str(), type_name.c_str());
-      }
-    }
-
-  } else {
-    fprintf(
-      stderr, "The parameter '%s' either doesn't exist or isn't an array\n", services_2_to_1_parameter_name);
-  }
-  
   // ROS 1 asynchronous spinner
   ros::AsyncSpinner async_spinner(1);
   async_spinner.start();
