@@ -277,11 +277,11 @@ void ServiceFactory<
 ) {
 @[      for field in service["fields"][type.lower()]]@
 @[        if field["array"]]@
-@[          if field["upper_bound_array"] is not None]@
+@[          if field["is_upper_bound"]]@
   // ensure array size
-@[            if field["upper_bound_array"] > 0 and frm == "1"]@
+@[            if field["array_size"] > 0 and frm == "1"]@
   // check boundary
-                assert(req@(frm).@(field["ros1"]["name"]).size() <= @(field["upper_bound_array"]));
+                assert(req@(frm).@(field["ros1"]["name"]).size() <= @(field["array_size"]));
 @[            end if]@
   // dynamic arrays must be resized
   req@(to).@(field["ros" + to]["name"]).resize(req@(frm).@(field["ros" + frm]["name"]).size());

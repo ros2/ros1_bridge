@@ -606,15 +606,18 @@ def determine_common_services(
                         match = False
                         break
                 if not ros2_type.array_size and not ros2_type.is_upper_bound:
-                    upper_bound_array = ros2_type.array_size if ros2_type.is_upper_bound else -1
+                    array_size = ros2_type.array_size if ros2_type.is_upper_bound else -1
                 else:
-                    upper_bound_array = None
-                ros2_cpptype = ros2_type.pkg_name + \
-                    '::msg::' + ros2_type.type if ros2_type.pkg_name else ''
+                    array_size = None
+                if ros2_type.pkg_name:
+                    ros2_cpptype = ros2_type.pkg_name + "::msg::" + ros2_type.type
+                else:
+                    ros2_cpptype = str(ros2_type)
                 output[direction].append({
                     'basic': not ros2_type.pkg_name,
                     'array': ros2_type.is_array,
-                    'upper_bound_array': upper_bound_array,
+                    'is_upper_bound': ros2_type.is_upper_bound,
+                    'array_size': array_size,
                     'ros1': {
                         'name': ros1_name,
                         'type': ros1_type.rstrip('[]'),
