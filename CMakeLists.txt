@@ -90,17 +90,11 @@ list(APPEND generated_files "${generated_path}/get_mappings.cpp")
 
 # generate per interface compilation units to keep the memory usage low
 ament_index_get_resources(ros2_interface_packages "rosidl_interfaces")
+# actionlib_msgs is deprecated, but we will quiet the warning until the bridge has support for
+# ROS actions: https://github.com/ros2/design/issues/195
+set(actionlib_msgs_DEPRECATED_QUIET TRUE)
 foreach(package_name ${ros2_interface_packages})
-  # actionlib_msgs is deprecated, but we will quiet the warning until the bridge has support for ROS actions
-  # https://github.com/ros2/design/issues/195
-  if("${package_name}" STREQUAL "actionlib_msgs")
-    set(_cache_cmake_warn_deprecated ${CMAKE_WARN_DEPRECATED})
-    set(CMAKE_WARN_DEPRECATED FALSE)
-  endif()
   find_package(${package_name} QUIET REQUIRED)
-  if("${package_name}" STREQUAL "actionlib_msgs")
-    set(CMAKE_WARN_DEPRECATED ${_cache_cmake_warn_deprecated})
-  endif()
   message(STATUS "Found ${package_name}: ${${package_name}_VERSION} (${${package_name}_DIR})")
   if(NOT "${package_name}" STREQUAL "builtin_interfaces")
     list(APPEND generated_files "${generated_path}/${package_name}_factories.cpp")
