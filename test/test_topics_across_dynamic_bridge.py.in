@@ -40,15 +40,15 @@ TEST_BRIDGE_ROS2_LISTENER = get_executable_path(
 TEST_BRIDGE_RMW = '@TEST_BRIDGE_RMW@'
 
 
-@launch_testing.parametrize('test_name,talker_cmd,listener_cmd', [
+@launch_testing.parametrize('test_name,talker_cmd,listener_cmd,logs_stream', [
     ('ros1_talker_ros2_listener_across_dynamic_bridge',
      [TEST_BRIDGE_ROS1_ENV] + TEST_BRIDGE_ROS1_TALKER,
-     [TEST_BRIDGE_ROS2_LISTENER]),
+     [TEST_BRIDGE_ROS2_LISTENER], 'stderr'),
     ('ros2_talker_ros1_listener_across_dynamic_bridge',
      [TEST_BRIDGE_ROS2_TALKER],
-     [TEST_BRIDGE_ROS1_ENV] + TEST_BRIDGE_ROS1_LISTENER),
+     [TEST_BRIDGE_ROS1_ENV] + TEST_BRIDGE_ROS1_LISTENER, 'stdout'),
 ])
-def generate_test_description(test_name, talker_cmd, listener_cmd):
+def generate_test_description(test_name, talker_cmd, listener_cmd, logs_stream):
     launch_description = LaunchDescription()
 
     # ROS 1 core
@@ -84,7 +84,7 @@ def generate_test_description(test_name, talker_cmd, listener_cmd):
 
 class TestTopicsAcrossDynamicBridge(unittest.TestCase):
 
-    def test_listener_output(self, proc_output, listener_process):
+    def test_listener_output(self, proc_output, listener_process, logs_stream):
         output_filter = launch_testing_ros.tools.basic_output_filter(
             filtered_rmw_implementation=TEST_BRIDGE_RMW
         )
@@ -92,7 +92,8 @@ class TestTopicsAcrossDynamicBridge(unittest.TestCase):
             expected_output=[re.compile('I heard.+')],
             process=listener_process,
             output_filter=output_filter,
-            timeout=10
+            timeout=10,
+            stream=logs_stream
         )
 
 
