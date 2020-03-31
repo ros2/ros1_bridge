@@ -19,6 +19,15 @@
 
 namespace ros1_bridge
 {
+rmw_qos_profile_t
+get_qos(size_t queue_size, bool transient_local, bool reliable) {
+    auto qos = rclcpp::QoS(rclcpp::KeepLast(queue_size)) ;
+
+    if (transient_local) { qos.transient_local(); }
+    if (reliable) { qos.reliable(); }
+
+    return qos.get_rmw_qos_profile();
+  }
 
 Bridge1to2Handles
 create_bridge_from_1_to_2(
@@ -29,11 +38,14 @@ create_bridge_from_1_to_2(
   size_t subscriber_queue_size,
   const std::string & ros2_type_name,
   const std::string & ros2_topic_name,
-  size_t publisher_queue_size)
+  size_t publisher_queue_size,
+  bool transient_local,
+  bool reliable)
 {
   auto factory = get_factory(ros1_type_name, ros2_type_name);
+  auto qos = get_qos(publisher_queue_size, transient_local, reliable);
   auto ros2_pub = factory->create_ros2_publisher(
-    ros2_node, ros2_topic_name, publisher_queue_size);
+    ros2_node, ros2_topic_name, qos);
 
   auto ros1_sub = factory->create_ros1_subscriber(
     ros1_node, ros1_topic_name, subscriber_queue_size, ros2_pub, ros2_node->get_logger());
@@ -54,14 +66,18 @@ create_bridge_from_2_to_1(
   const std::string & ros1_type_name,
   const std::string & ros1_topic_name,
   size_t publisher_queue_size,
-  rclcpp::PublisherBase::SharedPtr ros2_pub)
+  rclcpp::PublisherBase::SharedPtr ros2_pub,
+  bool transient_local,
+  bool reliable,
+  bool latch)
 {
   auto factory = get_factory(ros1_type_name, ros2_type_name);
   auto ros1_pub = factory->create_ros1_publisher(
-    ros1_node, ros1_topic_name, publisher_queue_size);
+    ros1_node, ros1_topic_name, publisher_queue_size, latch);
 
+  auto qos = get_qos(subscriber_queue_size, transient_local, reliable);
   auto ros2_sub = factory->create_ros2_subscriber(
-    ros2_node, ros2_topic_name, subscriber_queue_size, ros1_pub, ros2_pub);
+    ros2_node, ros2_topic_name, qos, ros1_pub, ros2_pub);
 
   Bridge2to1Handles handles;
   handles.ros2_subscriber = ros2_sub;
@@ -76,17 +92,20 @@ create_bidirectional_bridge(
   const std::string & ros1_type_name,
   const std::string & ros2_type_name,
   const std::string & topic_name,
-  size_t queue_size)
+  size_t queue_size,
+  bool transient_local,
+  bool reliable,
+  bool latch)
 {
   RCLCPP_INFO(ros2_node->get_logger(), "create bidirectional bridge for topic " + topic_name);
   BridgeHandles handles;
   handles.bridge1to2 = create_bridge_from_1_to_2(
     ros1_node, ros2_node,
-    ros1_type_name, topic_name, queue_size, ros2_type_name, topic_name, queue_size);
+    ros1_type_name, topic_name, queue_size, ros2_type_name, topic_name, queue_size, transient_local, reliable);
   handles.bridge2to1 = create_bridge_from_2_to_1(
     ros2_node, ros1_node,
     ros2_type_name, topic_name, queue_size, ros1_type_name, topic_name, queue_size,
-    handles.bridge1to2.ros2_publisher);
+    handles.bridge1to2.ros2_publisher, transient_local, reliable, latch);
   return handles;
 }
 

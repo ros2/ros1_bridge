@@ -1,3 +1,4 @@
+.. _index:
 ros1_bridge
 ===========
 

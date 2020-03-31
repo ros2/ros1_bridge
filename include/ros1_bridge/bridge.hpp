@@ -72,6 +72,9 @@ get_factory(
 std::unique_ptr<ServiceFactoryInterface>
 get_service_factory(const std::string &, const std::string &, const std::string &);
 
+rmw_qos_profile_t
+get_qos(size_t queue_size, bool transient_local, bool reliable);
+
 Bridge1to2Handles
 create_bridge_from_1_to_2(
   ros::NodeHandle ros1_node,
@@ -81,7 +84,9 @@ create_bridge_from_1_to_2(
   size_t subscriber_queue_size,
   const std::string & ros2_type_name,
   const std::string & ros2_topic_name,
-  size_t publisher_queue_size);
+  size_t publisher_queue_size,
+  bool transient_local = false,
+  bool reliable = false);
 
 Bridge2to1Handles
 create_bridge_from_2_to_1(
@@ -93,7 +98,10 @@ create_bridge_from_2_to_1(
   const std::string & ros1_type_name,
   const std::string & ros1_topic_name,
   size_t publisher_queue_size,
-  rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr);
+  rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr,
+  bool transient_local = false,
+  bool reliable = false,
+  bool latch = false);
 
 BridgeHandles
 create_bidirectional_bridge(
@@ -102,7 +110,10 @@ create_bidirectional_bridge(
   const std::string & ros1_type_name,
   const std::string & ros2_type_name,
   const std::string & topic_name,
-  size_t queue_size = 10);
+  size_t queue_size = 10,
+  bool transient_local = false,
+  bool reliable = false,
+  bool latch = false);
 
 }  // namespace ros1_bridge
 
