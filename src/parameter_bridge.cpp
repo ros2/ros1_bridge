@@ -109,7 +109,7 @@ int main(int argc, char * argv[])
     for (size_t i = 0; i < static_cast<size_t>(services_1_to_2.size()); ++i) {
       std::string service_name = static_cast<std::string>(services_1_to_2[i]["service"]);
       std::string package_name = static_cast<std::string>(services_1_to_2[i]["package"]);
-      std::string type_name = static_cast<std::string>(services_1_to_2[i]["type"]);
+      std::string type_name = "srv/" + static_cast<std::string>(services_1_to_2[i]["type"]);
       printf(
         "Trying to create bridge for ROS 2 service '%s' "
         "with package '%s' and type '%s'\n",
