@@ -252,6 +252,9 @@ def get_ros2_messages():
     # get messages from packages
     resource_type = 'rosidl_interfaces'
     resources = ament_index_python.get_resources(resource_type)
+    # Do not include messages in rmw_dds_common
+    del resources['rmw_dds_common']
+
     for package_name, prefix_path in resources.items():
         pkgs.append(package_name)
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
@@ -305,6 +308,9 @@ def get_ros2_services():
     rules = []
     resource_type = 'rosidl_interfaces'
     resources = ament_index_python.get_resources(resource_type)
+    # Do not include messages in rmw_dds_common
+    del resources['rmw_dds_common']
+
     for package_name, prefix_path in resources.items():
         pkgs.append(package_name)
         resource, _ = ament_index_python.get_resource(resource_type, package_name)

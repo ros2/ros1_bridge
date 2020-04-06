@@ -90,6 +90,9 @@ list(APPEND generated_files "${generated_path}/get_mappings.cpp")
 
 # generate per interface compilation units to keep the memory usage low
 ament_index_get_resources(ros2_interface_packages "rosidl_interfaces")
+# Do not generate factories for interfaces in rmw_dds_common
+list(REMOVE_ITEM ros2_interface_packages rmw_dds_common)
+
 # actionlib_msgs is deprecated, but we will quiet the warning until the bridge has support for
 # ROS actions: https://github.com/ros2/design/issues/195
 set(actionlib_msgs_DEPRECATED_QUIET TRUE)
