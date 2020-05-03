@@ -16,6 +16,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(rclcpp_action REQUIRED)
 
 # find ROS 1 packages
 set(cmake_extras_files cmake/find_ros1_package.cmake cmake/find_ros1_interface_packages.cmake)
@@ -43,6 +44,7 @@ if(NOT ros1_roscpp_FOUND)
 endif()
 
 find_ros1_package(std_msgs REQUIRED)
+find_ros1_package(actionlib REQUIRED)
 
 # Dependency that we should only look for if ROS 1 is installed (it's not present on a ROS 2
 # system; see https://github.com/ros2/ros1_bridge/pull/331#issuecomment-1188111510)
@@ -146,7 +148,7 @@ foreach(package_name ${ros2_interface_packages})
       file(TO_CMAKE_PATH "${interface_file}" interface_name)
       get_filename_component(interface_basename "${interface_name}" NAME_WE)
       # skipping actions and request and response messages of services
-      if(NOT "${interface_name}" MATCHES "^(msg|srv)/" OR "${interface_basename}" MATCHES "_(Request|Response)$")
+      if(NOT "${interface_name}" MATCHES "^(msg|srv|action)/" OR "${interface_basename}" MATCHES "_(Request|Response)$")
         continue()
       endif()
       string(REPLACE "/" "__" interface_name "${interface_name}")
@@ -227,6 +229,7 @@ ament_target_dependencies(${PROJECT_NAME}
   ${prefixed_ros1_message_packages}
   ${ros2_interface_packages}
   "rclcpp"
+  "rclcpp_action"
   "ros1_roscpp"
   "ros1_std_msgs")
 
@@ -240,6 +243,13 @@ custom_executable(static_bridge
   ROS1_DEPENDENCIES
   TARGET_DEPENDENCIES ${ros2_interface_packages})
 target_link_libraries(static_bridge
+  ${PROJECT_NAME})
+
+custom_executable(action_bridge
+  "src/action_bridge.cpp"
+  ROS1_DEPENDENCIES
+  TARGET_DEPENDENCIES ${ros2_interface_packages})
+target_link_libraries(action_bridge
   ${PROJECT_NAME})
 
 custom_executable(parameter_bridge
