@@ -72,6 +72,9 @@ get_factory(
 std::unique_ptr<ServiceFactoryInterface>
 get_service_factory(const std::string &, const std::string &, const std::string &);
 
+std::unique_ptr<ActionFactoryInterface>
+get_action_factory(const std::string &, const std::string &, const std::string &);
+
 Bridge1to2Handles
 create_bridge_from_1_to_2(
   ros::NodeHandle ros1_node,
