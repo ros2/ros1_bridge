@@ -57,7 +57,7 @@ Configuration Syntax
    :header: "key", "required", "default", "description"
    :widths: 20, 10, 10, 50
 
-   **topic_name**, YES, N/A, Name of the topic to bridge which is used in both ROS1/2
+   **topic**, YES, N/A, Name of the topic to bridge which is used in both ROS1/2
    **type**,       YES, N/A, message type in ROS2 (see `here <./index.rst>`_ how to map ROS1 and ROS2 messages)
    **queue_size**, NO,  100, queue size used in both ROS1/2 
    **direction**,  NO,  bidirectionl, ``bidirectional`` or ``1to2`` or ``2to1``
