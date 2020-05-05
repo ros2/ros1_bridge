@@ -60,19 +60,6 @@ public:
     using ROS2GoalHandle = typename rclcpp_action::ClientGoalHandle<ROS2_T>::SharedPtr;
     using ROS2ClientSharedPtr = typename rclcpp_action::Client<ROS2_T>::SharedPtr;
     using ROS2SendGoalOptions = typename rclcpp_action::Client<ROS2_T>::SendGoalOptions;
-    // ActionBridge_1_2(
-    //     ros::NodeHandle ros1_node,
-    //     rclcpp::Node::SharedPtr ros2_node,
-    //     const std::string action_name)
-    //     : ros1_node_(ros1_node), ros2_node_(ros2_node),
-    //       server_(ros1_node, action_name,
-    //               std::bind(&ActionBridge_1_2::goal_cb, this, std::placeholders::_1),
-    //               std::bind(&ActionBridge_1_2::cancel_cb, this, std::placeholders::_1),
-    //               false)
-    // {
-    //     server_.start();
-    //     client_ = rclcpp_action::create_client<ROS2_T>(ros2_node, action_name);
-    // }
 
     virtual void create_server_client(ros::NodeHandle ros1_node,
                                       rclcpp::Node::SharedPtr ros2_node,
@@ -122,29 +109,6 @@ public:
             goals_.erase(goal_id);
         }).detach();
     }
-
-    // static int main(const std::string &action_name, int argc, char *argv[])
-    // {
-    //     std::string node_name = "action_bridge_" + action_name;
-    //     std::replace(node_name.begin(), node_name.end(), '/', '_');
-    //     // ROS 1 node
-    //     ros::init(argc, argv, node_name);
-    //     ros::NodeHandle ros1_node;
-
-    //     // ROS 2 node
-    //     rclcpp::init(argc, argv);
-    //     auto ros2_node = rclcpp::Node::make_shared(node_name);
-
-    //     ActionBridge_1_2<ROS1_T, ROS2_T> action_bridge(ros1_node, ros2_node, action_name);
-
-    //     // // ROS 1 asynchronous spinner
-    //     ros::AsyncSpinner async_spinner(0);
-    //     async_spinner.start();
-
-    //     rclcpp::spin(ros2_node);
-    //     ros::shutdown();
-    //     return 0;
-    // }
 
 private:
     class GoalHandler
@@ -268,23 +232,6 @@ public:
     using ROS2Result = typename ROS2_T::Result;
     using ROS2ServerSharedPtr = typename rclcpp_action::Server<ROS2_T>::SharedPtr;
     using ROS2SendGoalOptions = typename rclcpp_action::Client<ROS2_T>::SendGoalOptions;
-    // ActionBridge_2_1(
-    //     ros::NodeHandle ros1_node,
-    //     rclcpp::Node::SharedPtr ros2_node,
-    //     const std::string action_name)
-    //     : ros1_node_(ros1_node), ros2_node_(ros2_node)
-    // {
-    //     client_ = std::make_shared<ROS1Client>(ros1_node, action_name);
-
-    //     server_ = rclcpp_action::create_server<ROS2_T>(ros2_node_->get_node_base_interface(),
-    //                                                    ros2_node_->get_node_clock_interface(),
-    //                                                    ros2_node_->get_node_logging_interface(),
-    //                                                    ros2_node_->get_node_waitables_interface(),
-    //                                                    action_name,
-    //                                                    std::bind(&ActionBridge_2_1::handle_goal, this, std::placeholders::_1, std::placeholders::_2),
-    //                                                    std::bind(&ActionBridge_2_1::handle_cancel, this, std::placeholders::_1),
-    //                                                    std::bind(&ActionBridge_2_1::handle_accepted, this, std::placeholders::_1));
-    // }
 
     virtual void create_server_client(ros::NodeHandle ros1_node,
                                       rclcpp::Node::SharedPtr ros2_node,
@@ -356,29 +303,6 @@ public:
         })
             .detach();
     }
-
-    // static int main(const std::string &action_name, int argc, char *argv[])
-    // {
-    //     std::string node_name = "action_bridge_" + action_name;
-    //     std::replace(node_name.begin(), node_name.end(), '/', '_');
-    //     // ROS 1 node
-    //     ros::init(argc, argv, node_name);
-    //     ros::NodeHandle ros1_node;
-
-    //     // ROS 2 node
-    //     rclcpp::init(argc, argv);
-    //     auto ros2_node = rclcpp::Node::make_shared(node_name);
-
-    //     ActionBridge_2_1<ROS1_T, ROS2_T> action_bridge(ros1_node, ros2_node, action_name);
-
-    //     // // ROS 1 asynchronous spinner
-    //     ros::AsyncSpinner async_spinner(0);
-    //     async_spinner.start();
-
-    //     rclcpp::spin(ros2_node);
-    //     ros::shutdown();
-    //     return 0;
-    // }
 
 private:
     class GoalHandler
