@@ -48,7 +48,7 @@ from rosidl_parser.definition import UnboundedString
 
 // include ROS 1 actions
 @[for action in mapped_actions]@
-#include <@(action["ros1_package"])/@(action["ros1_name"]).h>
+#include <@(action["ros1_package"])/@(action["ros1_name"])Action.h>
 @[end for]@
 
 // include ROS 2 actions
@@ -125,26 +125,24 @@ get_action_factory_@(ros2_package_name)__@(interface_type)__@(interface.message_
 @[end if]@
 @[for action in mapped_actions]@
   if (
-    (
-      ros_id == "ros1" &&
-      package_name == "@(action["ros1_package"])" &&
-      action_name == "@(action["ros1_name"])"
-    ) {
-      return std::unique_ptr<ActionFactoryInterface>(new ActionFactory_2_1<
-        @(action["ros1_package"])::@(action["ros1_name"]),
-        @(action["ros2_package"])::srv::@(action["ros2_name"])
-      >);
-    } 
-    else if    
+    ros_id == "ros1" &&
+    package_name == "@(action["ros1_package"])" &&
+    action_name == "@(action["ros1_name"])"
+  ) {
+    return std::unique_ptr<ActionFactoryInterface>(new ActionFactory_2_1<
+      @(action["ros1_package"])::@(action["ros1_name"])Action,
+      @(action["ros2_package"])::action::@(action["ros2_name"])
+    >);
+  }
+  else if
     (
       ros_id == "ros2" &&
       package_name == "@(action["ros2_package"])" &&
       action_name == "action/@(action["ros2_name"])"
-    )
   ) {
     return std::unique_ptr<ActionFactoryInterface>(new ActionFactory_1_2<
-      @(action["ros1_package"])::@(action["ros1_name"]),
-      @(action["ros2_package"])::srv::@(action["ros2_name"])
+      @(action["ros1_package"])::@(action["ros1_name"])Action,
+      @(action["ros2_package"])::action::@(action["ros2_name"])
     >);
   }
 @[end for]@
@@ -387,16 +385,29 @@ void ServiceFactory<
 @[  for frm, to in [("1", "2"), ("2", "1")]]@
 @[    for type in ["Goal", "Result", "Feedback"]]@
 template <>
-void ActionFactory_@(frm)_@(to)<
+@[      if type == "Goal"]@
+@{
+frm_, to_ = frm, to
+const_1 = "const "
+const_2 = ""
+}@
+@[      else]@
+@{
+frm_, to_ = to, frm
+const_1 = ""
+const_2 = "const "
+}@
+@[      end if]@
+void ActionFactory_@(frm_)_@(to_)<
 @(action["ros1_package"])::@(action["ros1_name"])Action,
 @(action["ros2_package"])::action::@(action["ros2_name"])
 >::translate_@(type.lower())_@(frm)_to_@(to)(
 @[      if type == "Goal"]@
-  const ROS@(frm)Goal &@(type.lower())@(frm), 
-  ROS@(to)Goal &@(type.lower())@(to))
+  @(const_1)ROS@(frm)@(type) &@(type.lower())@(frm),
+  @(const_2)ROS@(to)@(type) &@(type.lower())@(to))
 @[      else]@
-  const ROS@(to)Goal &@(type.lower())@(to), 
-  ROS@(frm)Goal &@(type.lower())@(frm))
+  @(const_1)ROS@(to)@(type) &@(type.lower())@(to),
+  @(const_2)ROS@(frm)@(type) &@(type.lower())@(frm))
 @[      end if]@
 {
 @[      for field in action["fields"][type.lower()]]@
@@ -415,9 +426,13 @@ void ActionFactory_@(frm)_@(to)<
   auto & @(field["ros" + to]["name"])@(to) = @(type.lower())@(to).@(field["ros" + to]["name"]);
 @[        end if]@
 @[      if field["basic"]]@
+@[        if field["ros2"]["type"].startswith("builtin_interfaces") ]@
+    ros1_bridge::convert_@(frm)_to_@(to)(@(field["ros" + frm]["name"])@(frm), @(field["ros" + to]["name"])@(to));
+@[        else]@
     @(field["ros" + to]["name"])@(to) = @(field["ros" + frm]["name"])@(frm);
+@[        end if]@
 @[      else]@
-    Factory<@(field["ros" + frm]["cpptype"]),@(field["ros" + to]["cpptype"])>::convert_@(frm)_to_@(to)(@(field["ros" + frm]["name"])@(frm), @(field["ros" + to]["name"])@(to));
+    Factory<@(field["ros1"]["cpptype"]),@(field["ros2"]["cpptype"])>::convert_@(frm)_to_@(to)(@(field["ros" + frm]["name"])@(frm), @(field["ros" + to]["name"])@(to));
 @[end if]@
 @[        if field["array"]]@
   }
