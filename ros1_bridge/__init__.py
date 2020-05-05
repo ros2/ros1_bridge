@@ -84,8 +84,6 @@ def generate_cpp(output_path, template_dir):
     data.update(generate_actions(
         rospack, message_string_pairs=message_string_pairs))
 
-    print(data['actions'])
-
     template_file = os.path.join(template_dir, 'get_mappings.cpp.em')
     output_file = os.path.join(output_path, 'get_mappings.cpp')
     data_for_template = {
@@ -881,7 +879,7 @@ def determine_common_actions(
                     # might not be equal, therefore check the message pairs
                     # the check for 'builtin_interfaces' should be removed once merged with __init__.py
                     # It seems to handle it already
-                    if (ros1_type, ros2_type) not in message_string_pairs and not ros2_type.startswith("builtin_interfaces"):
+                    if (ros1_type, ros2_type) not in message_string_pairs and not ros2_type.startswith("builtin_interfaces") and "GripperCommand" not in ros2_type:
                         match = False
                         break
                 output[direction].append({
