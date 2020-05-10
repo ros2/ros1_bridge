@@ -174,9 +174,6 @@ Once you stop either the talker or the listener in *shell B* a line will be stat
 removed 1to2 bridge for topic '/chatter'
 ```
 
-*Note:* When the bridge is run using the default ROS 2 middleware implementation, which uses Fast RTPS, it does not always remove bridges instantly.
-See [https://github.com/ros2/ros1_bridge/issues/38](https://github.com/ros2/ros1_bridge/issues/38).
-
 The screenshot shows all the shell windows and their expected content:
 
 ![ROS 1 talker and ROS 2 listener](doc/ros1_talker_ros2_listener.png)
