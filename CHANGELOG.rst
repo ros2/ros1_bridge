@@ -2,6 +2,16 @@
 Changelog for package ros1_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.9.0 (2020-05-18)
+------------------
+* Avoid new deprecations (`#255 <https://github.com/ros2/ros1_bridge/issues/255>`_)
+* Updates since changes to message_info in rclcpp (`#253 <https://github.com/ros2/ros1_bridge/issues/253>`_)
+* Assert ROS 1 nodes' stdout (`#247 <https://github.com/ros2/ros1_bridge/issues/247>`_)
+* Ignore actionlib_msgs deprecation warning (`#245 <https://github.com/ros2/ros1_bridge/issues/245>`_)
+* Drop workaround for https://github.com/ros2/rmw_fastrtps/issues/265. (`#233 <https://github.com/ros2/ros1_bridge/issues/233>`_)
+* Code style only: wrap after open parenthesis if not in one line (`#238 <https://github.com/ros2/ros1_bridge/issues/238>`_)
+* Contributors: Dirk Thomas, Jacob Perron, Michel Hidalgo, William Woodall
+
 0.8.2 (2020-01-17)
 ------------------
 * fix building test when ROS 1 diagnostic_msgs is isolated from roscpp (`#236 <https://github.com/ros2/ros1_bridge/issues/236>`_)
