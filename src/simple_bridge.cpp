@@ -82,7 +82,7 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
   auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
   ros2_pub = ros2_node->create_publisher<std_msgs::msg::String>(
-    "chatter", rclcpp::SensorDataQoS());
+    "chatter", 10);
 
   // ROS 1 subscriber
   ros::Subscriber ros1_sub = ros1_node.subscribe(
