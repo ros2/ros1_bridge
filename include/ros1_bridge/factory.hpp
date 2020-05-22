@@ -214,6 +214,16 @@ protected:
       }
     }
 
+    void * ptr = ros1_pub;
+    if (ptr == 0) {
+      RCLCPP_WARN_ONCE(
+        logger,
+        "Message from ROS 2 %s failed to be passed to ROS 1 %s because the "
+        "ROS 1 publisher is invalid (showing msg only once per type)",
+        ros2_type_name.c_str(), ros1_type_name.c_str());
+      return;
+    }
+
     ROS1_T ros1_msg;
     convert_2_to_1(*ros2_msg, ros1_msg);
     RCLCPP_INFO_ONCE(
