@@ -564,15 +564,21 @@ def determine_common_services(
             for ros2_srv in ros2_srvs:
                 if rule.ros1_package_name == ros1_srv.package_name and \
                    rule.ros2_package_name == ros2_srv.package_name:
+
+                    pair = (ros1_srv, ros2_srv)
+
+                    if pair in pairs:
+                        continue
+
                     if rule.ros1_service_name is None and rule.ros2_service_name is None:
                         if ros1_srv.message_name == ros2_srv.message_name:
-                            pairs.append((ros1_srv, ros2_srv))
+                            pairs.append(pair)
                     else:
                         if (
                             rule.ros1_service_name == ros1_srv.message_name and
                             rule.ros2_service_name == ros2_srv.message_name
                         ):
-                            pairs.append((ros1_srv, ros2_srv))
+                            pairs.append(pair)
 
     for pair in pairs:
         ros1_spec = load_ros1_service(pair[0])
