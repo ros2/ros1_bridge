@@ -129,7 +129,7 @@ int main(int argc, char * argv[])
         "Trying to create bridge for ROS 2 service '%s' with type '%s'\n",
         service_name.c_str(), type_name.c_str());
 
-      size_t index = type_name.find("/");
+      const size_t index = type_name.find("/");
       if (index == std::string::npos) {
         fprintf(
           stderr,
@@ -191,7 +191,7 @@ int main(int argc, char * argv[])
         "Trying to create bridge for ROS 1 service '%s' with type '%s'\n",
         service_name.c_str(), type_name.c_str());
 
-      size_t index = type_name.find("/");
+      const size_t index = type_name.find("/");
       if (index == std::string::npos) {
         fprintf(
           stderr,
