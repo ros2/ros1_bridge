@@ -2,6 +2,15 @@
 Changelog for package ros1_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.9.1 (2020-05-27)
+------------------
+* Deprecate package key for service parameters, use full type instead (`#263 <https://github.com/ros2/ros1_bridge/issues/263>`_)
+* Fix removing obsolete ROS 2 service bridges (`#267 <https://github.com/ros2/ros1_bridge/issues/267>`_)
+* Gracefully handle invalid ROS 1 publishers (`#266 <https://github.com/ros2/ros1_bridge/issues/266>`_)
+* Use reliable publisher in simple bridge (`#264 <https://github.com/ros2/ros1_bridge/issues/264>`_)
+* Remove outdated information on Fast RTPS bug (`#260 <https://github.com/ros2/ros1_bridge/issues/260>`_)
+* Contributors: Dirk Thomas, Thom747
+
 0.9.0 (2020-05-18)
 ------------------
 * Avoid new deprecations (`#255 <https://github.com/ros2/ros1_bridge/issues/255>`_)
