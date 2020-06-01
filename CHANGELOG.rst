@@ -2,6 +2,11 @@
 Changelog for package ros1_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.9.2 (2020-06-01)
+------------------
+* When generating service mappings cast pair to set to avoid duplicate pairs (`#268 <https://github.com/ros2/ros1_bridge/issues/268>`_)
+* Contributors: Gavin Suddrey
+
 0.9.1 (2020-05-27)
 ------------------
 * Deprecate package key for service parameters, use full type instead (`#263 <https://github.com/ros2/ros1_bridge/issues/263>`_)
