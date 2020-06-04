@@ -84,48 +84,45 @@ int main(int argc, char * argv[])
       bool transient_local = static_cast<bool>(topics[i]["transient_local"]);
       bool reliable = static_cast<bool>(topics[i]["reliable"]);
       bool latch = static_cast<bool>(topics[i]["latch"]);
-      
+
       if (!queue_size) {
         queue_size = 100;
       }
       if (direction == "") {
-	direction = "bidirectional";
+        direction = "bidirectional";
       }
-      
+
       printf(
-	"Trying to create %s bridge for topic '%s' "
-	"with ROS 2 type '%s' (transient_local=%s reliable=%s latch=%s)\n",
-	direction.c_str(), topic_name.c_str(), type_name.c_str(),
-	transient_local?"true":"false", reliable?"true":"false", latch?"true":"false");
+        "Trying to create %s bridge for topic '%s' "
+        "with ROS 2 type '%s' (transient_local=%s reliable=%s latch=%s)\n",
+        direction.c_str(), topic_name.c_str(), type_name.c_str(),
+        transient_local ? "true" : "false", reliable ? "true" : "false", latch ? "true" : "false");
 
       try {
-
-	if (direction == "bidirectional") {
-	  ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
-	    ros1_node, ros2_node, "", type_name, topic_name, queue_size, transient_local, reliable, latch);
-	  all_handles.push_back(handles);
-	}
-	else if (direction == "1to2") {
-	  ros1_bridge::Bridge1to2Handles handles = ros1_bridge::create_bridge_from_1_to_2(
-	    ros1_node, ros2_node, "", topic_name, queue_size, type_name, topic_name, queue_size,
-	    transient_local, reliable);
-	  all_1to2_handles.push_back(handles);
-	}
-	else if (direction == "2to1") {
-	  ros1_bridge::Bridge2to1Handles handles = ros1_bridge::create_bridge_from_2_to_1(
-	    ros2_node, ros1_node, type_name, topic_name, queue_size, "", topic_name, queue_size,
-	    nullptr, transient_local, reliable, latch);
-	  all_2to1_handles.push_back(handles);
-	}
-	
+        if (direction == "bidirectional") {
+          ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
+            ros1_node, ros2_node, "", type_name, topic_name, queue_size, transient_local,
+            reliable, latch);
+          all_handles.push_back(handles);
+        } else if (direction == "1to2") {
+          ros1_bridge::Bridge1to2Handles handles = ros1_bridge::create_bridge_from_1_to_2(
+            ros1_node, ros2_node, "", topic_name, queue_size, type_name, topic_name, queue_size,
+            transient_local, reliable);
+          all_1to2_handles.push_back(handles);
+        } else if (direction == "2to1") {
+          ros1_bridge::Bridge2to1Handles handles = ros1_bridge::create_bridge_from_2_to_1(
+            ros2_node, ros1_node, type_name, topic_name, queue_size, "", topic_name, queue_size,
+            nullptr, transient_local, reliable, latch);
+          all_2to1_handles.push_back(handles);
+        }
       } catch (std::runtime_error & e) {
-	
-	fprintf(
-	  stderr,
-	  "failed to create %s bridge for topic '%s' "
-	  "with ROS 2 type '%s' (transient_local=%s reliable=%s latch=%s): %s\n",
-	  direction.c_str(), topic_name.c_str(), type_name.c_str(),
-	  transient_local?"true":"false", reliable?"true":"false", latch?"true":"false", e.what());
+        fprintf(
+          stderr,
+          "failed to create %s bridge for topic '%s' "
+          "with ROS 2 type '%s' (transient_local=%s reliable=%s latch=%s): %s\n",
+          direction.c_str(), topic_name.c_str(), type_name.c_str(),
+          transient_local ? "true" : "false", reliable ? "true" : "false", latch ? "true" : "false",
+          e.what());
       }
     }
   } else {

@@ -20,14 +20,18 @@
 namespace ros1_bridge
 {
 rmw_qos_profile_t
-get_qos(size_t queue_size, bool transient_local, bool reliable) {
-    auto qos = rclcpp::QoS(rclcpp::KeepLast(queue_size)) ;
+get_qos(
+  size_t queue_size,
+  bool transient_local,
+  bool reliable)
+{
+  auto qos = rclcpp::QoS(rclcpp::KeepLast(queue_size));
 
-    if (transient_local) { qos.transient_local(); }
-    if (reliable) { qos.reliable(); }
+  if (transient_local) {qos.transient_local();}
+  if (reliable) {qos.reliable();}
 
-    return qos.get_rmw_qos_profile();
-  }
+  return qos.get_rmw_qos_profile();
+}
 
 Bridge1to2Handles
 create_bridge_from_1_to_2(
@@ -101,7 +105,8 @@ create_bidirectional_bridge(
   BridgeHandles handles;
   handles.bridge1to2 = create_bridge_from_1_to_2(
     ros1_node, ros2_node,
-    ros1_type_name, topic_name, queue_size, ros2_type_name, topic_name, queue_size, transient_local, reliable);
+    ros1_type_name, topic_name, queue_size, ros2_type_name, topic_name, queue_size,
+    transient_local, reliable);
   handles.bridge2to1 = create_bridge_from_2_to_1(
     ros2_node, ros1_node,
     ros2_type_name, topic_name, queue_size, ros1_type_name, topic_name, queue_size,
