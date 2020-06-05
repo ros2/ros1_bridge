@@ -6,7 +6,9 @@ You can launch parameter_bridge with the following command::
   
     ros2 run ros1_bridge parameter_bridge [<topics_name> [<services_1_to_2_name> [<services_2_to_1_name>]]]
 
-Parameter bridge reads ``topics``, ``services_1_to_2``, and ``services_2_to_1`` parameters on ROS1 as default to make your bridge. You can specify the names of those parameters as arguments of the command. Here is an example of configuration::
+Parameter bridge reads ``topics``, ``services_1_to_2``, and ``services_2_to_1`` parameters on ROS1 as default to make your bridge.
+You can specify the names of those parameters as arguments of the command.
+Here is an example of configuration::
 
  <rosparam>
  topics:

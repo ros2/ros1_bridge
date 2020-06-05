@@ -14,7 +14,8 @@ Note that before `rostopic echo` would work with bridged topics, a subscriber mu
 You can use the `--bridge-all-2to1-topics` option to bridge all ROS 2 topics to ROS 1 so that tools such as `rostopic list` and `rqt` will see the topics even if there are no matching ROS 1 subscribers.
 Run `ros2 run ros1_bridge dynamic_bridge -- --help` for more options.
 
-If you want to specify messages/services you want to bridge, run `ros2 run ros1_bridge parameter_bridge`. See [here](doc/parameter_bridge.rst) for more information.
+If you want to specify messages/services you want to bridge, run `ros2 run ros1_bridge parameter_bridge`.
+See [here](doc/parameter_bridge.rst) for more information.
 
 ## Prerequisites
 
