@@ -138,15 +138,19 @@ def generate_cpp(output_path, template_dir):
                     'ros2_package_name': ros2_package_name,
                     'interface_type': interface_type,
                     'interface': interface,
-                    'mapped_msgs': [
+                    'mapped_msgs': [],
+                    'mapped_services': [],
+                }
+                if interface_type == 'msg':
+                    data_idl_cpp['mapped_msgs'] += [
                         m for m in data['mappings']
                         if m.ros2_msg.package_name == ros2_package_name and
-                        m.ros2_msg.message_name == interface.message_name],
-                    'mapped_services': [
+                        m.ros2_msg.message_name == interface.message_name]
+                if interface_type == 'srv':
+                    data_idl_cpp['mapped_services'] += [
                         s for s in data['services']
                         if s['ros2_package'] == ros2_package_name and
-                        s['ros2_name'] == interface.message_name],
-                }
+                        s['ros2_name'] == interface.message_name]
                 template_file = os.path.join(template_dir, 'interface_factories.cpp.em')
                 output_file = os.path.join(
                     output_path, '%s__%s__%s__factories.cpp' %
