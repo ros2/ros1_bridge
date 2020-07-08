@@ -2,6 +2,11 @@
 Changelog for package ros1_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.9.3 (2020-07-07)
+------------------
+* Fix multiple definition if message with same name as service exists (`#272 <https://github.com/ros2/ros1_bridge/issues/272>`_)
+* Contributors: Dirk Thomas
+
 0.9.2 (2020-06-01)
 ------------------
 * When generating service mappings cast pair to set to avoid duplicate pairs (`#268 <https://github.com/ros2/ros1_bridge/issues/268>`_)
