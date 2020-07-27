@@ -10,8 +10,11 @@ If you would like to use a bridge with other interfaces (including your own cust
 See [the documentation](doc/index.rst) for an example setup.
 
 For efficiency reasons, topics will only be bridged when matching publisher-subscriber pairs are active for a topic on either side of the bridge.
-Note that before `rostopic echo` would work with bridged topics, a subscriber must already exist, in order for `echo` to determine the message type and then to create its own subscriber.
-You can use the `--bridge-all-2to1-topics` option to bridge all ROS 2 topics to ROS 1 so that tools such as `rostopic list` and `rqt` will see the topics even if there are no matching ROS 1 subscribers.
+As a result using `ros2 topic echo <topic-name>` doesn't work but fails with an error message `Could not determine the type for the passed topic` if no other subscribers are present since the dynamic bridge hasn't bridged the topic yet.
+As a workaround the topic type can be specified explicitly `ros2 topic echo <topic-name> <topic-type>` which triggers the bridging of the topic since the `echo` command represents the necessary subscriber.
+On the ROS 1 side `rostopic echo` doesn't have an option to specify the topic type explicitly.
+Therefore it can't be used with the dynamic bridge if no other subscribers are present.
+As an alternative you can use the `--bridge-all-2to1-topics` option to bridge all ROS 2 topics to ROS 1 so that tools such as `rostopic echo`, `rostopic list` and `rqt` will see the topics even if there are no matching ROS 1 subscribers.
 Run `ros2 run ros1_bridge dynamic_bridge -- --help` for more options.
 
 ## Prerequisites
