@@ -78,11 +78,7 @@ create_bridge_from_2_to_1(
   size_t publisher_queue_size,
   rclcpp::PublisherBase::SharedPtr ros2_pub)
 {
-  rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_sensor_data;
-  custom_qos_profile.depth = subscriber_queue_size;
-  auto subscriber_qos = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(custom_qos_profile));
-  subscriber_qos.get_rmw_qos_profile() = custom_qos_profile;
-
+  auto subscriber_qos = rclcpp::SensorDataQoS(subscriber_queue_size);
   return create_bridge_from_2_to_1(
     ros2_node,
     ros1_node,
