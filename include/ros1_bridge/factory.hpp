@@ -70,6 +70,15 @@ public:
   {
     auto qos = rclcpp::QoS(rclcpp::KeepAll());
     qos.get_rmw_qos_profile() = qos_profile;
+    return create_ros2_publisher(node, topic_name, qos);
+  }
+
+  rclcpp::PublisherBase::SharedPtr
+  create_ros2_publisher(
+    rclcpp::Node::SharedPtr node,
+    const std::string & topic_name,
+    const rclcpp::QoS & qos)
+  {
     return node->create_publisher<ROS2_T>(topic_name, qos);
   }
 
@@ -103,9 +112,8 @@ public:
     ros::Publisher ros1_pub,
     rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr)
   {
-    rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_sensor_data;
-    custom_qos_profile.depth = queue_size;
-    return create_ros2_subscriber(node, topic_name, custom_qos_profile, ros1_pub, ros2_pub);
+    auto qos = rclcpp::SensorDataQoS(rclcpp::KeepLast(queue_size));
+    return create_ros2_subscriber(node, topic_name, qos, ros1_pub, ros2_pub);
   }
 
   rclcpp::SubscriptionBase::SharedPtr
@@ -116,17 +124,29 @@ public:
     ros::Publisher ros1_pub,
     rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr)
   {
+    auto rclcpp_qos = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos));
+    rclcpp_qos.get_rmw_qos_profile() = qos;
+    return create_ros2_subscriber(
+      node, topic_name, rclcpp_qos, ros1_pub, ros2_pub);
+  }
+
+  rclcpp::SubscriptionBase::SharedPtr
+  create_ros2_subscriber(
+    rclcpp::Node::SharedPtr node,
+    const std::string & topic_name,
+    const rclcpp::QoS & qos,
+    ros::Publisher ros1_pub,
+    rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr)
+  {
     std::function<
       void(const typename ROS2_T::SharedPtr msg, const rclcpp::MessageInfo & msg_info)> callback;
     callback = std::bind(
       &Factory<ROS1_T, ROS2_T>::ros2_callback, std::placeholders::_1, std::placeholders::_2,
       ros1_pub, ros1_type_name_, ros2_type_name_, node->get_logger(), ros2_pub);
-    auto rclcpp_qos = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos));
-    rclcpp_qos.get_rmw_qos_profile() = qos;
     rclcpp::SubscriptionOptions options;
     options.ignore_local_publications = true;
     return node->create_subscription<ROS2_T>(
-      topic_name, rclcpp_qos, callback, options);
+      topic_name, qos, callback, options);
   }
 
   void convert_1_to_2(const void * ros1_msg, void * ros2_msg) override

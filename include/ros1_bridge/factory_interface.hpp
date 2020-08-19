@@ -68,6 +68,13 @@ public:
     const rmw_qos_profile_t & qos_profile) = 0;
 
   virtual
+  rclcpp::PublisherBase::SharedPtr
+  create_ros2_publisher(
+    rclcpp::Node::SharedPtr node,
+    const std::string & topic_name,
+    const rclcpp::QoS & qos) = 0;
+
+  virtual
   ros::Subscriber
   create_ros1_subscriber(
     ros::NodeHandle node,
@@ -91,6 +98,15 @@ public:
     rclcpp::Node::SharedPtr node,
     const std::string & topic_name,
     const rmw_qos_profile_t & qos_profile,
+    ros::Publisher ros1_pub,
+    rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr) = 0;
+
+  virtual
+  rclcpp::SubscriptionBase::SharedPtr
+  create_ros2_subscriber(
+    rclcpp::Node::SharedPtr node,
+    const std::string & topic_name,
+    const rclcpp::QoS & qos,
     ros::Publisher ros1_pub,
     rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr) = 0;
 
