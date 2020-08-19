@@ -78,7 +78,8 @@ create_bridge_from_2_to_1(
   size_t publisher_queue_size,
   rclcpp::PublisherBase::SharedPtr ros2_pub)
 {
-  auto subscriber_qos = rclcpp::SensorDataQoS(subscriber_queue_size);
+  auto subscriber_qos = rclcpp::SensorDataQoS();
+  subscriber_qos.keep_last(subscriber_queue_size);
   return create_bridge_from_2_to_1(
     ros2_node,
     ros1_node,
