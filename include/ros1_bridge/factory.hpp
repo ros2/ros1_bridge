@@ -112,9 +112,9 @@ public:
     ros::Publisher ros1_pub,
     rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr)
   {
-    rmw_qos_profile_t custom_qos_profile = rmw_qos_profile_sensor_data;
-    custom_qos_profile.depth = queue_size;
-    return create_ros2_subscriber(node, topic_name, custom_qos_profile, ros1_pub, ros2_pub);
+    auto qos = rclcpp::SensorDataQoS();
+    qos.keep_last(queue_size);
+    return create_ros2_subscriber(node, topic_name, qos, ros1_pub, ros2_pub);
   }
 
   rclcpp::SubscriptionBase::SharedPtr
