@@ -2,8 +2,8 @@
 Changelog for package ros1_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.9.4 (2020-09-10)
+------------------
 * use hardcoded QoS (keep all, transient local) for /tf_static topic in dynamic_bridge (`#282 <https://github.com/ros2/ros1_bridge/issues/282>`_)
 * document explicitly passing the topic type to 'ros2 topic echo' (`#279 <https://github.com/ros2/ros1_bridge/issues/279>`_)
 
