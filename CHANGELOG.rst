@@ -2,6 +2,11 @@
 Changelog for package ros1_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* use hardcoded QoS (keep all, transient local) for /tf_static topic in dynamic_bridge (`#282 <https://github.com/ros2/ros1_bridge/issues/282>`_)
+* document explicitly passing the topic type to 'ros2 topic echo' (`#279 <https://github.com/ros2/ros1_bridge/issues/279>`_)
+
 0.9.3 (2020-07-07)
 ------------------
 * Fix multiple definition if message with same name as service exists (`#272 <https://github.com/ros2/ros1_bridge/issues/272>`_)
