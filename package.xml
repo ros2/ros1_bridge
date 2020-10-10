@@ -4,8 +4,11 @@
   <name>ros1_bridge</name>
   <version>0.9.4</version>
   <description>A simple bridge between ROS 1 and ROS 2</description>
-  <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
+  <maintainer email="jacob@openrobotics.org">Jacob Perron</maintainer>
+  <maintainer email="sloretz@openrobotics.org">Shane Loretz</maintainer>
   <license>Apache License 2.0</license>
+
+  <author email="dthomas@openrobotics.org">Dirk Thomas</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_index_python</buildtool_depend>
