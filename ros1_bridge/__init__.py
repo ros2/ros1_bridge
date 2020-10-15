@@ -618,12 +618,12 @@ def determine_common_services(
                     'ros1': {
                         'name': ros1_name,
                         'type': ros1_type.rstrip('[]'),
-                        'cpptype': ros1_type.rstrip('[]').replace('/', '::')
+                        'cpptype': ros1_type.rstrip('[]').replace('/', '::') if (ros1_type.find("bool[]") == -1) else "std_msgs::UInt8"
                     },
                     'ros2': {
                         'name': ros2_name,
                         'type': ros2_type.rstrip('[]'),
-                        'cpptype': ros2_type.rstrip('[]').replace('/', '::msg::')
+                        'cpptype': ros2_type.rstrip('[]').replace('/', '::msg::') if (ros2_type.find("bool[]") == -1) else "std_msgs::msg::UInt8"
                     }
                 })
         if match:
