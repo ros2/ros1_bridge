@@ -136,11 +136,14 @@ private:
                 return;
             }
 
+            // goal_response_callback signature changed after foxy, this implementation
+            // works with both
+            std::shared_future<ROS2GoalHandle> gh2_future;
             //Changes as per Dashing
             auto send_goal_ops = ROS2SendGoalOptions();
             send_goal_ops.goal_response_callback =
-                [this](auto gh2_future) mutable {
-                    auto goal_handle = gh2_future.get();
+                [this, &gh2_future](auto gh2) mutable {
+		    auto goal_handle = gh2_future.get();
                     if (!goal_handle)
                     {
                         gh1_.setRejected(); // goal was not accepted by remote server
@@ -168,7 +171,7 @@ private:
                 };
 
             // send goal to ROS2 server, set-up feedback
-            auto gh2_future = client_->async_send_goal(goal2, send_goal_ops);
+            gh2_future = client_->async_send_goal(goal2, send_goal_ops);
 
             auto future_result = client_->async_get_result(gh2_future.get());
             auto res2 = future_result.get();
