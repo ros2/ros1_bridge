@@ -135,7 +135,9 @@ set(target_dependencies
 add_custom_command(
   OUTPUT ${generated_files}
   COMMAND ${PYTHON_EXECUTABLE} bin/ros1_bridge_generate_factories
-    --output-path "${generated_path}" --template-dir resource
+    --output-path '${generated_path}' --template-dir resource
+    --pkg-includes '${BRIDGE_INCLUDE_PKGS}'
+    --pkg-ignores '${BRIDGE_IGNORE_PKGS}'
   DEPENDS ${target_dependencies}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Generating factories for interface types")
