@@ -31,13 +31,14 @@
 
 int main(int argc, char *argv[])
 {
+  // ROS 2 node
+  // must be before ROS1, because ros::init consumes args like __name and we cannot remap the node
+  rclcpp::init(argc, argv);
+  auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
+
   // ROS 1 node
   ros::init(argc, argv, "ros_bridge");
   ros::NodeHandle ros1_node;
-
-  // ROS 2 node
-  rclcpp::init(argc, argv);
-  auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
 
   std::string dir = argv[1];
   std::string package = argv[2];
