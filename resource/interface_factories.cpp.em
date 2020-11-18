@@ -149,8 +149,6 @@ get_action_factory_@(ros2_package_name)__@(interface_type)__@(interface.message_
   return nullptr;
 }
 @
-}
-@
 // conversion functions for available interfaces
 @[for m in mapped_msgs]@
 
