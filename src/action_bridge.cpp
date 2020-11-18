@@ -26,10 +26,9 @@
 
 // include ROS 2
 #include "rclcpp/rclcpp.hpp"
-
 #include "ros1_bridge/bridge.hpp"
 
-int main(int argc, char *argv[])
+int main(int argc, char * argv[])
 {
   // ROS 2 node
   // must be before ROS1, because ros::init consumes args like __name and we cannot remap the node
@@ -47,25 +46,18 @@ int main(int argc, char *argv[])
 
   std::cout << dir << " " << package << " " << type << " " << name << std::endl;
 
-  //ros1 example_tutorials Fibonacci fibonacci
+  // ros1 example_tutorials Fibonacci fibonacci
 
-  auto factory = ros1_bridge::get_action_factory(
-      dir, package, type);
-  if (factory)
-  {
+  auto factory = ros1_bridge::get_action_factory(dir, package, type);
+  if (factory) {
     printf("created action factory");
-    try
-    {
+    try {
       factory->create_server_client(ros1_node, ros2_node, name);
       // printf("Created 2 to 1 bridge for service %s\n", name.data());
-    }
-    catch (std::runtime_error &e)
-    {
+    } catch (std::runtime_error & e) {
       fprintf(stderr, "Failed to created a bridge: %s\n", e.what());
     }
-  }
-  else
-  {
+  } else {
     fprintf(stderr, "Failed to create a factory\n");
   }
 
@@ -75,8 +67,7 @@ int main(int argc, char *argv[])
 
   // ROS 2 spinning loop
   rclcpp::executors::SingleThreadedExecutor executor;
-  while (ros1_node.ok() && rclcpp::ok())
-  {
+  while (ros1_node.ok() && rclcpp::ok()) {
     executor.spin_node_once(ros2_node, std::chrono::milliseconds(1000));
   }
 

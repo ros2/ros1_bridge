@@ -147,9 +147,10 @@ public:
 class ActionFactoryInterface
 {
 public:
-  virtual void create_server_client(ros::NodeHandle ros1_node,
-                                    rclcpp::Node::SharedPtr ros2_node,
-                                    const std::string action_name) = 0;
+  virtual void create_server_client(
+    ros::NodeHandle ros1_node,
+    rclcpp::Node::SharedPtr ros2_node,
+    const std::string action_name) = 0;
 };
 
 }  // namespace ros1_bridge
