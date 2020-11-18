@@ -157,11 +157,18 @@ def generate_cpp(output_path, template_dir):
                     (ros2_package_name, interface_type, interface.message_name))
                 expand_template(template_file, data_idl_cpp, output_file)
 
+def remove_duplicate_messages(ros1_msgs, ros2_msgs):
+    # iterate_packages might return ros2 pkgs with the ros1 pkgs
+    # ros2 pkgs in ros1_msgs appear as /root/msgs/ros2/install/pal_control_msgs/share/pal_control_msgs/msg
+    # ros2 pkgs in ros2_msgs appear as /root/msgs/ros2/install/pal_control_msgs
+    for ros2_msg in ros2_msgs:
+        ros1_msgs[:] = [ros1_msg for ros1_msg in ros1_msgs if ros2_msg.prefix_path not in ros1_msg.prefix_path]
 
 def generate_messages(rospack=None):
     ros1_msgs = get_ros1_messages(rospack=rospack)
     ros2_package_names, ros2_msgs, mapping_rules = get_ros2_messages()
 
+    remove_duplicate_messages(ros1_msgs, ros2_msgs)
     package_pairs = determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules)
     message_pairs = determine_message_pairs(ros1_msgs, ros2_msgs, package_pairs, mapping_rules)
 
@@ -228,6 +235,8 @@ def generate_messages(rospack=None):
 def generate_services(rospack=None, message_string_pairs=None):
     ros1_srvs = get_ros1_services(rospack=rospack)
     ros2_pkgs, ros2_srvs, mapping_rules = get_ros2_services()
+
+    remove_duplicate_messages(ros1_srvs, ros2_srvs)
     services = determine_common_services(
         ros1_srvs, ros2_srvs, mapping_rules,
         message_string_pairs=message_string_pairs)
