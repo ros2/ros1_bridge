@@ -842,7 +842,7 @@ def load_ros2_message(ros2_msg):
     messages = spec.content.get_elements_of_type(rosidl_parser.definition.Message)
     if len(messages) != 1:
         raise RuntimeError(
-            "unexpectedly found multiple message definitions when processing "
+            'unexpectedly found multiple message definitions when processing '
             f"message '{ros2_msg.package_name}/msg/{ros2_msg.message_name}'"
         )
     return messages[0]
