@@ -50,7 +50,7 @@ int main(int argc, char * argv[])
 
   auto factory = ros1_bridge::get_action_factory(dir, package, type);
   if (factory) {
-    printf("created action factory");
+    printf("created action factory\n");
     try {
       factory->create_server_client(ros1_node, ros2_node, name);
       // printf("Created 2 to 1 bridge for service %s\n", name.data());

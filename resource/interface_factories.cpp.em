@@ -410,7 +410,7 @@ void ActionFactory_@(frm_)_@(to_)<
 {
 @[      for field in action["fields"][type.lower()]]@
 @[        if field["array"]]@
-  @(type.lower())@(to).@(field["ros" + frm]["name"]).resize(@(type.lower())@(frm).@(field["ros" + to]["name"]).size());
+  @(type.lower())@(to).@(field["ros" + to]["name"]).resize(@(type.lower())@(frm).@(field["ros" + frm]["name"]).size());
   auto @(field["ros" + frm]["name"])@(frm)_it = @(type.lower())@(frm).@(field["ros" + frm]["name"]).begin();
   auto @(field["ros" + to]["name"])@(to)_it = @(type.lower())@(to).@(field["ros" + to]["name"]).begin();
   while (
