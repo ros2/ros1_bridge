@@ -111,6 +111,15 @@ bool parse_command_options(
     } else {
       printf("No service type conversion pairs supported.\n");
     }
+    mappings_2to1 = ros1_bridge::get_all_action_mappings_2to1();
+    if (mappings_2to1.size() > 0) {
+      printf("Supported ROS 2 <=> ROS 1 action type conversion pairs:\n");
+      for (auto & pair : mappings_2to1) {
+        printf("  - '%s' (ROS 2) <=> '%s' (ROS 1)\n", pair.first.c_str(), pair.second.c_str());
+      }
+    } else {
+      printf("No action type conversion pairs supported.\n");
+    }
     return false;
   }
 
