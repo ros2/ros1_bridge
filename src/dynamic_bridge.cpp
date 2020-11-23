@@ -602,7 +602,6 @@ void get_active_ros2_actions(const std::map<std::string, std::string> active_ros
         }
     }
     for (it_num = action_client_nums.begin(); it_num != action_client_nums.end(); it_num++) {
-      printf("%d", it_num->second);
         if (it_num->second != 2) {
             active_ros2_action_clients.erase(it_num->first);
         }
@@ -611,12 +610,6 @@ void get_active_ros2_actions(const std::map<std::string, std::string> active_ros
         if (it_num->second != 2) {
             active_ros2_action_servers.erase(it_num->first);
         }
-    }
-    for (it = active_ros2_action_servers.begin(); it != active_ros2_action_servers.end(); it++) {
-        printf("ROS2 action server: %s %s\n", it->first.c_str(), it->second.c_str());
-    }
-    for (it = active_ros2_action_clients.begin(); it != active_ros2_action_clients.end(); it++) {
-        printf("ROS2 action client: %s %s\n", it->first.c_str(), it->second.c_str());
     }
 }
 
