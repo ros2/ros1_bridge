@@ -556,30 +556,37 @@ def determine_common_services(
         message_string_pairs = set()
 
     pairs = []
+    fields_1_to_2_pairs = OrderedDict()
+    fields_1_to_2_pairs["request"] = OrderedDict()
+    fields_1_to_2_pairs["response"] = OrderedDict()
     services = []
     for ros1_srv in ros1_srvs:
         for ros2_srv in ros2_srvs:
             if ros1_srv.package_name == ros2_srv.package_name:
                 if ros1_srv.message_name == ros2_srv.message_name:
                     pairs.append((ros1_srv, ros2_srv))
-
     for rule in mapping_rules:
         for ros1_srv in ros1_srvs:
             for ros2_srv in ros2_srvs:
                 pair = (ros1_srv, ros2_srv)
-                if pair in pairs:
-                    continue
+                append_flag = False
                 if rule.ros1_package_name == ros1_srv.package_name and \
                    rule.ros2_package_name == ros2_srv.package_name:
                     if rule.ros1_service_name is None and rule.ros2_service_name is None:
                         if ros1_srv.message_name == ros2_srv.message_name:
-                            pairs.append(pair)
+                            append_flag = True
                     else:
                         if (
                             rule.ros1_service_name == ros1_srv.message_name and
                             rule.ros2_service_name == ros2_srv.message_name
                         ):
+                            append_flag = True
+                    if append_flag:
+                        if pair not in pairs:
                             pairs.append(pair)
+                        fields_1_to_2_pairs["request"][pair] = rule.request_fields_1_to_2
+                        fields_1_to_2_pairs["response"][pair] = rule.response_fields_1_to_2
+
 
     for pair in pairs:
         ros1_spec = load_ros1_service(pair[0])
@@ -606,6 +613,19 @@ def determine_common_services(
                 ros2_type = str(ros2_fields[direction][i].type)
                 ros1_name = ros1_field[1]
                 ros2_name = ros2_fields[direction][i].name
+
+                if ros1_name != ros2_name:
+                    # if two field names between ros1 and ros2 are different,
+                    # check whether they are defined in the mapping rule
+                    if (
+                        pair not in fields_1_to_2_pairs[direction] or
+                        fields_1_to_2_pairs[direction][pair] is None or
+                        ros1_name not in fields_1_to_2_pairs[direction][pair] or
+                        fields_1_to_2_pairs[direction][pair][ros1_name] != ros2_name
+                    ):
+                        match = False
+                        break
+
                 if ros1_type != ros2_type:
                     # if the message types have a custom mapping their names
                     # might not be equal, therefore check the message pairs
