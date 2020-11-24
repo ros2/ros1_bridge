@@ -556,9 +556,10 @@ def determine_common_services(
         message_string_pairs = set()
 
     pairs = []
-    fields_1_to_2_pairs = OrderedDict()
-    fields_1_to_2_pairs["request"] = OrderedDict()
-    fields_1_to_2_pairs["response"] = OrderedDict()
+    fields_1_to_2_pairs = {
+        'request': OrderedDict(),
+        'response': OrderedDict()
+    }
     services = []
     for ros1_srv in ros1_srvs:
         for ros2_srv in ros2_srvs:
@@ -585,9 +586,8 @@ def determine_common_services(
                     if append_flag:
                         if pair not in pairs:
                             pairs.append(pair)
-                        fields_1_to_2_pairs["request"][pair] = rule.request_fields_1_to_2
-                        fields_1_to_2_pairs["response"][pair] = rule.response_fields_1_to_2
-
+                        fields_1_to_2_pairs['request'][pair] = rule.request_fields_1_to_2
+                        fields_1_to_2_pairs['response'][pair] = rule.response_fields_1_to_2
 
     for pair in pairs:
         ros1_spec = load_ros1_service(pair[0])
