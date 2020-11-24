@@ -99,7 +99,7 @@ foreach(package_name ${ros2_interface_packages})
   if(NOT "${package_name}" STREQUAL "builtin_interfaces")
     list(APPEND generated_files "${generated_path}/${package_name}_factories.cpp")
     list(APPEND generated_files "${generated_path}/${package_name}_factories.hpp")
-    foreach(interface_file ${${package_name}_INTERFACE_FILES})
+    foreach(interface_file ${${package_name}_IDL_FILES})
       file(TO_CMAKE_PATH "${interface_file}" interface_name)
       get_filename_component(interface_basename "${interface_name}" NAME_WE)
       # skipping actions and request and response messages of services
