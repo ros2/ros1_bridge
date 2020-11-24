@@ -565,6 +565,7 @@ def determine_common_services(
             if ros1_srv.package_name == ros2_srv.package_name:
                 if ros1_srv.message_name == ros2_srv.message_name:
                     pairs.append((ros1_srv, ros2_srv))
+
     for rule in mapping_rules:
         for ros1_srv in ros1_srvs:
             for ros2_srv in ros2_srvs:
