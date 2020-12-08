@@ -284,11 +284,18 @@ public:
     const std::shared_ptr<ROS2Request> request, std::shared_ptr<ROS2Response> response)
   {
     ROS1_T srv;
+    const auto & service_name = client.getService();
     translate_2_to_1(*request, srv.request);
+    while (!client.waitForExistence(ros::Duration(5.0))) {
+      if (!ros::ok()) {
+        throw std::runtime_error("Interrupted while waiting for ROS 1 service " + service_name);
+      }
+      RCLCPP_WARN(logger, "Waiting for ROS 1 service %s to exist...", service_name);
+    }
     if (client.call(srv)) {
       translate_1_to_2(srv.response, *response);
     } else {
-      throw std::runtime_error("Failed to get response from ROS 1 service " + client.getService());
+      throw std::runtime_error("Failed to get response from ROS 1 service " + service_name);
     }
   }
 
