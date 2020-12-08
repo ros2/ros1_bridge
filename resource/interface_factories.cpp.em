@@ -20,6 +20,10 @@
 @
 @{
 from ros1_bridge import camel_case_to_lower_case_underscore
+from rosidl_parser.definition import AbstractNestedType
+from rosidl_parser.definition import AbstractSequence
+from rosidl_parser.definition import BoundedSequence
+from rosidl_parser.definition import NamespacedType
 }@
 #include "@(ros2_package_name)_factories.hpp"
 
@@ -118,35 +122,46 @@ Factory<
 @{
 ros1_field_selection = '.'.join((str(field.name) for field in ros1_fields))
 ros2_field_selection = '.'.join((str(field.name) for field in ros2_fields))
+
+if isinstance(ros2_fields[-1].type, NamespacedType):
+    namespaces = ros2_fields[-1].type.namespaces
+    assert len(namespaces) == 2 and namespaces[1] == 'msg', \
+      "messages not using the '<pkg_name>, msg, <type_name>' triplet are not supported"
 }
-@[    if not ros2_fields[-1].type.is_array]@
+@[    if not isinstance(ros2_fields[-1].type, AbstractNestedType)]@
   // convert non-array field
-@[      if not ros2_fields[-1].type.pkg_name]@
+@[      if not isinstance(ros2_fields[-1].type, NamespacedType)]@
   // convert primitive field
   ros2_msg.@(ros2_field_selection) = ros1_msg.@(ros1_field_selection);
-@[      elif ros2_fields[-1].type.pkg_name == 'builtin_interfaces']@
+@[      elif ros2_fields[-1].type.namespaces[0] == 'builtin_interfaces']@
   // convert builtin field
   ros1_bridge::convert_1_to_2(ros1_msg.@(ros1_field_selection), ros2_msg.@(ros2_field_selection));
 @[      else]@
   // convert sub message field
   Factory<
     @(ros1_fields[-1].pkg_name)::@(ros1_fields[-1].msg_name),
-    @(ros2_fields[-1].type.pkg_name)::msg::@(ros2_fields[-1].type.type)
+    @(ros2_fields[-1].type.namespaces[0])::msg::@(ros2_fields[-1].type.name)
   >::convert_1_to_2(
     ros1_msg.@(ros1_field_selection), ros2_msg.@(ros2_field_selection));
 @[      end if]@
 @[    else]@
-  // convert array field
-@[      if not ros2_fields[-1].type.array_size or ros2_fields[-1].type.is_upper_bound]@
-  // ensure array size
-@[        if ros2_fields[-1].type.is_upper_bound]@
-  // check boundary
-  assert(ros1_msg.@(ros1_field_selection).size() <= @(ros2_fields[-1].type.array_size));
+  // convert array or sequence field
+@[      if isinstance(ros2_fields[-1].type, AbstractSequence)]@
+  // dynamically sized sequence, ensure destination sequence/vector size is large enough
+@[        if isinstance(ros2_fields[-1].type, BoundedSequence)]@
+  // bounded size sequence, check that the ros 1 vector size is not larger than the upper bound for the target
+  assert(ros1_msg.@(ros1_field_selection).size() <= @(ros2_fields[-1].type.maximum_size));
 @[        end if]@
-  // dynamic arrays must be resized
+  // resize ros2 field to match the ros1 field
   ros2_msg.@(ros2_field_selection).resize(ros1_msg.@(ros1_field_selection).size());
+@[      else]@
+  // statically sized array
+  static_assert(
+    (ros2_msg.@(ros2_field_selection).size()) >= (ros1_msg.@(ros1_field_selection).size()),
+    "destination array not large enough for source array"
+  );
 @[      end if]@
-@[      if not ros2_fields[-1].type.pkg_name]@
+@[      if not isinstance(ros2_fields[-1].type.value_type, NamespacedType)]@
   // convert primitive array elements
   std::copy(
     ros1_msg.@(ros1_field_selection).begin(),
@@ -155,22 +170,22 @@ ros2_field_selection = '.'.join((str(field.name) for field in ros2_fields))
 @[      else]@
   // copy element wise since the type is different
   {
-    auto ros1_it = ros1_msg.@(ros1_field_selection).begin();
+    auto ros1_it = ros1_msg.@(ros1_field_selection).cbegin();
     auto ros2_it = ros2_msg.@(ros2_field_selection).begin();
     for (
       ;
-      ros1_it != ros1_msg.@(ros1_field_selection).end() &&
+      ros1_it != ros1_msg.@(ros1_field_selection).cend() &&
       ros2_it != ros2_msg.@(ros2_field_selection).end();
       ++ros1_it, ++ros2_it
     )
     {
       // convert sub message element
-@[        if ros2_fields[-1].type.pkg_name == 'builtin_interfaces']@
+@[        if ros2_fields[-1].type.value_type.namespaces[0] == 'builtin_interfaces']@
       ros1_bridge::convert_1_to_2(*ros1_it, *ros2_it);
 @[        else]@
       Factory<
         @(ros1_fields[-1].pkg_name)::@(ros1_fields[-1].msg_name),
-        @(ros2_fields[-1].type.pkg_name)::msg::@(ros2_fields[-1].type.type)
+        @(ros2_fields[-1].type.value_type.namespaces[0])::msg::@(ros2_fields[-1].type.value_type.name)
       >::convert_1_to_2(
         *ros1_it, *ros2_it);
 @[        end if]@
@@ -198,31 +213,42 @@ Factory<
 @{
 ros2_field_selection = '.'.join((str(field.name) for field in ros2_fields))
 ros1_field_selection = '.'.join((str(field.name) for field in ros1_fields))
+
+if isinstance(ros2_fields[-1].type, NamespacedType):
+    namespaces = ros2_fields[-1].type.namespaces
+    assert len(namespaces) == 2 and namespaces[1] == 'msg', \
+      "messages not using the '<pkg_name>, msg, <type_name>' triplet are not supported"
 }
-@[    if not ros2_fields[-1].type.is_array]@
+@[    if not isinstance(ros2_fields[-1].type, AbstractNestedType)]@
   // convert non-array field
-@[      if not ros2_fields[-1].type.pkg_name]@
+@[      if not isinstance(ros2_fields[-1].type, NamespacedType)]@
   // convert primitive field
   ros1_msg.@(ros1_field_selection) = ros2_msg.@(ros2_field_selection);
-@[      elif ros2_fields[-1].type.pkg_name == 'builtin_interfaces']@
+@[      elif ros2_fields[-1].type.namespaces[0] == 'builtin_interfaces']@
   // convert builtin field
   ros1_bridge::convert_2_to_1(ros2_msg.@(ros2_field_selection), ros1_msg.@(ros1_field_selection));
 @[      else]@
   // convert sub message field
   Factory<
     @(ros1_fields[-1].pkg_name)::@(ros1_fields[-1].msg_name),
-    @(ros2_fields[-1].type.pkg_name)::msg::@(ros2_fields[-1].type.type)
+    @(ros2_fields[-1].type.namespaces[0])::msg::@(ros2_fields[-1].type.name)
   >::convert_2_to_1(
     ros2_msg.@(ros2_field_selection), ros1_msg.@(ros1_field_selection));
 @[      end if]@
 @[    else]@
-  // convert array field
-@[      if not ros2_fields[-1].type.array_size or ros2_fields[-1].type.is_upper_bound]@
-  // ensure array size
-  // dynamic arrays must be resized
+  // convert array or sequence field
+@[      if isinstance(ros2_fields[-1].type, AbstractSequence)]@
+  // dynamically sized sequence, ensure destination vector size is large enough
+  // resize ros1 field to match the ros2 field
   ros1_msg.@(ros1_field_selection).resize(ros2_msg.@(ros2_field_selection).size());
+@[      else]@
+  // statically sized array
+  static_assert(
+    (ros1_msg.@(ros1_field_selection).size()) >= (ros2_msg.@(ros2_field_selection).size()),
+    "destination array not large enough for source array"
+  );
 @[      end if]@
-@[      if not ros2_fields[-1].type.pkg_name]@
+@[      if not isinstance(ros2_fields[-1].type.value_type, NamespacedType)]@
   // convert primitive array elements
   std::copy(
     ros2_msg.@(ros2_field_selection).begin(),
@@ -231,22 +257,22 @@ ros1_field_selection = '.'.join((str(field.name) for field in ros1_fields))
 @[      else]@
   // copy element wise since the type is different
   {
-    auto ros2_it = ros2_msg.@(ros2_field_selection).begin();
+    auto ros2_it = ros2_msg.@(ros2_field_selection).cbegin();
     auto ros1_it = ros1_msg.@(ros1_field_selection).begin();
     for (
       ;
-      ros2_it != ros2_msg.@(ros2_field_selection).end() &&
+      ros2_it != ros2_msg.@(ros2_field_selection).cend() &&
       ros1_it != ros1_msg.@(ros1_field_selection).end();
       ++ros2_it, ++ros1_it
     )
     {
       // convert sub message element
-@[        if ros2_fields[-1].type.pkg_name == 'builtin_interfaces']@
+@[        if ros2_fields[-1].type.value_type.namespaces[0] == 'builtin_interfaces']@
       ros1_bridge::convert_2_to_1(*ros2_it, *ros1_it);
 @[        else]@
       Factory<
         @(ros1_fields[-1].pkg_name)::@(ros1_fields[-1].msg_name),
-        @(ros2_fields[-1].type.pkg_name)::msg::@(ros2_fields[-1].type.type)
+        @(ros2_fields[-1].type.value_type.namespaces[0])::msg::@(ros2_fields[-1].type.value_type.name)
       >::convert_2_to_1(
         *ros2_it, *ros1_it);
 @[        end if]@
