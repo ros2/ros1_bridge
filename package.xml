@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ros1_bridge</name>
-  <version>0.9.4</version>
+  <version>0.9.5</version>
   <description>A simple bridge between ROS 1 and ROS 2</description>
   <maintainer email="jacob@openrobotics.org">Jacob Perron</maintainer>
   <maintainer email="sloretz@openrobotics.org">Shane Loretz</maintainer>

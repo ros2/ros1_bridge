@@ -2,6 +2,12 @@
 Changelog for package ros1_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.9.5 (2020-12-08)
+------------------
+* Update to use rosidl_parser and .idl files rather than rosidl_adapter and .msg files (`#296 <https://github.com/ros2/ros1_bridge/issues/296>`_)
+* Update maintainers (`#286 <https://github.com/ros2/ros1_bridge/issues/286>`_)
+* Contributors: Jacob Perron, William Woodall
+
 0.9.4 (2020-09-10)
 ------------------
 * use hardcoded QoS (keep all, transient local) for /tf_static topic in dynamic_bridge (`#282 <https://github.com/ros2/ros1_bridge/issues/282>`_)
