@@ -157,7 +157,7 @@ if isinstance(ros2_fields[-1].type, NamespacedType):
 @[      else]@
   // statically sized array
   static_assert(
-    sizeof(ros2_msg.@(ros2_field_selection)) >= sizeof(ros1_msg.@(ros1_field_selection)),
+    (ros2_msg.@(ros2_field_selection).size()) >= (ros1_msg.@(ros1_field_selection).size()),
     "destination array not large enough for source array"
   );
 @[      end if]@
@@ -244,7 +244,7 @@ if isinstance(ros2_fields[-1].type, NamespacedType):
 @[      else]@
   // statically sized array
   static_assert(
-    sizeof(ros1_msg.@(ros1_field_selection)) >= sizeof(ros2_msg.@(ros2_field_selection)),
+    (ros1_msg.@(ros1_field_selection).size()) >= (ros2_msg.@(ros2_field_selection).size()),
     "destination array not large enough for source array"
   );
 @[      end if]@
