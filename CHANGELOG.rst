@@ -2,8 +2,8 @@
 Changelog for package ros1_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.8.3 (2020-12-09)
+------------------
 * [backport] support idl files on the ROS 2 side of the bridge (`#302 <https://github.com/ros2/ros1_bridge/issues/302>`_)
   * [backport] update to use rosidl_parser and .idl files rather than rosidl_adapter and .msg files (`#296 <https://github.com/ros2/ros1_bridge/issues/296>`_)
   * [backport] fix bug with sizeof when type of the arrays differ (`#298 <https://github.com/ros2/ros1_bridge/issues/298>`_)
