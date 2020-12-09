@@ -2,6 +2,14 @@
 Changelog for package ros1_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [backport] support idl files on the ROS 2 side of the bridge (`#302 <https://github.com/ros2/ros1_bridge/issues/302>`_)
+  * [backport] update to use rosidl_parser and .idl files rather than rosidl_adapter and .msg files (`#296 <https://github.com/ros2/ros1_bridge/issues/296>`_)
+  * [backport] fix bug with sizeof when type of the arrays differ (`#298 <https://github.com/ros2/ros1_bridge/issues/298>`_)
+* fix multiple definition if message with same name as service exists (`#272 <https://github.com/ros2/ros1_bridge/issues/272>`_) (`#274 <https://github.com/ros2/ros1_bridge/issues/274>`_)
+* Contributors: Dirk Thomas, William Woodall
+
 0.8.2 (2020-01-17)
 ------------------
 * fix building test when ROS 1 diagnostic_msgs is isolated from roscpp (`#236 <https://github.com/ros2/ros1_bridge/issues/236>`_)
