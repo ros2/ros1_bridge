@@ -68,13 +68,7 @@ import rosmsg  # noqa
 def generate_cpp(output_path, template_dir):
     rospack = rospkg.RosPack()
     data = generate_messages(rospack)
-    message_string_pairs = {
-        (
-            '%s/%s' % (m.ros1_msg.package_name, m.ros1_msg.message_name),
-            '%s/%s' % (m.ros2_msg.package_name, m.ros2_msg.message_name))
-        for m in data['mappings']}
-    data.update(
-        generate_services(rospack, message_string_pairs=message_string_pairs))
+    data.update(generate_services(rospack))
 
     template_file = os.path.join(template_dir, 'get_mappings.cpp.em')
     output_file = os.path.join(output_path, 'get_mappings.cpp')
@@ -226,12 +220,10 @@ def generate_messages(rospack=None):
     }
 
 
-def generate_services(rospack=None, message_string_pairs=None):
+def generate_services(rospack=None):
     ros1_srvs = get_ros1_services(rospack=rospack)
     ros2_pkgs, ros2_srvs, mapping_rules = get_ros2_services()
-    services = determine_common_services(
-        ros1_srvs, ros2_srvs, mapping_rules,
-        message_string_pairs=message_string_pairs)
+    services = determine_common_services(ros1_srvs, ros2_srvs, mapping_rules)
     return {
         'services': services,
         'ros2_package_names_srv': ros2_pkgs,
@@ -432,7 +424,10 @@ class MessageMappingRule(MappingRule):
         return self.fields_1_to_2 is not None
 
     def __str__(self):
-        return 'MessageMappingRule(%s <-> %s)' % (self.ros1_package_name, self.ros2_package_name)
+        return 'MessageMappingRule(%s::%s <-> %s::%s)' % (self.ros1_package_name,
+                                                          self.ros1_message_name,
+                                                          self.ros2_package_name,
+                                                          self.ros2_message_name)
 
 
 class ServiceMappingRule(MappingRule):
@@ -471,7 +466,10 @@ class ServiceMappingRule(MappingRule):
                 'Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
 
     def __str__(self):
-        return 'ServiceMappingRule(%s <-> %s)' % (self.ros1_package_name, self.ros2_package_name)
+        return 'ServiceMappingRule(%s::%s <-> %s::%s)' % (self.ros1_package_name,
+                                                          self.ros1_service_name,
+                                                          self.ros2_package_name,
+                                                          self.ros2_service_name)
 
 
 def determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules):
@@ -550,86 +548,103 @@ def determine_message_pairs(ros1_msgs, ros2_msgs, package_pairs, mapping_rules):
     return pairs
 
 
-def determine_common_services(
-    ros1_srvs, ros2_srvs, mapping_rules, message_string_pairs=None
-):
-    if message_string_pairs is None:
-        message_string_pairs = set()
+def srv_field_mapping(ros_type, ros1_name, ros2_name):
+    return {
+        'basic': False if '/' in ros_type else True,
+        'array': True if '[]' in ros_type else False,
+        'ros1': {
+            'name': ros1_name,
+            'type': ros_type.rstrip('[]'),
+            'cpptype': ros_type.rstrip('[]').replace('/', '::')
+        },
+        'ros2': {
+            'name': ros2_name,
+            'type': ros_type.rstrip('[]'),
+            'cpptype': ros_type.rstrip('[]').replace('/', '::msg::')
+        }
+    }
 
-    pairs = []
+
+def determine_common_services(ros1_srvs, ros2_srvs, mapping_rules):
     services = []
+    mapping_pairs = [(rule.ros1_package_name, rule.ros1_service_name) for rule in mapping_rules]
+
+    # fill in rules for matching names
     for ros1_srv in ros1_srvs:
-        for ros2_srv in ros2_srvs:
-            if ros1_srv.package_name == ros2_srv.package_name:
-                if ros1_srv.message_name == ros2_srv.message_name:
-                    pairs.append((ros1_srv, ros2_srv))
+        # add ros1/ros2 srv pairs if a mapping doesn't already exist
+        # and names are the same
+        if(not (ros1_srv.package_name, ros1_srv.message_name) in mapping_pairs):
+            if(ros1_srv in ros2_srvs):
+                data = {
+                    'ros1_package_name': ros1_srv.package_name,
+                    'ros2_package_name': ros1_srv.package_name,
+                    'ros1_service_name': ros1_srv.message_name,
+                    'ros2_service_name': ros1_srv.message_name,
+                    'request_fields_1_to_2': {},
+                    'response_fields_1_to_2': {}
+                }
+                mapping_rules.append(ServiceMappingRule(data, ros1_srv.package_name))
+            else:
+                print("No matching ros2 srv for %s" % str(ros1_srv), file=sys.stdout)
+                continue
 
+    # fill in missing fields if they match
     for rule in mapping_rules:
-        for ros1_srv in ros1_srvs:
-            for ros2_srv in ros2_srvs:
-                if rule.ros1_package_name == ros1_srv.package_name and \
-                   rule.ros2_package_name == ros2_srv.package_name:
-                    if rule.ros1_service_name is None and rule.ros2_service_name is None:
-                        if ros1_srv.message_name == ros2_srv.message_name:
-                            pairs.append((ros1_srv, ros2_srv))
-                    else:
-                        if (
-                            rule.ros1_service_name == ros1_srv.message_name and
-                            rule.ros2_service_name == ros2_srv.message_name
-                        ):
-                            pairs.append((ros1_srv, ros2_srv))
-
-    for pair in pairs:
-        ros1_spec = load_ros1_service(pair[0])
-        ros2_spec = load_ros2_service(pair[1])
+        ros1_srv = Message(rule.ros1_package_name, rule.ros1_service_name)
+        ros2_srv = Message(rule.ros2_package_name, rule.ros2_service_name)
+        ros1_spec = load_ros1_service(ros1_srvs[ros1_srvs.index(ros1_srv)])
+        ros2_spec = load_ros2_service(ros2_srvs[ros2_srvs.index(ros2_srv)])
+        match = True
         ros1_fields = {
             'request': ros1_spec.request.fields(),
             'response': ros1_spec.response.fields()
         }
         ros2_fields = {
-            'request': ros2_spec.request.fields,
-            'response': ros2_spec.response.fields
+            'request': [(str(field.type), field.name) for field in ros2_spec.request.fields],
+            'response': [(str(field.type), field.name) for field in ros2_spec.response.fields]
+        }
+        rule_fields = {
+            'request': rule.request_fields_1_to_2,
+            'response': rule.response_fields_1_to_2
         }
         output = {
             'request': [],
             'response': []
         }
-        match = True
         for direction in ['request', 'response']:
-            if len(ros1_fields[direction]) != len(ros2_fields[direction]):
+            if(len(ros1_fields[direction]) != len(ros2_fields[direction])):
                 match = False
-                break
-            for i, ros1_field in enumerate(ros1_fields[direction]):
-                ros1_type = ros1_field[0]
-                ros2_type = str(ros2_fields[direction][i].type)
-                ros1_name = ros1_field[1]
-                ros2_name = ros2_fields[direction][i].name
-                if ros1_type != ros2_type or ros1_name != ros2_name:
-                    # if the message types have a custom mapping their names
-                    # might not be equal, therefore check the message pairs
-                    if (ros1_type, ros2_type) not in message_string_pairs:
+                print("ros1 and ros2 %s fields must have matching length %s" %
+                      (direction, rule), file=sys.stderr)
+                continue
+            for (ros_type, ros1_name) in ros1_fields[direction]:
+                # if a rule exists for this item, add in the mapping
+                if (rule_fields[direction] and ros1_name in rule_fields[direction]):
+                    ros2_name = rule_fields[direction][ros1_name]
+
+                    if ((ros_type, ros2_name) in ros2_fields[direction]):
+                        output[direction].append(srv_field_mapping(ros_type, ros1_name, ros2_name))
+                    else:
+                        print("Invalid rule field pair for %s<-->%s in %s" %
+                              (ros1_name, ros2_name, rule), file=sys.stderr)
                         match = False
-                        break
-                output[direction].append({
-                    'basic': False if '/' in ros1_type else True,
-                    'array': True if '[]' in ros1_type else False,
-                    'ros1': {
-                        'name': ros1_name,
-                        'type': ros1_type.rstrip('[]'),
-                        'cpptype': ros1_type.rstrip('[]').replace('/', '::')
-                    },
-                    'ros2': {
-                        'name': ros2_name,
-                        'type': ros2_type.rstrip('[]'),
-                        'cpptype': ros2_type.rstrip('[]').replace('/', '::msg::')
-                    }
-                })
+                        continue
+                # A rule doesn't exist for this item, try to match by name
+                else:
+                    ros2_name = ros1_name
+                    if ((ros_type, ros2_name) in ros2_fields[direction]):
+                        output[direction].append(srv_field_mapping(ros_type, ros1_name, ros2_name))
+                    else:
+                        print("Invalid matching field pair for %s<-->%s in %s" %
+                              (ros1_name, ros2_name, rule), file=sys.stderr)
+                        match = False
+                        continue
         if match:
             services.append({
-                'ros1_name': pair[0].message_name,
-                'ros2_name': pair[1].message_name,
-                'ros1_package': pair[0].package_name,
-                'ros2_package': pair[1].package_name,
+                'ros1_name': rule.ros1_service_name,
+                'ros2_name': rule.ros2_service_name,
+                'ros1_package': rule.ros1_package_name,
+                'ros2_package': rule.ros2_package_name,
                 'fields': output
             })
     return services
@@ -655,7 +670,7 @@ def get_ros1_selected_fields(ros1_field_selection, parent_ros1_spec, msg_idx):
     in ros1_field_selection
     :type msg_idx: MessageIndex
 
-    :return: a tuple of genmsg.msgs.Field objets with additional attributes `pkg_name`
+    :return: a tuple of genmsg.msgs.Field objects with additional attributes `pkg_name`
     and `msg_name` as defined by `update_ros1_field_information`, corresponding to
     traversing `parent_ros1_spec` recursively following `ros1_field_selection`
 
