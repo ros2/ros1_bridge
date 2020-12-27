@@ -86,9 +86,15 @@ int main(int argc, char * argv[])
         "with ROS 2 type '%s'\n",
         topic_name.c_str(), type_name.c_str());
 
+      auto ros2_publisher_qos = rclcpp::QoS(rclcpp::KeepLast(queue_size));
+      if (topic_name == "/tf_static") {
+        ros2_publisher_qos.keep_all();
+        ros2_publisher_qos.transient_local();
+      }
+
       try {
         ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
-          ros1_node, ros2_node, "", type_name, topic_name, queue_size);
+          ros1_node, ros2_node, "", type_name, topic_name, queue_size, ros2_publisher_qos);
         all_handles.push_back(handles);
       } catch (std::runtime_error & e) {
         fprintf(
