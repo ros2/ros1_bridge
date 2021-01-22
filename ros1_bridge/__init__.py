@@ -818,9 +818,9 @@ def load_ros2_message(ros2_msg):
         message_relative_path += '.msg'
     else:
         raise RuntimeError(
-            f"message '{ros2_msg.package_name}/msg/{ros2_msg.message_name}' "
-            f"was not found in prefix '{ros2_msg.prefix_path}' with either "
-            f"file extension '.msg' or '.idl'")
+            "message '%s/msg/%s' was not found in prefix '%s' with either"
+            "file extension '.msg' or '.idl'" %
+            (ros2_msg.package_name, ros2_msg.message_name, ros2_msg.prefix_path))
     # We don't support .msg files, but that shouldn't be a problem since an .idl
     # version should have been created when the package was built by rosidl_adapter.
     if message_path.endswith('.msg'):
@@ -831,7 +831,7 @@ def load_ros2_message(ros2_msg):
         )
     if not message_path.endswith('.idl'):
         raise RuntimeError(
-            f"message_path '{message_path}' unexpectedly does not end with '.idl'"
+            "message_path '%s' unexpectedly does not end with '.idl'" % message_path
         )
     idl_locator = \
         rosidl_parser.definition.IdlLocator(message_basepath, message_relative_path)
@@ -839,8 +839,8 @@ def load_ros2_message(ros2_msg):
     messages = spec.content.get_elements_of_type(rosidl_parser.definition.Message)
     if len(messages) != 1:
         raise RuntimeError(
-            "unexpectedly found multiple message definitions when processing "
-            f"message '{ros2_msg.package_name}/msg/{ros2_msg.message_name}'"
+            "unexpectedly found multiple message definitions when processing " +
+            "message '%s/msg/%s'" % (ros2_msg.package_name, ros2_msg.message_name)
         )
     return messages[0]
 
