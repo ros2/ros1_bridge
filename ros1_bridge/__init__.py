@@ -819,7 +819,7 @@ def load_ros2_message(ros2_msg):
     else:
         raise RuntimeError(
             "message '%s/msg/%s' was not found in prefix '%s' with either"
-            "file extension '.msg' or '.idl' %
+            "file extension '.msg' or '.idl'" %
             (ros2_msg.package_name, ros2_msg.message_name, ros2_msg.prefix_path))
     # We don't support .msg files, but that shouldn't be a problem since an .idl
     # version should have been created when the package was built by rosidl_adapter.
