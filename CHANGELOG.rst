@@ -2,8 +2,8 @@
 Changelog for package ros1_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.10.1 (2021-01-25)
+-------------------
 * Fix logging for updated rclcpp interface (`#303 <https://github.com/ros2/ros1_bridge/issues/303>`_)
 * Fix typo in comments (`#297 <https://github.com/ros2/ros1_bridge/issues/297>`_)
 * Contributors: Michael Carroll, Vicidel
