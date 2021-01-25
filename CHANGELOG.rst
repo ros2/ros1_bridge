@@ -2,6 +2,12 @@
 Changelog for package ros1_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix logging for updated rclcpp interface (`#303 <https://github.com/ros2/ros1_bridge/issues/303>`_)
+* Fix typo in comments (`#297 <https://github.com/ros2/ros1_bridge/issues/297>`_)
+* Contributors: Michael Carroll, Vicidel
+
 0.9.5 (2020-12-08)
 ------------------
 * Update to use rosidl_parser and .idl files rather than rosidl_adapter and .msg files (`#296 <https://github.com/ros2/ros1_bridge/issues/296>`_)
