@@ -1,0 +1,35 @@
+name: CI
+
+on: [push, pull_request] # on all pushes and PRs
+
+jobs:
+  ros1_bridge:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        distro: ["ros:rolling-ros1-bridge-focal", "ros:foxy-ros1-bridge-focal"]
+    container:
+      image: ${{ matrix.distro }}
+    env:
+      CCACHE_DIR: "/home/runner/.ccache"
+    steps:
+      - uses: actions/checkout@v2
+      - name: install ccache
+        run: |
+          sudo apt-get update -y
+          sudo apt-get -qq -y install ccache
+      - name: ccache cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.CCACHE_DIR }}
+          key: ccache-${{ matrix.distro }}-${{github.run_id}}
+          restore-keys: |
+            ccache-${{ matrix.distro }}
+      - name: ccache stats
+        run: ccache -s
+      - name: Build ros1-bridge
+        run: |
+          bash ./build_bridge.sh
+      - name: Test ros1-bridge
+        run: |
+          bash ./test_bridge.sh
