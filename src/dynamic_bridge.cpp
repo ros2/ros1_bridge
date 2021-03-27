@@ -254,11 +254,14 @@ void update_bridge(
     bridge.ros1_type_name = ros1_type_name;
     bridge.ros2_type_name = ros2_type_name;
 
+    bool ros1_pub_latching = (topic_name == "/tf_static");
+
     try {
       bridge.bridge_handles = ros1_bridge::create_bridge_from_2_to_1(
         ros2_node, ros1_node,
         bridge.ros2_type_name, topic_name, 10,
-        bridge.ros1_type_name, topic_name, 10);
+        bridge.ros1_type_name, topic_name, 10,
+        ros1_pub_latching);
     } catch (std::runtime_error & e) {
       fprintf(
         stderr,

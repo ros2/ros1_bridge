@@ -76,6 +76,7 @@ create_bridge_from_2_to_1(
   const std::string & ros1_type_name,
   const std::string & ros1_topic_name,
   size_t publisher_queue_size,
+  bool publisher_latching,
   rclcpp::PublisherBase::SharedPtr ros2_pub)
 {
   auto subscriber_qos = rclcpp::SensorDataQoS(rclcpp::KeepLast(subscriber_queue_size));
@@ -88,6 +89,7 @@ create_bridge_from_2_to_1(
     ros1_type_name,
     ros1_topic_name,
     publisher_queue_size,
+    publisher_latching,
     ros2_pub);
 }
 
@@ -101,11 +103,12 @@ create_bridge_from_2_to_1(
   const std::string & ros1_type_name,
   const std::string & ros1_topic_name,
   size_t publisher_queue_size,
+  bool publisher_latching,
   rclcpp::PublisherBase::SharedPtr ros2_pub)
 {
   auto factory = get_factory(ros1_type_name, ros2_type_name);
   auto ros1_pub = factory->create_ros1_publisher(
-    ros1_node, ros1_topic_name, publisher_queue_size);
+    ros1_node, ros1_topic_name, publisher_queue_size, publisher_latching);
 
   auto ros2_sub = factory->create_ros2_subscriber(
     ros2_node, ros2_topic_name, subscriber_qos, ros1_pub, ros2_pub);
@@ -135,7 +138,7 @@ create_bidirectional_bridge(
   handles.bridge2to1 = create_bridge_from_2_to_1(
     ros2_node, ros1_node,
     ros2_type_name, topic_name, queue_size, ros1_type_name, topic_name, queue_size,
-    handles.bridge1to2.ros2_publisher);
+    false, handles.bridge1to2.ros2_publisher);
   return handles;
 }
 
@@ -147,7 +150,8 @@ create_bidirectional_bridge(
   const std::string & ros2_type_name,
   const std::string & topic_name,
   size_t queue_size,
-  const rclcpp::QoS & publisher_qos)
+  bool ros1_publisher_latching,
+  const rclcpp::QoS & ros2_publisher_qos)
 {
   RCLCPP_INFO(
     ros2_node->get_logger(), "create bidirectional bridge for topic %s",
@@ -155,11 +159,12 @@ create_bidirectional_bridge(
   BridgeHandles handles;
   handles.bridge1to2 = create_bridge_from_1_to_2(
     ros1_node, ros2_node,
-    ros1_type_name, topic_name, publisher_qos.get_rmw_qos_profile().depth, ros2_type_name, topic_name, publisher_qos);
+    ros1_type_name, topic_name, ros2_publisher_qos.get_rmw_qos_profile().depth, ros2_type_name,
+    topic_name, ros2_publisher_qos);
   handles.bridge2to1 = create_bridge_from_2_to_1(
     ros2_node, ros1_node,
     ros2_type_name, topic_name, queue_size, ros1_type_name, topic_name, queue_size,
-    handles.bridge1to2.ros2_publisher);
+    ros1_publisher_latching, handles.bridge1to2.ros2_publisher);
   return handles;
 }
 
