@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        distro: ["ros:rolling-ros1-bridge-focal", "ros:foxy-ros1-bridge-focal"]
+        distro: ["ros:rolling-ros1-bridge-focal"]
     container:
       image: ${{ matrix.distro }}
     env:
