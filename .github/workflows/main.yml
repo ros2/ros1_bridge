@@ -27,9 +27,13 @@ jobs:
             ccache-${{ matrix.distro }}
       - name: ccache stats
         run: ccache -s
-      - name: Build ros1-bridge
-        run: |
-          bash ./build_bridge.sh
-      - name: Test ros1-bridge
-        run: |
-          bash ./test_bridge.sh
+      - uses: ros-tooling/setup-ros@v0.1
+        with:
+          required-ros-distributions: "noetic rolling"
+      - name: Build and test ros1-bridge
+        uses: ros-tooling/action-ros-ci@v0.2
+        with:
+          package-name: ros1_bridge
+          target-ros1-distro: noetic
+          target-ros2-distro: rolling
+
