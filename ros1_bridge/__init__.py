@@ -288,7 +288,7 @@ def get_ros2_messages():
                 if all(n not in data for n in ('ros1_service_name', 'ros2_service_name')):
                     try:
                         rules.append(MessageMappingRule(data, package_name))
-                    except Exception as e:
+                    except Exception as e:  # noqa: B902
                         print('%s' % str(e), file=sys.stderr)
     return pkgs, msgs, rules
 
@@ -341,7 +341,7 @@ def get_ros2_services():
                 if all(n not in data for n in ('ros1_message_name', 'ros2_message_name')):
                     try:
                         rules.append(ServiceMappingRule(data, package_name))
-                    except Exception as e:
+                    except Exception as e:  # noqa: B902
                         print('%s' % str(e), file=sys.stderr)
     return pkgs, srvs, rules
 
