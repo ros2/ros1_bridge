@@ -38,8 +38,6 @@
 #include "rclcpp/rclcpp.hpp"
 #include "rclcpp/scope_exit.hpp"
 
-#include "rcutils/get_env.h"
-
 #include "ros1_bridge/bridge.hpp"
 
 
