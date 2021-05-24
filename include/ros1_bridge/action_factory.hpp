@@ -57,9 +57,10 @@ public:
     using ROS2Goal = typename ROS2_T::Goal;
     using ROS2Feedback = typename ROS2_T::Feedback;
     using ROS2Result = typename ROS2_T::Result;
-    using ROS2GoalHandle = typename rclcpp_action::ClientGoalHandle<ROS2_T>::SharedPtr;
+    using ROS2ClientGoalHandle = typename rclcpp_action::ClientGoalHandle<ROS2_T>::SharedPtr;
     using ROS2ClientSharedPtr = typename rclcpp_action::Client<ROS2_T>::SharedPtr;
     using ROS2SendGoalOptions = typename rclcpp_action::Client<ROS2_T>::SendGoalOptions;
+    using ROS2GoalHandle = typename rclcpp_action::Client<ROS2_T>::GoalHandle::SharedPtr;
 
     virtual void create_server_client(ros::NodeHandle ros1_node,
                                       rclcpp::Node::SharedPtr ros2_node,
@@ -138,12 +139,12 @@ private:
 
             // goal_response_callback signature changed after foxy, this implementation
             // works with both
-            std::shared_future<ROS2GoalHandle> gh2_future;
+            std::shared_future<ROS2ClientGoalHandle> gh2_future;
             //Changes as per Dashing
             auto send_goal_ops = ROS2SendGoalOptions();
             send_goal_ops.goal_response_callback =
-                [this, &gh2_future](auto gh2) mutable {
-		    auto goal_handle = gh2_future.get();
+                [this, &gh2_future](ROS2GoalHandle gh2) mutable {
+                    auto goal_handle = gh2_future.get();
                     if (!goal_handle)
                     {
                         gh1_.setRejected(); // goal was not accepted by remote server
@@ -164,7 +165,7 @@ private:
                 };
 
             send_goal_ops.feedback_callback =
-                [this](ROS2GoalHandle, auto feedback2) mutable {
+                [this](ROS2ClientGoalHandle, auto feedback2) mutable {
                     ROS1Feedback feedback1;
                     translate_feedback_2_to_1(feedback1, *feedback2);
                     gh1_.publishFeedback(feedback1);
@@ -199,7 +200,7 @@ private:
 
     private:
         ROS1GoalHandle gh1_;
-        ROS2GoalHandle gh2_;
+        ROS2ClientGoalHandle gh2_;
         ROS2ClientSharedPtr client_;
         bool canceled_; // cancel was called
         std::mutex mutex_;
