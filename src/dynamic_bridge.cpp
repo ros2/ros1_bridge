@@ -136,8 +136,7 @@ void update_bridge(
   std::map<std::string, Bridge2to1HandlesAndMessageTypes> & bridges_2to1,
   std::map<std::string, ros1_bridge::ServiceBridge1to2> & service_bridges_1_to_2,
   std::map<std::string, ros1_bridge::ServiceBridge2to1> & service_bridges_2_to_1,
-  bool bridge_all_1to2_topics, bool bridge_all_2to1_topics,
-  std::vector<rclcpp::CallbackGroup::SharedPtr> & invalid_callback_group)
+  bool bridge_all_1to2_topics, bool bridge_all_2to1_topics)
 {
   std::lock_guard<std::mutex> lock(g_bridge_mutex);
 
@@ -354,8 +353,6 @@ void update_bridge(
     if (ros1_services.find(it->first) == ros1_services.end()) {
       printf("Removed 2 to 1 bridge for service %s\n", it->first.data());
       try {
-        // store the callback group to ensure that it is deleted after the node
-        invalid_callback_group.push_back(it->second.group);
         it = service_bridges_2_to_1.erase(it);
       } catch (std::runtime_error & e) {
         fprintf(stderr, "There was an error while removing 2 to 1 bridge: %s\n", e.what());
@@ -371,8 +368,6 @@ void update_bridge(
       printf("Removed 1 to 2 bridge for service %s\n", it->first.data());
       try {
         it->second.server.shutdown();
-        // store the callback group to ensure that it is deleted after the node
-        invalid_callback_group.push_back(it->second.group);
         it = service_bridges_1_to_2.erase(it);
       } catch (std::runtime_error & e) {
         fprintf(stderr, "There was an error while removing 1 to 2 bridge: %s\n", e.what());
@@ -472,6 +467,8 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
 
   auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
+  // a callback group for creating ros2 entity (client, service and subscription) later
+  auto callback_group = ros2_node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
   // ROS 1 node
   ros::init(argc, argv, "ros_bridge");
@@ -489,7 +486,6 @@ int main(int argc, char * argv[])
   std::map<std::string, Bridge2to1HandlesAndMessageTypes> bridges_2to1;
   std::map<std::string, ros1_bridge::ServiceBridge1to2> service_bridges_1_to_2;
   std::map<std::string, ros1_bridge::ServiceBridge2to1> service_bridges_2_to_1;
-  std::vector<rclcpp::CallbackGroup::SharedPtr> invalid_callback_group;
 
   // setup polling of ROS 1 master
   auto ros1_poll = [
@@ -500,8 +496,7 @@ int main(int argc, char * argv[])
     &ros1_services, &ros2_services,
     &service_bridges_1_to_2, &service_bridges_2_to_1,
     &output_topic_introspection,
-    &bridge_all_1to2_topics, &bridge_all_2to1_topics,
-    &invalid_callback_group
+    &bridge_all_1to2_topics, &bridge_all_2to1_topics
     ](const ros::TimerEvent &) -> void
     {
       // collect all topics names which have at least one publisher or subscriber beside this bridge
@@ -619,8 +614,7 @@ int main(int argc, char * argv[])
         ros1_services, ros2_services,
         bridges_1to2, bridges_2to1,
         service_bridges_1_to_2, service_bridges_2_to_1,
-        bridge_all_1to2_topics, bridge_all_2to1_topics,
-        invalid_callback_group);
+        bridge_all_1to2_topics, bridge_all_2to1_topics);
     };
 
   auto ros1_poll_timer = ros1_node.createTimer(ros::Duration(1.0), ros1_poll);
@@ -639,8 +633,7 @@ int main(int argc, char * argv[])
     &service_bridges_1_to_2, &service_bridges_2_to_1,
     &output_topic_introspection,
     &bridge_all_1to2_topics, &bridge_all_2to1_topics,
-    &already_ignored_topics, &already_ignored_services,
-    &invalid_callback_group
+    &already_ignored_topics, &already_ignored_services
     ]() -> void
     {
       auto ros2_topics = ros2_node->get_topic_names_and_types();
@@ -785,8 +778,7 @@ int main(int argc, char * argv[])
         ros1_services, ros2_services,
         bridges_1to2, bridges_2to1,
         service_bridges_1_to_2, service_bridges_2_to_1,
-        bridge_all_1to2_topics, bridge_all_2to1_topics,
-        invalid_callback_group);
+        bridge_all_1to2_topics, bridge_all_2to1_topics);
     };
 
   auto ros2_poll_timer = ros2_node->create_wall_timer(
@@ -801,7 +793,6 @@ int main(int argc, char * argv[])
   rclcpp::executors::MultiThreadedExecutor executor;
   while (ros1_node.ok() && rclcpp::ok()) {
     executor.spin_node_once(ros2_node);
-    invalid_callback_group.clear();
   }
 
   return 0;

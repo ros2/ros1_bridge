@@ -33,6 +33,20 @@
 namespace ros1_bridge
 {
 
+static rclcpp::CallbackGroup::SharedPtr get_callback_group(rclcpp::Node::SharedPtr ros2_node)
+{
+  auto node_base = ros2_node->get_node_base_interface();
+  auto group = node_base->get_default_callback_group();
+  auto callback_groups = node_base->get_callback_groups();
+  if (callback_groups.size() > 1) {
+    auto group_lock = callback_groups[1].lock();
+    if (group_lock) {
+      group = group_lock;
+    }
+  }
+  return group;
+}
+
 template<typename ROS1_T, typename ROS2_T>
 class Factory : public FactoryInterface
 {
@@ -145,6 +159,7 @@ public:
       ros1_pub, ros1_type_name_, ros2_type_name_, node->get_logger(), ros2_pub);
     rclcpp::SubscriptionOptions options;
     options.ignore_local_publications = true;
+    options.callback_group = ros1_bridge::get_callback_group(node);
     return node->create_subscription<ROS2_T>(
       topic_name, qos, callback, options);
   }
@@ -328,10 +343,9 @@ public:
     ros::NodeHandle & ros1_node, rclcpp::Node::SharedPtr ros2_node, const std::string & name)
   {
     ServiceBridge1to2 bridge;
-    bridge.group = ros2_node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
     bridge.client = ros2_node->create_client<ROS2_T>(
       name, rmw_qos_profile_services_default,
-      bridge.group);
+      ros1_bridge::get_callback_group(ros2_node));
     auto m = &ServiceFactory<ROS1_T, ROS2_T>::forward_1_to_2;
     auto f = std::bind(
       m, this, bridge.client, ros2_node->get_logger(), std::placeholders::_1,
@@ -354,10 +368,9 @@ public:
     f = std::bind(
       m, this, bridge.client, ros2_node->get_logger(), std::placeholders::_1,
       std::placeholders::_2, std::placeholders::_3);
-    bridge.group = ros2_node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
     bridge.server = ros2_node->create_service<ROS2_T>(
       name, f, rmw_qos_profile_services_default,
-      bridge.group);
+      ros1_bridge::get_callback_group(ros2_node));
     return bridge;
   }
 
