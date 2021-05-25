@@ -329,7 +329,9 @@ public:
   {
     ServiceBridge1to2 bridge;
     bridge.group = ros2_node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-    bridge.client = ros2_node->create_client<ROS2_T>(name, rmw_qos_profile_services_default, bridge.group);
+    bridge.client = ros2_node->create_client<ROS2_T>(
+      name, rmw_qos_profile_services_default,
+      bridge.group);
     auto m = &ServiceFactory<ROS1_T, ROS2_T>::forward_1_to_2;
     auto f = std::bind(
       m, this, bridge.client, ros2_node->get_logger(), std::placeholders::_1,
@@ -353,7 +355,9 @@ public:
       m, this, bridge.client, ros2_node->get_logger(), std::placeholders::_1,
       std::placeholders::_2, std::placeholders::_3);
     bridge.group = ros2_node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
-    bridge.server = ros2_node->create_service<ROS2_T>(name, f, rmw_qos_profile_services_default, bridge.group);
+    bridge.server = ros2_node->create_service<ROS2_T>(
+      name, f, rmw_qos_profile_services_default,
+      bridge.group);
     return bridge;
   }
 
