@@ -467,7 +467,7 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
 
   auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
-  // a callback group for creating ros2 entity (client, service and subscription) later
+  // a callback group for creating ros2 entity (client, service) later
   auto callback_group = ros2_node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
   // ROS 1 node
@@ -781,17 +781,9 @@ int main(int argc, char * argv[])
         bridge_all_1to2_topics, bridge_all_2to1_topics);
     };
 
-  auto check_ros1_flag = [&ros1_node] {
-      if (!ros1_node.ok()) {
-        rclcpp::shutdown();
-      }
-    };
-
   auto ros2_poll_timer = ros2_node->create_wall_timer(
-    std::chrono::seconds(1), [&ros2_poll, &check_ros1_flag] {
-      ros2_poll();
-      check_ros1_flag();
-    });
+    std::chrono::seconds(1), ros2_poll);
+
 
   // ROS 1 asynchronous spinner
   ros::AsyncSpinner async_spinner(0);
@@ -799,8 +791,9 @@ int main(int argc, char * argv[])
 
   // ROS 2 spinning loop
   rclcpp::executors::MultiThreadedExecutor executor;
-  executor.add_node(ros2_node);
-  executor.spin();
+  while (ros1_node.ok() && rclcpp::ok()) {
+    executor.spin_node_once(ros2_node);
+  }
 
   return 0;
 }

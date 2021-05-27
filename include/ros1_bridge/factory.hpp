@@ -33,17 +33,35 @@
 namespace ros1_bridge
 {
 
-static rclcpp::CallbackGroup::SharedPtr get_callback_group(rclcpp::Node::SharedPtr ros2_node)
+static rclcpp::CallbackGroup::SharedPtr get_callback_group(
+  rclcpp::Node::SharedPtr ros2_node,
+  const std::string & topic_name = "")
 {
   auto node_base = ros2_node->get_node_base_interface();
   auto group = node_base->get_default_callback_group();
-  auto callback_groups = node_base->get_callback_groups();
-  if (callback_groups.size() > 1) {
-    auto group_lock = callback_groups[1].lock();
-    if (group_lock) {
-      group = group_lock;
+  if (topic_name.empty()) {
+    auto callback_groups = node_base->get_callback_groups();
+    if (callback_groups.size() > 1) {
+      auto group_lock = callback_groups[1].lock();
+      if (group_lock) {
+        group = group_lock;
+      }
     }
+    return group;
   }
+
+  typedef std::map<std::string, rclcpp::CallbackGroup::SharedPtr> TopicCallbackGroupMap;
+  static TopicCallbackGroupMap s_topic_callbackgroups;
+  auto iter = s_topic_callbackgroups.find(topic_name);
+  if (iter != s_topic_callbackgroups.end()) {
+    return iter->second;
+  }
+
+  // use CallbackGroup with MutuallyExclusive for each topic
+  // to ensure that the message data of each topic is received in order
+  group = ros2_node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
+  s_topic_callbackgroups.insert({topic_name, group});
+
   return group;
 }
 
@@ -159,7 +177,7 @@ public:
       ros1_pub, ros1_type_name_, ros2_type_name_, node->get_logger(), ros2_pub);
     rclcpp::SubscriptionOptions options;
     options.ignore_local_publications = true;
-    options.callback_group = ros1_bridge::get_callback_group(node);
+    options.callback_group = ros1_bridge::get_callback_group(node, topic_name);
     return node->create_subscription<ROS2_T>(
       topic_name, qos, callback, options);
   }
