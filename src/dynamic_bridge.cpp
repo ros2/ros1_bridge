@@ -468,14 +468,12 @@ int main(int argc, char * argv[])
   rclcpp::init(argc, argv);
 
   auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
-  // a callback group for creating ros2 entity (client, service) later
-  auto callback_group = ros2_node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
 
   // ROS 1 node
   ros::init(argc, argv, "ros_bridge");
   ros::NodeHandle ros1_node;
-  ros::CallbackQueue queue;
-  ros1_node.setCallbackQueue(&queue);
+  ros::CallbackQueue ros1_callback_queue;
+  ros1_node.setCallbackQueue(&ros1_callback_queue);
 
   // mapping of available topic names to type names
   std::map<std::string, std::string> ros1_publishers;
@@ -789,7 +787,7 @@ int main(int argc, char * argv[])
 
 
   // ROS 1 asynchronous spinner
-  ros::AsyncSpinner async_spinner(0, &queue);
+  ros::AsyncSpinner async_spinner(0, &ros1_callback_queue);
   async_spinner.start();
 
   // ROS 2 spinning loop

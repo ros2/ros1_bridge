@@ -41,14 +41,10 @@ static rclcpp::CallbackGroup::SharedPtr get_callback_group(
   auto node_base = ros2_node->get_node_base_interface();
   auto group = node_base->get_default_callback_group();
   if (topic_name.empty()) {
-    auto callback_groups = node_base->get_callback_groups();
-    if (callback_groups.size() > 1) {
-      auto group_lock = callback_groups[1].lock();
-      if (group_lock) {
-        group = group_lock;
-      }
-    }
-    return group;
+    // create a callback group with Reentrant for creating ros2 clients and services
+    static auto s_shared_callbackgroup =
+      ros2_node->create_callback_group(rclcpp::CallbackGroupType::Reentrant);
+    return s_shared_callbackgroup;
   }
 
   typedef std::map<std::string, rclcpp::CallbackGroup::SharedPtr> TopicCallbackGroupMap;
@@ -58,7 +54,7 @@ static rclcpp::CallbackGroup::SharedPtr get_callback_group(
     return iter->second;
   }
 
-  // use CallbackGroup with MutuallyExclusive for each topic
+  // create one CallbackGroup with MutuallyExclusive for each topic
   // to ensure that the message data of each topic is received in order
   group = ros2_node->create_callback_group(rclcpp::CallbackGroupType::MutuallyExclusive);
   s_topic_callbackgroups.insert({topic_name, group});
