@@ -16,6 +16,7 @@
 #define  ROS1_BRIDGE__FACTORY_HPP_
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>

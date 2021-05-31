@@ -25,6 +25,7 @@
 # pragma clang diagnostic push
 # pragma clang diagnostic ignored "-Wunused-parameter"
 #endif
+#include "ros/callback_queue.h"
 #include "ros/ros.h"
 #ifdef __clang__
 # pragma clang diagnostic pop
@@ -473,6 +474,8 @@ int main(int argc, char * argv[])
   // ROS 1 node
   ros::init(argc, argv, "ros_bridge");
   ros::NodeHandle ros1_node;
+  ros::CallbackQueue queue;
+  ros1_node.setCallbackQueue(&queue);
 
   // mapping of available topic names to type names
   std::map<std::string, std::string> ros1_publishers;
@@ -786,7 +789,7 @@ int main(int argc, char * argv[])
 
 
   // ROS 1 asynchronous spinner
-  ros::AsyncSpinner async_spinner(0);
+  ros::AsyncSpinner async_spinner(0, &queue);
   async_spinner.start();
 
   // ROS 2 spinning loop
