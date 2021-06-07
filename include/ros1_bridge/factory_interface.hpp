@@ -151,6 +151,8 @@ public:
     ros::NodeHandle ros1_node,
     rclcpp::Node::SharedPtr ros2_node,
     const std::string action_name) = 0;
+
+  virtual void shutdown() = 0;
 };
 
 }  // namespace ros1_bridge

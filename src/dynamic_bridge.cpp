@@ -411,8 +411,8 @@ void update_bridge(
         "ros1", details.at("package"), details.at("type"));
       if (factory) {
         try {
-          action_bridges_2_to_1[name].reset(factory.get());
           factory->create_server_client(ros1_node, ros2_node, name);
+          action_bridges_2_to_1[name] = std::move(factory);
           printf("Created 2 to 1 bridge for action %s\n", name.data());
         } catch (std::runtime_error & e) {
           fprintf(stderr, "Failed to created a bridge: %s\n", e.what());
@@ -433,8 +433,8 @@ void update_bridge(
         "ros2", details.at("package"), details.at("type"));
       if (factory) {
         try {
-          action_bridges_1_to_2[name].reset(factory.get());
           factory->create_server_client(ros1_node, ros2_node, name);
+          action_bridges_1_to_2[name] = std::move(factory);
           printf("Created 1 to 2 bridge for action %s\n", name.data());
         } catch (std::runtime_error & e) {
           fprintf(stderr, "Failed to created a bridge: %s\n", e.what());
@@ -448,6 +448,8 @@ void update_bridge(
     if (ros1_action_servers.find(it->first) == ros1_action_servers.end()) {
       printf("Removed 2 to 1 bridge for action %s\n", it->first.data());
       try {
+        it->second->shutdown();
+        it->second.reset();
         it = action_bridges_2_to_1.erase(it);
       } catch (std::runtime_error & e) {
         fprintf(stderr, "There was an error while removing 2 to 1 bridge: %s\n", e.what());
@@ -463,6 +465,8 @@ void update_bridge(
       printf("Removed 1 to 2 bridge for action %s\n", it->first.data());
       try {
         // it->second.server.shutdown();
+        it->second->shutdown();
+        it->second.reset();
         it = action_bridges_1_to_2.erase(it);
       } catch (std::runtime_error & e) {
         fprintf(stderr, "There was an error while removing 1 to 2 bridge: %s\n", e.what());
@@ -894,6 +898,13 @@ int main(int argc, char * argv[])
       get_active_ros1_actions(
         current_ros1_publishers, current_ros1_subscribers,
         active_ros1_action_servers, active_ros1_action_clients);
+
+      {
+        std::lock_guard<std::mutex> lock(g_bridge_mutex);
+        ros1_services = active_ros1_services;
+        ros1_action_servers = active_ros1_action_servers;
+        ros1_action_clients = active_ros1_action_clients;
+      }
 
       if (output_topic_introspection) {
         printf("\n");

@@ -78,6 +78,14 @@ public:
     client_ = rclcpp_action::create_client<ROS2_T>(ros2_node, action_name);
   }
 
+  virtual void shutdown() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto goal : goals_) {
+      std::thread([handler = goal.second]() mutable {handler->cancel();}).detach();
+    }
+    server_.reset();
+  }
+
   void cancel_cb(ROS1GoalHandle gh1)
   {
     // try to find goal and cancel it
@@ -243,6 +251,14 @@ public:
         std::placeholders::_2),
       std::bind(&ActionFactory_2_1::handle_cancel, this, std::placeholders::_1),
       std::bind(&ActionFactory_2_1::handle_accepted, this, std::placeholders::_1));
+  }
+
+  virtual void shutdown() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    for (auto goal : goals_) {
+      std::thread([handler = goal.second]() mutable {handler->cancel();}).detach();
+    }
+    server_.reset();
   }
 
   // ROS2 callbacks
