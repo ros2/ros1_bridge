@@ -28,6 +28,7 @@ from ros1_bridge import camel_case_to_lower_case_underscore
 #include <string>
 
 #include <ros1_bridge/factory.hpp>
+#include <ros1_bridge/action_factory.hpp>
 
 // include ROS 1 messages
 @[for ros1_msg in mapped_ros1_msgs]@
@@ -56,6 +57,14 @@ get_service_factory_@(ros2_package_name)(const std::string & ros_id, const std::
 
 std::unique_ptr<ServiceFactoryInterface>
 get_service_factory_@(ros2_package_name)__srv__@(s.message_name)(const std::string & ros_id, const std::string & package_name, const std::string & service_name);
+@[end for]@
+
+std::unique_ptr<ActionFactoryInterface>
+get_action_factory_@(ros2_package_name)(const std::string & ros_id, const std::string & package_name, const std::string & action_name);
+@[for a in ros2_action_types]@
+
+std::unique_ptr<ActionFactoryInterface>
+get_action_factory_@(ros2_package_name)__action__@(a.message_name)(const std::string & ros_id, const std::string & package_name, const std::string & action_name);
 @[end for]@
 
 // conversion functions for available interfaces

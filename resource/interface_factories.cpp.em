@@ -44,6 +44,16 @@ from rosidl_parser.definition import NamespacedType
 #include <@(service["ros2_package"])/srv/@(camel_case_to_lower_case_underscore(service["ros2_name"])).hpp>
 @[end for]@
 
+// include ROS 1 actions
+@[for action in mapped_actions]@
+#include <@(action["ros1_package"])/@(action["ros1_name"])Action.h>
+@[end for]@
+
+// include ROS 2 actions
+@[for action in mapped_actions]@
+#include <@(action["ros2_package"])/action/@(camel_case_to_lower_case_underscore(action["ros2_name"])).hpp>
+@[end for]@
+
 namespace ros1_bridge
 {
 
@@ -96,6 +106,41 @@ get_service_factory_@(ros2_package_name)__@(interface_type)__@(interface.message
     return std::unique_ptr<ServiceFactoryInterface>(new ServiceFactory<
       @(service["ros1_package"])::@(service["ros1_name"]),
       @(service["ros2_package"])::srv::@(service["ros2_name"])
+    >);
+  }
+@[end for]@
+  return nullptr;
+}
+@
+
+std::unique_ptr<ActionFactoryInterface>
+get_action_factory_@(ros2_package_name)__@(interface_type)__@(interface.message_name)(const std::string & ros_id, const std::string & package_name, const std::string & action_name)
+{
+@[if not mapped_actions]@
+  (void)ros_id;
+  (void)package_name;
+  (void)action_name;
+@[end if]@
+@[for action in mapped_actions]@
+  if (
+    ros_id == "ros1" &&
+    package_name == "@(action["ros1_package"])" &&
+    action_name == "@(action["ros1_name"])"
+  ) {
+    return std::unique_ptr<ActionFactoryInterface>(new ActionFactory_2_1<
+      @(action["ros1_package"])::@(action["ros1_name"])Action,
+      @(action["ros2_package"])::action::@(action["ros2_name"])
+    >);
+  }
+  else if
+    (
+      ros_id == "ros2" &&
+      package_name == "@(action["ros2_package"])" &&
+      action_name == "action/@(action["ros2_name"])"
+  ) {
+    return std::unique_ptr<ActionFactoryInterface>(new ActionFactory_1_2<
+      @(action["ros1_package"])::@(action["ros1_name"])Action,
+      @(action["ros2_package"])::action::@(action["ros2_name"])
     >);
   }
 @[end for]@
@@ -317,10 +362,14 @@ void ServiceFactory<
   auto & @(field["ros2"]["name"])2 = req2.@(field["ros2"]["name"]);
 @[        end if]@
 @[        if field["basic"]]@
-  @(field["ros2"]["name"])@(to) = @(field["ros1"]["name"])@(frm);
+@[           if field["ros2"]["type"].startswith("builtin_interfaces") ]@
+  ros1_bridge::convert_@(frm)_to_@(to)(@(field["ros" + frm]["name"])@(frm), @(field["ros" + to]["name"])@(to));
+@[            else]@
+  @(field["ros" + to]["name"])@(to) = @(field["ros" + frm]["name"])@(frm);
+@[            end if]@
 @[        else]@
   Factory<@(field["ros1"]["cpptype"]),@(field["ros2"]["cpptype"])>::convert_@(frm)_to_@(to)(@
-@(field["ros2"]["name"])@(frm), @(field["ros1"]["name"])@(to));
+@(field["ros" + frm]["name"])@(frm), @(field["ros" + to]["name"])@(to));
 @[        end if]@
 @[        if field["array"]]@
   }
@@ -330,5 +379,71 @@ void ServiceFactory<
 
 @[    end for]@
 @[  end for]@
+@[end for]@
+
+@[for action in mapped_actions]@
+@[  for frm, to in [("1", "2"), ("2", "1")]]@
+@[    for type in ["Goal", "Result", "Feedback"]]@
+template <>
+@[      if type == "Goal"]@
+@{
+frm_, to_ = frm, to
+const_1 = "const "
+const_2 = ""
+}@
+@[      else]@
+@{
+frm_, to_ = to, frm
+const_1 = ""
+const_2 = "const "
+}@
+@[      end if]@
+void ActionFactory_@(frm_)_@(to_)<
+@(action["ros1_package"])::@(action["ros1_name"])Action,
+@(action["ros2_package"])::action::@(action["ros2_name"])
+>::translate_@(type.lower())_@(frm)_to_@(to)(
+@[      if type == "Goal"]@
+  @(const_1)ROS@(frm)@(type) &@(type.lower())@(frm),
+  @(const_2)ROS@(to)@(type) &@(type.lower())@(to))
+@[      else]@
+  @(const_1)ROS@(to)@(type) &@(type.lower())@(to),
+  @(const_2)ROS@(frm)@(type) &@(type.lower())@(frm))
+@[      end if]@
+{
+@[      for field in action["fields"][type.lower()]]@
+@[        if field["array"]]@
+  @(type.lower())@(to).@(field["ros" + to]["name"]).resize(@(type.lower())@(frm).@(field["ros" + frm]["name"]).size());
+  auto @(field["ros" + frm]["name"])@(frm)_it = @(type.lower())@(frm).@(field["ros" + frm]["name"]).begin();
+  auto @(field["ros" + to]["name"])@(to)_it = @(type.lower())@(to).@(field["ros" + to]["name"]).begin();
+  while (
+    @(field["ros" + frm]["name"])@(frm)_it != @(type.lower())@(frm).@(field["ros" + frm]["name"]).end() &&
+    @(field["ros" + to]["name"])@(to)_it != @(type.lower())@(to).@(field["ros" + to]["name"]).end()
+  ) {
+    auto & @(field["ros" + frm]["name"])@(frm) = *(@(field["ros" + frm]["name"])@(frm)_it++);
+    auto & @(field["ros" + to]["name"])@(to) = *(@(field["ros" + to]["name"])@(to)_it++);
+@[        else]@
+  auto & @(field["ros" + frm]["name"])@(frm) = @(type.lower())@(frm).@(field["ros" + frm]["name"]);
+  auto & @(field["ros" + to]["name"])@(to) = @(type.lower())@(to).@(field["ros" + to]["name"]);
+@[        end if]@
+@[      if field["basic"]]@
+@[        if field["ros2"]["type"].startswith("builtin_interfaces") ]@
+    ros1_bridge::convert_@(frm)_to_@(to)(@(field["ros" + frm]["name"])@(frm), @(field["ros" + to]["name"])@(to));
+@[        else]@
+    @(field["ros" + to]["name"])@(to) = @(field["ros" + frm]["name"])@(frm);
+@[        end if]@
+@[      else]@
+    Factory<@(field["ros1"]["cpptype"]),@(field["ros2"]["cpptype"])>::convert_@(frm)_to_@(to)(@(field["ros" + frm]["name"])@(frm), @(field["ros" + to]["name"])@(to));
+@[end if]@
+@[        if field["array"]]@
+  }
+@[        end if]@
+
+@[      end for]@
+}
+
+@[    end for]@
+
+@[  end for]@
+
 @[end for]@
 }  // namespace ros1_bridge

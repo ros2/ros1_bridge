@@ -346,3 +346,25 @@ Launch AddTwoInts client:
 . <ros2-install-dir>/setup.bash
 ros2 run demo_nodes_cpp add_two_ints_client
 ```
+
+# Action bridge
+
+The arguments for `action_bridge` node are:
+`direction`: from `ros1` client to `ros2` server --> `ros1`  
+`package`: package of the `ROS1` server node  
+`type`: action interface type of `ROS1`  
+`name`: action name
+```
+# Terminal 1 -- action bridge
+source <ros1_bridge-install-dir>/setup.bash
+ros2 run ros1_bridge action_bridge ros1 actionlib_tutorials Fibonacci fibonacci
+
+# Terminal 2 -- ROS1 action server
+# Make sure roscore is already running
+source <ros1-install-dir>/setup.bash
+rosrun actionlib_tutorials fibonacci_server
+
+# Terminal 3 -- ROS2 action client
+source <ros2-install-dir>/setup.bash
+ros2 run action_tutorials_cpp fibonacci_action_client 20
+```
