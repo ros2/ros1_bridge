@@ -27,6 +27,7 @@ TEST_BRIDGE_ROSCORE = '@TEST_BRIDGE_ROSCORE@'
 TEST_BRIDGE_ROS1_CLIENT = '@TEST_BRIDGE_ROS1_CLIENT@'
 TEST_BRIDGE_ROS1_SERVER = '@TEST_BRIDGE_ROS1_SERVER@'
 TEST_BRIDGE_DYNAMIC_BRIDGE = '@TEST_BRIDGE_DYNAMIC_BRIDGE@'
+TEST_BRIDGE_DYNAMIC_BRIDGE_ARG = '@TEST_BRIDGE_DYNAMIC_BRIDGE_ARG@'
 TEST_BRIDGE_ROS2_CLIENT = '@TEST_BRIDGE_ROS2_CLIENT@'
 TEST_BRIDGE_ROS2_SERVER = '@TEST_BRIDGE_ROS2_SERVER@'
 
@@ -50,7 +51,7 @@ def generate_test_description(test_name, server_cmd, client_cmd):
 
     # dynamic bridge
     rosbridge_process = ExecuteProcess(
-        cmd=[TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_DYNAMIC_BRIDGE],
+        cmd=[TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_DYNAMIC_BRIDGE, TEST_BRIDGE_DYNAMIC_BRIDGE_ARG],
         name=test_name + '__dynamic_bridge',
     )
     launch_description.add_action(rosbridge_process)
