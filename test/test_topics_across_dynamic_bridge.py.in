@@ -33,6 +33,7 @@ TEST_BRIDGE_ROSCORE = '@TEST_BRIDGE_ROSCORE@'
 TEST_BRIDGE_ROS1_TALKER = ['rosrun', 'roscpp_tutorials', 'talker']
 TEST_BRIDGE_ROS1_LISTENER = ['rosrun', 'rospy_tutorials', 'listener']
 TEST_BRIDGE_DYNAMIC_BRIDGE = '@TEST_BRIDGE_DYNAMIC_BRIDGE@'
+TEST_BRIDGE_DYNAMIC_BRIDGE_ARG = '@TEST_BRIDGE_DYNAMIC_BRIDGE_ARG@'
 TEST_BRIDGE_ROS2_TALKER = get_executable_path(
     package_name='demo_nodes_cpp', executable_name='talker')
 TEST_BRIDGE_ROS2_LISTENER = get_executable_path(
@@ -59,7 +60,7 @@ def generate_test_description(test_name, talker_cmd, listener_cmd, logs_stream):
 
     # dynamic bridge
     rosbridge_process = ExecuteProcess(
-        cmd=[TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_DYNAMIC_BRIDGE],
+        cmd=[TEST_BRIDGE_ROS1_ENV, TEST_BRIDGE_DYNAMIC_BRIDGE, TEST_BRIDGE_DYNAMIC_BRIDGE_ARG],
         name=test_name + '__dynamic_bridge',
     )
     launch_description.add_action(rosbridge_process)

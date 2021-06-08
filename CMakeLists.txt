@@ -223,35 +223,44 @@ endif()
 macro(targets)
   set(TEST_BRIDGE_RMW ${rmw_implementation})
 
-  configure_file(
-    test/test_topics_across_dynamic_bridge.py.in
-    test_topics_across_dynamic_bridge${target_suffix}.py.genexp
-    @ONLY
-  )
-  file(GENERATE
-    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test_topics_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
-    INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_topics_across_dynamic_bridge${target_suffix}.py.genexp"
-  )
-  add_launch_test(
-    "${CMAKE_CURRENT_BINARY_DIR}/test_topics_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
-    TARGET test_topics_across_dynamic_bridge${target_suffix}
-    ENV RMW_IMPLEMENTATION=${rmw_implementation}
-    TIMEOUT 60)
+  list(LENGTH DYNAMIC_BRIDGE_TYPE count)
+  math(EXPR count "${count}-1")
+  foreach(i RANGE ${count})
+    list(GET DYNAMIC_BRIDGE_TYPE ${i} bridge_type)
+    list(GET DYNAMIC_BRIDGE_ARG ${i} bridge_arg)
+    set(TEST_BRIDGE_DYNAMIC_BRIDGE_ARG "${bridge_arg}")
 
-  configure_file(
-    test/test_services_across_dynamic_bridge.py.in
-    test_services_across_dynamic_bridge${target_suffix}.py.genexp
-    @ONLY
-  )
-  file(GENERATE
-    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
-    INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}.py.genexp"
-  )
-  add_launch_test(
-    "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}_$<CONFIG>.py"
-    TARGET test_services_across_dynamic_bridge${target_suffix}
-    ENV RMW_IMPLEMENTATION=${rmw_implementation}
-    TIMEOUT 60)
+    configure_file(
+      test/test_topics_across_dynamic_bridge.py.in
+      test_topics_across_dynamic_bridge${target_suffix}_${bridge_type}.py.genexp
+      @ONLY
+    )
+    file(GENERATE
+      OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test_topics_across_dynamic_bridge${target_suffix}_${bridge_type}_$<CONFIG>.py"
+      INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_topics_across_dynamic_bridge${target_suffix}_${bridge_type}.py.genexp"
+    )
+    add_launch_test(
+      "${CMAKE_CURRENT_BINARY_DIR}/test_topics_across_dynamic_bridge${target_suffix}_${bridge_type}_$<CONFIG>.py"
+      TARGET test_topics_across_dynamic_bridge${target_suffix}_${bridge_type}
+      ENV RMW_IMPLEMENTATION=${rmw_implementation}
+      TIMEOUT 60)
+
+    configure_file(
+      test/test_services_across_dynamic_bridge.py.in
+      test_services_across_dynamic_bridge${target_suffix}_${bridge_type}.py.genexp
+      @ONLY
+    )
+    file(GENERATE
+      OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}_${bridge_type}_$<CONFIG>.py"
+      INPUT "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}_${bridge_type}.py.genexp"
+    )
+    add_launch_test(
+      "${CMAKE_CURRENT_BINARY_DIR}/test_services_across_dynamic_bridge${target_suffix}_${bridge_type}_$<CONFIG>.py"
+      TARGET test_services_across_dynamic_bridge${target_suffix}_${bridge_type}
+      ENV RMW_IMPLEMENTATION=${rmw_implementation}
+      TIMEOUT 60)
+  endforeach()
+
 endmacro()
 
 if(TEST_ROS1_BRIDGE)
@@ -265,6 +274,12 @@ if(TEST_ROS1_BRIDGE)
   set(TEST_BRIDGE_ROSCORE "${ros1_roslaunch_PREFIX}/bin/roscore")
   set(TEST_BRIDGE_ROS1_CLIENT "$<TARGET_FILE:test_ros1_client>")
   set(TEST_BRIDGE_ROS1_SERVER "$<TARGET_FILE:test_ros1_server>")
+
+  list(APPEND DYNAMIC_BRIDGE_TYPE "st")
+  list(APPEND DYNAMIC_BRIDGE_ARG " ")
+
+  list(APPEND DYNAMIC_BRIDGE_TYPE "mt")
+  list(APPEND DYNAMIC_BRIDGE_ARG "--multi-threads")
 
   call_for_each_rmw_implementation(targets)
 endif()
