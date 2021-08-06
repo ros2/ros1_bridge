@@ -122,9 +122,12 @@ set(target_dependencies
   "resource/pkg_factories.hpp.em"
   "ros1_bridge/__init__.py")
 
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
 add_custom_command(
   OUTPUT ${generated_files}
-  COMMAND ${PYTHON_EXECUTABLE} bin/ros1_bridge_generate_factories
+  COMMAND Python3::Interpreter
+  ARGS bin/ros1_bridge_generate_factories
     --output-path "${generated_path}" --template-dir resource
   DEPENDS ${target_dependencies}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
