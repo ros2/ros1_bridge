@@ -17,6 +17,9 @@ find_package(rclcpp REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
 
+# include / ignore lists
+include(cmake/find_ignore_include_lists.cmake)
+
 # find ROS 1 packages
 set(cmake_extras_files cmake/find_ros1_package.cmake cmake/find_ros1_interface_packages.cmake)
 include(cmake/find_ros1_package.cmake)
@@ -44,6 +47,7 @@ find_ros1_package(std_msgs REQUIRED)
 # find ROS 1 packages with messages / services
 include(cmake/find_ros1_interface_packages.cmake)
 find_ros1_interface_packages(ros1_message_packages)
+filter_packages("ros1_message_packages")
 
 set(prefixed_ros1_message_packages "")
 foreach(ros1_message_package ${ros1_message_packages})
@@ -52,6 +56,8 @@ foreach(ros1_message_package ${ros1_message_packages})
   if(NOT "${ros1_message_package}" STREQUAL "nodelet")
     find_ros1_package(${ros1_message_package} REQUIRED)
     list(APPEND prefixed_ros1_message_packages "ros1_${ros1_message_package}")
+  else()
+    message(STATUS "Ignoring module '${ros1_message_package}'")
   endif()
 endforeach()
 
@@ -90,6 +96,8 @@ list(APPEND generated_files "${generated_path}/get_mappings.cpp")
 
 # generate per interface compilation units to keep the memory usage low
 ament_index_get_resources(ros2_interface_packages "rosidl_interfaces")
+filter_packages("ros2_interface_packages")
+
 # actionlib_msgs is deprecated, but we will quiet the warning until the bridge has support for
 # ROS actions: https://github.com/ros2/design/issues/195
 set(actionlib_msgs_DEPRECATED_QUIET TRUE)
@@ -110,6 +118,8 @@ foreach(package_name ${ros2_interface_packages})
       get_filename_component(interface_name "${interface_name}" NAME_WE)
       list(APPEND generated_files "${generated_path}/${package_name}__${interface_name}__factories.cpp")
     endforeach()
+  else()
+    message(STATUS "  ignoring.")
   endif()
 endforeach()
 
@@ -125,7 +135,9 @@ set(target_dependencies
 add_custom_command(
   OUTPUT ${generated_files}
   COMMAND ${PYTHON_EXECUTABLE} bin/ros1_bridge_generate_factories
-    --output-path "${generated_path}" --template-dir resource
+    --output-path '${generated_path}' --template-dir resource
+    --pkg-includes '${BRIDGE_INCLUDE_PKGS}'
+    --pkg-ignores '${BRIDGE_IGNORE_PKGS}'
   DEPENDS ${target_dependencies}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Generating factories for interface types")

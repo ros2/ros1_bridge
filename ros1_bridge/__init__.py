@@ -65,16 +65,16 @@ for package_path in reversed([p for p in rpp if p]):
 import rosmsg  # noqa
 
 
-def generate_cpp(output_path, template_dir):
+def generate_cpp(output_path, template_dir, pkg_includes, pkg_ignores):
     rospack = rospkg.RosPack()
-    data = generate_messages(rospack)
+    data = generate_messages(rospack, pkg_includes, pkg_ignores)
     message_string_pairs = {
         (
             '%s/%s' % (m.ros1_msg.package_name, m.ros1_msg.message_name),
             '%s/%s' % (m.ros2_msg.package_name, m.ros2_msg.message_name))
         for m in data['mappings']}
     data.update(
-        generate_services(rospack, message_string_pairs=message_string_pairs))
+        generate_services(rospack, message_string_pairs=message_string_pairs, includes=pkg_includes, ignores=pkg_ignores))
 
     template_file = os.path.join(template_dir, 'get_mappings.cpp.em')
     output_file = os.path.join(output_path, 'get_mappings.cpp')
@@ -159,11 +159,11 @@ def generate_cpp(output_path, template_dir):
                 expand_template(template_file, data_idl_cpp, output_file)
 
 
-def generate_messages(rospack=None):
+def generate_messages(rospack=None, includes=[], ignores=[]):
     ros1_msgs = get_ros1_messages(rospack=rospack)
-    ros2_package_names, ros2_msgs, mapping_rules = get_ros2_messages()
+    ros2_package_names, ros2_msgs, mapping_rules = get_ros2_messages(includes, ignores)
 
-    package_pairs = determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules)
+    package_pairs = determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules, includes, ignores)
     message_pairs = determine_message_pairs(ros1_msgs, ros2_msgs, package_pairs, mapping_rules)
 
     mappings = []
@@ -226,9 +226,9 @@ def generate_messages(rospack=None):
     }
 
 
-def generate_services(rospack=None, message_string_pairs=None):
+def generate_services(rospack=None, message_string_pairs=None, includes=[], ignores=[]):
     ros1_srvs = get_ros1_services(rospack=rospack)
-    ros2_pkgs, ros2_srvs, mapping_rules = get_ros2_services()
+    ros2_pkgs, ros2_srvs, mapping_rules = get_ros2_services(includes, ignores)
     services = determine_common_services(
         ros1_srvs, ros2_srvs, mapping_rules,
         message_string_pairs=message_string_pairs)
@@ -250,7 +250,7 @@ def get_ros1_messages(rospack=None):
     return msgs
 
 
-def get_ros2_messages():
+def get_ros2_messages(includes=[], ignores=[]):
     pkgs = []
     msgs = []
     rules = []
@@ -258,6 +258,9 @@ def get_ros2_messages():
     resource_type = 'rosidl_interfaces'
     resources = ament_index_python.get_resources(resource_type)
     for package_name, prefix_path in resources.items():
+        if (includes and not package_name in includes) or (ignores and package_name in ignores):
+            # Ignore package
+            continue
         pkgs.append(package_name)
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
@@ -304,13 +307,16 @@ def get_ros1_services(rospack=None):
     return srvs
 
 
-def get_ros2_services():
+def get_ros2_services(includes=[], ignores=[]):
     pkgs = []
     srvs = []
     rules = []
     resource_type = 'rosidl_interfaces'
     resources = ament_index_python.get_resources(resource_type)
     for package_name, prefix_path in resources.items():
+        if (includes and not package_name in includes) or (ignores and package_name in ignores):
+            # Ignore package
+            continue
         pkgs.append(package_name)
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
@@ -474,7 +480,7 @@ class ServiceMappingRule(MappingRule):
         return 'ServiceMappingRule(%s <-> %s)' % (self.ros1_package_name, self.ros2_package_name)
 
 
-def determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules):
+def determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules, includes, ignores):
     pairs = []
     # determine package names considered equal between ROS 1 and ROS 2
     ros1_suffix = '_msgs'
@@ -482,11 +488,18 @@ def determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules):
     ros1_package_names = {m.package_name for m in ros1_msgs}
     ros2_package_names = {m.package_name for m in ros2_msgs}
     for ros1_package_name in ros1_package_names:
-        if not ros1_package_name.endswith(ros1_suffix):
+        if (not ros1_package_name.endswith(ros1_suffix)):
+            continue
+        if (includes and not ros1_package_name in includes) or (ignores and ros1_package_name in ignores):
+            # Ignore package
             continue
         ros1_package_basename = ros1_package_name[:-len(ros1_suffix)]
 
         for ros2_package_name in ros2_package_names:
+            if (includes and not ros2_package_name in includes) or (ignores and ros2_package_name in ignores):
+                # Ignore package
+                continue
+
             for ros2_suffix in ros2_suffixes:
                 if ros2_package_name.endswith(ros2_suffix):
                     break
