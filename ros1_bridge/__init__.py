@@ -28,6 +28,7 @@ from rosidl_cmake import expand_template
 import rosidl_parser.parser
 
 import yaml
+import glob
 
 # import rospkg which is required by rosmsg
 # and likely only available for Python 2
@@ -244,9 +245,13 @@ def get_ros1_messages(rospack=None):
         rospack = rospkg.RosPack()
     msgs = []
     pkgs = sorted(x for x in rosmsg.iterate_packages(rospack, rosmsg.MODE_MSG))
+    def get_msgs(_dir):
+        files = rosmsg._list_types(_dir, 'msg', rosmsg.MODE_MSG)
+        return list(zip(files, [_dir] * len(files)))
     for package_name, path in pkgs:
-        for message_name in rosmsg._list_types(path, 'msg', rosmsg.MODE_MSG):
-            msgs.append(Message(package_name, message_name, path))
+        msg_files = sum([(sum([get_msgs(_dir) for _dir in dirs], []) + get_msgs(root)) for root, dirs, _ in os.walk(path)], [])
+        for message_name, _dir in msg_files:
+            msgs.append(Message(package_name, message_name, _dir))
     return msgs
 
 
@@ -298,9 +303,13 @@ def get_ros1_services(rospack=None):
         rospack = rospkg.RosPack()
     srvs = []
     pkgs = sorted(x for x in rosmsg.iterate_packages(rospack, rosmsg.MODE_SRV))
+    def get_srvs(_dir):
+        files = rosmsg._list_types(_dir, 'srv', rosmsg.MODE_SRV)
+        return list(zip(files, [_dir] * len(files)))
     for package_name, path in pkgs:
-        for message_name in rosmsg._list_types(path, 'srv', rosmsg.MODE_SRV):
-            srvs.append(Message(package_name, message_name, path))
+        srv_files = sum([(sum([get_srvs(_dir) for _dir in dirs], []) + get_srvs(root)) for root, dirs, _ in os.walk(path)], [])
+        for message_name, _dir in srv_files:
+            srvs.append(Message(package_name, message_name, _dir))
     return srvs
 
 
@@ -849,11 +858,14 @@ def load_ros2_message(ros2_msg):
 
 
 def load_ros2_service(ros2_srv):
-    srv_path = os.path.join(
-        ros2_srv.prefix_path, 'share', ros2_srv.package_name, 'srv',
-        ros2_srv.message_name + '.srv')
+    basepath = os.path.join(ros2_srv.prefix_path, 'share', ros2_srv.package_name)
+    srv_filename = ros2_srv.message_name + '.srv'
+    # When using subdirectories inside srv/, the .srv files get installed to weird places. We use glob to find them.
+    locations = glob.glob(os.path.join(basepath, '**', srv_filename))
+    if len(locations) == 0:
+        return None
     try:
-        spec = rosidl_adapter.parser.parse_service_file(ros2_srv.package_name, srv_path)
+        spec = rosidl_adapter.parser.parse_service_file(ros2_srv.package_name, locations[0])
     except rosidl_adapter.parser.InvalidSpecification:
         return None
     return spec
