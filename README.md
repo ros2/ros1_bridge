@@ -348,15 +348,17 @@ ros2 run demo_nodes_cpp add_two_ints_client
 ```
 
 ## Example 4: bridge only selected topics and services
-Where the `dynamic_bridge` bridges all topics and service, the `parameter_bridge` allows to parametrize which topics and services are bridged on the ROS1 parameter server. 
+This example expands on example 3 by selecting a subset of topics and services to be bridges. This is handy when, for example, you have a system that runs most of it's stuff in either ROS 1 or ROS 2 but needs a few nodes from the 'opposite' version of ROS. 
+Where the `dynamic_bridge` bridges all topics and service, the `parameter_bridge` allows to parametrize which topics and services are bridged on the ROS1 parameter server, allowing to make that selection. 
 For example, to bridge only eg. the `/joint_states` topic and the `/add_two_ints service` from ROS to ROS2, use this configuration file:
 
-bridge.yaml:
+Create a file `bridge.yaml` with this content:
+
 ```yaml
 topics:
   - 
-    topic: /joint_states  # ROS1 topic name
-    type: sensor_msgs/msg/JointState  # ROS2 type name
+    topic: /chatter  # ROS1 topic name
+    type: std_msgs/msg/String  # ROS2 type name
     queue_size: 1  # For the publisher back to ROS1
 services_1_to_2:
   - 
@@ -364,14 +366,57 @@ services_1_to_2:
     type: example_interfaces/srv/AddTwoInts  # The ROS2 type name
 ```
 
-Then load this in a ROS1 terminal:
+Start a ROS1 roscore:
 
 ```bash
-rosparam load bridge.yaml
+# Shell A (ROS 1 only):
+. /opt/ros/melodic/setup.bash
+# Or, on OSX, something like:
+# . ~/ros_catkin_ws/install_isolated/setup.bash
+roscore
 ```
 
-Then, in a ROS 2 terminal: 
+Then load the bridge.yaml config file and start the talker to publish stuff on the `/chatter` topic:
+
 ```bash
+Shell B: (ROS1 only):
+. /opt/ros/melodic/setup.bash
+# Or, on OSX, something like:
+# . ~/ros_catkin_ws/install_isolated/setup.bash
+rosparam load bridge.yaml
+
+rosrun rospy_tutorials talker
+```
+
+```bash
+Shell C: (ROS1 only):
+. /opt/ros/melodic/setup.bash
+# Or, on OSX, something like:
+# . ~/ros_catkin_ws/install_isolated/setup.bash
+rosparam load bridge.yaml
+
+rosrun roscpp_tutorials add_two_ints_server
+```
+
+Then, in a few ROS2 terminals: 
+
+```bash
+# Shell D:
+. <install-space-with-ros2>/setup.bash
 ros2 run ros1_bridge parameter_bridge
 ```
-If all is well, the logging shows it is creating bridges for the topic and service. 
+
+If all is well, the logging shows it is creating bridges for the topic and service and you should be able to call the service and listen to the ROS1 talker from ROS2:
+
+```bash
+# Shell E:
+. <install-space-with-ros2>/setup.bash
+ros2 run demo_nodes_cpp listener
+```
+
+```bash
+# Shell F:
+. <install-space-with-ros2>/setup.bash
+ros2 service call /add_two_ints example_interfaces/srv/AddTwoInts "{a: 1, b: 2}" 
+```
+
