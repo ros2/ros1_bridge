@@ -346,3 +346,32 @@ Launch AddTwoInts client:
 . <ros2-install-dir>/setup.bash
 ros2 run demo_nodes_cpp add_two_ints_client
 ```
+
+## Example 4: bridge only selected topics and services
+Where the `dynamic_bridge` bridges all topics and service, the `parameter_bridge` allows to parametrize which topics and services are bridged on the ROS1 parameter server. 
+For example, to bridge only eg. the `/joint_states` topic and the `/add_two_ints service` from ROS to ROS2, use this configuration file:
+
+bridge.yaml:
+```yaml
+topics:
+  - 
+    topic: /joint_states  # ROS1 topic name
+    type: sensor_msgs/msg/JointState  # ROS2 type name
+    queue_size: 1  # For the publisher back to ROS1
+services_1_to_2:
+  - 
+    service: /add_two_ints
+    type: example_interfaces/srv/AddTwoInts
+```
+
+Then load this in a ROS1 terminal:
+
+```bash
+rosparam load bridge.yaml
+```
+
+Then, in a ROS 2 terminal: 
+```bash
+ros2 run ros1_bridge parameter_bridge
+```
+If all is well, the logging shows it is creating bridges for the topic and service. 
