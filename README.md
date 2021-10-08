@@ -360,8 +360,8 @@ topics:
     queue_size: 1  # For the publisher back to ROS1
 services_1_to_2:
   - 
-    service: /add_two_ints
-    type: example_interfaces/srv/AddTwoInts
+    service: /add_two_ints  # ROS1 service name
+    type: example_interfaces/srv/AddTwoInts  # The ROS2 type name
 ```
 
 Then load this in a ROS1 terminal:
