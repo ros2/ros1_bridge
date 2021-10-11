@@ -349,10 +349,8 @@ ros2 run demo_nodes_cpp add_two_ints_client
 
 ## Example 4: bridge only selected topics and services
 This example expands on example 3 by selecting a subset of topics and services to be bridges. This is handy when, for example, you have a system that runs most of it's stuff in either ROS 1 or ROS 2 but needs a few nodes from the 'opposite' version of ROS. 
-Where the `dynamic_bridge` bridges all topics and service, the `parameter_bridge` allows to parametrize which topics and services are bridged on the ROS1 parameter server, allowing to make that selection. 
-For example, to bridge only eg. the `/joint_states` topic and the `/add_two_ints service` from ROS to ROS2, use this configuration file:
-
-Create a file `bridge.yaml` with this content:
+Where the `dynamic_bridge` bridges all topics and service, the `parameter_bridge` used below allows to parametrize, on the ROS1 parameter server, which topics and services are bridged, allowing to make that selection. 
+For example, to bridge only eg. the `/chatter` topic and the `/add_two_ints service` from ROS1 to ROS2, create this configuration file, `bridge.yaml`:
 
 ```yaml
 topics:
@@ -393,7 +391,6 @@ Shell C: (ROS1 only):
 . /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
-rosparam load bridge.yaml
 
 rosrun roscpp_tutorials add_two_ints_server
 ```
