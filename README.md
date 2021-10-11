@@ -410,10 +410,11 @@ If all is well, the logging shows it is creating bridges for the topic and servi
 . <install-space-with-ros2>/setup.bash
 ros2 run demo_nodes_cpp listener
 ```
+This should start spewing text like `I heard: [hello world ...]` with a timestamp. 
 
 ```bash
 # Shell F:
 . <install-space-with-ros2>/setup.bash
 ros2 service call /add_two_ints example_interfaces/srv/AddTwoInts "{a: 1, b: 2}" 
 ```
-
+If all is well, the output should contain `example_interfaces.srv.AddTwoInts_Response(sum=3)`
