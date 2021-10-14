@@ -240,3 +240,18 @@ int main(int argc, char * argv[])
 
   return 0;
 }
+
+rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
+{
+  auto ros2_publisher_qos = rclcpp::QoS(rclcpp::KeepLast(10));
+  if (qos_params.getType() == XmlRpc::XmlRpcValue::TypeStruct)
+  {
+  }
+  else
+  {
+    fprintf(
+      stderr,
+      "QoS parameters could not be read\n");  // TODO: clearer message
+  }
+  return ros2_publisher_qos;
+}
