@@ -140,6 +140,22 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
       }
     }
 
+    if (qos_params.hasMember("liveliness"))
+    {
+      try
+      {
+        auto liveliness = static_cast<int>(qos_params["liveliness"]);
+        ros2_publisher_qos.liveliness(static_cast<rmw_qos_liveliness_policy_t>(liveliness));
+      }
+      catch (std::runtime_error &e)
+      {
+        fprintf(
+            stderr,
+            "failed to create parametrize liveliness: '%s'\n",
+            e.what());
+      }
+    }
+
     if (qos_params.hasMember("liveliness_lease_duration"))
     {
       try
