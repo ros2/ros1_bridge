@@ -246,6 +246,34 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
   auto ros2_publisher_qos = rclcpp::QoS(rclcpp::KeepLast(10));
   if (qos_params.getType() == XmlRpc::XmlRpcValue::TypeStruct)
   {
+    if(qos_params.hasMember("history"))
+    {
+      auto history = static_cast<std::string>(qos_params["history"]);
+      if(history == "keep_all")
+      {
+        ros2_publisher_qos.keep_all();
+      }
+      else if (history == "keep_last")
+      {
+        if(qos_params.hasMember("depth"))
+        {
+          auto depth = static_cast<int>(qos_params["depth"]);
+          ros2_publisher_qos.keep_last(depth);
+        }
+        else
+        {
+          fprintf(
+              stderr,
+              "history: keep_last requires that also a depth is set\n");
+        }
+      }
+      else
+      {
+        fprintf(
+            stderr,
+            "invalid value for 'history': '%s', allowed values are 'keep_all', 'keep_last' (also required 'depth' to be set)\n", history.c_str());
+      }
+    }
   }
   else
   {
