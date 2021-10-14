@@ -30,6 +30,48 @@
 
 #include "ros1_bridge/bridge.hpp"
 
+rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
+{
+  auto ros2_publisher_qos = rclcpp::QoS(rclcpp::KeepLast(10));
+  if (qos_params.getType() == XmlRpc::XmlRpcValue::TypeStruct)
+  {
+    if (qos_params.hasMember("history"))
+    {
+      auto history = static_cast<std::string>(qos_params["history"]);
+      if (history == "keep_all")
+      {
+        ros2_publisher_qos.keep_all();
+      }
+      else if (history == "keep_last")
+      {
+        if (qos_params.hasMember("depth"))
+        {
+          auto depth = static_cast<int>(qos_params["depth"]);
+          ros2_publisher_qos.keep_last(depth);
+        }
+        else
+        {
+          fprintf(
+              stderr,
+              "history: keep_last requires that also a depth is set\n");
+        }
+      }
+      else
+      {
+        fprintf(
+            stderr,
+            "invalid value for 'history': '%s', allowed values are 'keep_all', 'keep_last' (also required 'depth' to be set)\n", history.c_str());
+      }
+    }
+  }
+  else
+  {
+    fprintf(
+        stderr,
+        "QoS parameters could not be read\n"); // TODO: clearer message
+  }
+  return ros2_publisher_qos;
+}
 
 int main(int argc, char * argv[])
 {
@@ -87,9 +129,20 @@ int main(int argc, char * argv[])
         topic_name.c_str(), type_name.c_str());
 
       try {
-        ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
-          ros1_node, ros2_node, "", type_name, topic_name, queue_size);
-        all_handles.push_back(handles);
+        if (topics[i].hasMember("qos"))
+        {
+          auto qos_settings = qos_from_params(topics[i]["qos"]);
+          ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
+            ros1_node, ros2_node, "", type_name, topic_name, queue_size, qos_settings);
+          all_handles.push_back(handles);
+        }
+        else
+        {
+          ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
+            ros1_node, ros2_node, "", type_name, topic_name, queue_size);
+          all_handles.push_back(handles);
+        }
+        
       } catch (std::runtime_error & e) {
         fprintf(
           stderr,
@@ -239,47 +292,4 @@ int main(int argc, char * argv[])
   }
 
   return 0;
-}
-
-rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
-{
-  auto ros2_publisher_qos = rclcpp::QoS(rclcpp::KeepLast(10));
-  if (qos_params.getType() == XmlRpc::XmlRpcValue::TypeStruct)
-  {
-    if(qos_params.hasMember("history"))
-    {
-      auto history = static_cast<std::string>(qos_params["history"]);
-      if(history == "keep_all")
-      {
-        ros2_publisher_qos.keep_all();
-      }
-      else if (history == "keep_last")
-      {
-        if(qos_params.hasMember("depth"))
-        {
-          auto depth = static_cast<int>(qos_params["depth"]);
-          ros2_publisher_qos.keep_last(depth);
-        }
-        else
-        {
-          fprintf(
-              stderr,
-              "history: keep_last requires that also a depth is set\n");
-        }
-      }
-      else
-      {
-        fprintf(
-            stderr,
-            "invalid value for 'history': '%s', allowed values are 'keep_all', 'keep_last' (also required 'depth' to be set)\n", history.c_str());
-      }
-    }
-  }
-  else
-  {
-    fprintf(
-      stderr,
-      "QoS parameters could not be read\n");  // TODO: clearer message
-  }
-  return ros2_publisher_qos;
 }
