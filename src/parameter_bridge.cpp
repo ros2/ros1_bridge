@@ -33,6 +33,7 @@
 rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
 {
   auto ros2_publisher_qos = rclcpp::QoS(rclcpp::KeepLast(10));
+  
   if (qos_params.getType() == XmlRpc::XmlRpcValue::TypeStruct)
   {
     if (qos_params.hasMember("history"))
@@ -60,7 +61,100 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
       {
         fprintf(
             stderr,
-            "invalid value for 'history': '%s', allowed values are 'keep_all', 'keep_last' (also required 'depth' to be set)\n", history.c_str());
+            "invalid value for 'history': '%s', allowed values are 'keep_all', 'keep_last' (also requires 'depth' to be set)\n", history.c_str());
+      }
+    }
+
+    if (qos_params.hasMember("reliability"))
+    {
+      auto reliability = static_cast<std::string>(qos_params["reliability"]);
+      if (reliability == "best_effort")
+      {
+        ros2_publisher_qos.best_effort();
+      }
+      else if (reliability == "reliable")
+      {
+        ros2_publisher_qos.reliable();
+      }
+      else
+      {
+        fprintf(
+            stderr,
+            "invalid value for 'reliability': '%s', allowed values are 'best_effort', 'reliable'\n", reliability.c_str());
+      }
+    }
+
+    if (qos_params.hasMember("durability"))
+    {
+      auto durability = static_cast<std::string>(qos_params["durability"]);
+      if (durability == "transient_local")
+      {
+        ros2_publisher_qos.transient_local();
+      }
+      else if (durability == "volatile")
+      {
+        ros2_publisher_qos.durability_volatile();
+      }
+      else
+      {
+        fprintf(
+            stderr,
+            "invalid value for 'durability': '%s', allowed values are 'best_effort', 'volatile'\n", durability.c_str());
+      }
+    }
+
+    if (qos_params.hasMember("deadline"))
+    {
+      try
+      {
+        ros2_publisher_qos.deadline(
+          rclcpp::Duration(
+            static_cast<int>(qos_params["deadline"]["secs"]),
+            static_cast<int>(qos_params["deadline"]["nsecs"]))
+        );
+      }
+      catch (std::runtime_error &e)
+      {
+        fprintf(
+            stderr,
+            "failed to create parametrize deadline: '%s'\n",
+            e.what());
+      }
+    }
+
+    if (qos_params.hasMember("lifespan"))
+    {
+      try
+      {
+        ros2_publisher_qos.lifespan(
+            rclcpp::Duration(
+                static_cast<int>(qos_params["lifespan"]["secs"]),
+                static_cast<int>(qos_params["lifespan"]["nsecs"])));
+      }
+      catch (std::runtime_error &e)
+      {
+        fprintf(
+            stderr,
+            "failed to create parametrize lifespan: '%s'\n",
+            e.what());
+      }
+    }
+
+    if (qos_params.hasMember("liveliness_lease_duration"))
+    {
+      try
+      {
+        ros2_publisher_qos.liveliness_lease_duration(
+            rclcpp::Duration(
+                static_cast<int>(qos_params["liveliness_lease_duration"]["secs"]),
+                static_cast<int>(qos_params["liveliness_lease_duration"]["nsecs"])));
+      }
+      catch (std::runtime_error &e)
+      {
+        fprintf(
+            stderr,
+            "failed to create parametrize liveliness_lease_duration: '%s'\n",
+            e.what());
       }
     }
   }
