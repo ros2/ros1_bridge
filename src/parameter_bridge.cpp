@@ -169,25 +169,78 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
 
     if (qos_params.hasMember("liveliness"))
     {
-      try
+      if (qos_params["liveliness"].getType() == XmlRpc::XmlRpcValue::TypeInt)
       {
-        auto liveliness = static_cast<int>(qos_params["liveliness"]);
-        ros2_publisher_qos.liveliness(static_cast<rmw_qos_liveliness_policy_t>(liveliness));
-        printf("liveliness: %i, ", static_cast<int>(liveliness));
+        printf("liviness is an int\n");
+        try
+        {
+          auto liveliness = static_cast<int>(qos_params["liveliness"]);
+          ros2_publisher_qos.liveliness(static_cast<rmw_qos_liveliness_policy_t>(liveliness));
+          printf("liveliness: %i, ", static_cast<int>(liveliness));
+        }
+        catch (std::runtime_error &e)
+        {
+          fprintf(
+              stderr,
+              "failed to create parametrize liveliness: '%s'\n",
+              e.what());
+        }
+        catch (XmlRpc::XmlRpcException &e)
+        {
+          fprintf(
+              stderr,
+              "failed to create parametrize liveliness: '%s'\n",
+              e.getMessage().c_str());
+        }
       }
-      catch (std::runtime_error &e)
+      else if (qos_params["liveliness"].getType() == XmlRpc::XmlRpcValue::TypeString)
+      {
+        try
+        {
+          rmw_qos_liveliness_policy_t liveliness = rmw_qos_liveliness_policy_t::RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT;
+          auto liveliness_str = static_cast<std::string>(qos_params["liveliness"]);
+          if (liveliness_str == "LIVELINESS_SYSTEM_DEFAULT" || liveliness_str == "liveliness_system_default")
+          {
+            liveliness = rmw_qos_liveliness_policy_t::RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT;
+          }
+          else if (liveliness_str == "LIVELINESS_AUTOMATIC" || liveliness_str == "liveliness_automatic")
+          {
+            liveliness = rmw_qos_liveliness_policy_t::RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
+          }
+          else if (liveliness_str == "LIVELINESS_MANUAL_BY_TOPIC" || liveliness_str == "liveliness_manual_by_topic")
+          {
+            liveliness = rmw_qos_liveliness_policy_t::RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC;
+          }
+          else
+          {
+            fprintf(
+                stderr,
+                "invalid value for 'liveliness': '%s', allowed values are LIVELINESS_{SYSTEM_DEFAULT, AUTOMATIC, MANUAL_BY_TOPIC}, upper or lower case\n", liveliness_str.c_str());
+          }
+
+          ros2_publisher_qos.liveliness(liveliness);
+          printf("liveliness: %s, ", liveliness_str.c_str());
+        }
+        catch (std::runtime_error &e)
+        {
+          fprintf(
+              stderr,
+              "failed to create parametrize liveliness: '%s'\n",
+              e.what());
+        }
+        catch (XmlRpc::XmlRpcException &e)
+        {
+          fprintf(
+              stderr,
+              "failed to create parametrize liveliness: '%s'\n",
+              e.getMessage().c_str());
+        }
+      }
+      else
       {
         fprintf(
-            stderr,
-            "failed to create parametrize liveliness: '%s'\n",
-            e.what());
-      }
-      catch (XmlRpc::XmlRpcException &e)
-      {
-        fprintf(
-            stderr,
-            "failed to create parametrize liveliness: '%s'\n",
-            e.getMessage().c_str());
+          stderr,
+          "failed to create parametrize liveliness, parameter was not a string or int \n");
       }
     }
 
