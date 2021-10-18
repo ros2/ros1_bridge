@@ -27,6 +27,7 @@
 
 // include ROS 2
 #include "rclcpp/rclcpp.hpp"
+#include <xmlrpcpp/XmlRpcException.h>
 
 #include "ros1_bridge/bridge.hpp"
 
@@ -131,6 +132,13 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
             "failed to create parametrize deadline: '%s'\n",
             e.what());
       }
+      catch (XmlRpc::XmlRpcException &e)
+      {
+        fprintf(
+            stderr,
+            "failed to create parametrize deadline: '%s'\n",
+            e.getMessage().c_str());
+      }
     }
 
     if (qos_params.hasMember("lifespan"))
@@ -150,6 +158,13 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
             "failed to create parametrize lifespan: '%s'\n",
             e.what());
       }
+      catch (XmlRpc::XmlRpcException &e)
+      {
+        fprintf(
+            stderr,
+            "failed to create parametrize lifespan: '%s'\n",
+            e.getMessage().c_str());
+      }
     }
 
     if (qos_params.hasMember("liveliness"))
@@ -166,6 +181,13 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
             stderr,
             "failed to create parametrize liveliness: '%s'\n",
             e.what());
+      }
+      catch (XmlRpc::XmlRpcException &e)
+      {
+        fprintf(
+            stderr,
+            "failed to create parametrize liveliness: '%s'\n",
+            e.getMessage().c_str());
       }
     }
 
@@ -185,6 +207,13 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
             stderr,
             "failed to create parametrize liveliness_lease_duration: '%s'\n",
             e.what());
+      }
+      catch (XmlRpc::XmlRpcException &e)
+      {
+        fprintf(
+            stderr,
+            "failed to create parametrize liveliness_lease_duration: '%s'\n",
+            e.getMessage().c_str());
       }
     }
   }
