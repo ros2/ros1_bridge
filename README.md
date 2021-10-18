@@ -348,23 +348,24 @@ ros2 run demo_nodes_cpp add_two_ints_client
 ```
 
 ## Example 4: bridge only selected topics and services
-This example expands on example 3 by selecting a subset of topics and services to be bridges. This is handy when, for example, you have a system that runs most of it's stuff in either ROS 1 or ROS 2 but needs a few nodes from the 'opposite' version of ROS. 
-Where the `dynamic_bridge` bridges all topics and service, the `parameter_bridge` used below allows to parametrize, on the ROS1 parameter server, which topics and services are bridged, allowing to make that selection. 
+This example expands on example 3 by selecting a subset of topics and services to be bridged.
+This is handy when, for example, you have a system that runs most of it's stuff in either ROS 1 or ROS 2 but needs a few nodes from the 'opposite' version of ROS.
+Where the `dynamic_bridge` bridges all topics and service, the `parameter_bridge` uses the ROS 1 parameter server to choose which topics and services are bridged.
 For example, to bridge only eg. the `/chatter` topic and the `/add_two_ints service` from ROS1 to ROS2, create this configuration file, `bridge.yaml`:
 
 ```yaml
 topics:
-  - 
+  -
     topic: /chatter  # ROS1 topic name
     type: std_msgs/msg/String  # ROS2 type name
     queue_size: 1  # For the publisher back to ROS1
 services_1_to_2:
-  - 
+  -
     service: /add_two_ints  # ROS1 service name
     type: example_interfaces/srv/AddTwoInts  # The ROS2 type name
 ```
 
-Start a ROS1 roscore:
+Start a ROS 1 roscore:
 
 ```bash
 # Shell A (ROS 1 only):
@@ -374,7 +375,7 @@ Start a ROS1 roscore:
 roscore
 ```
 
-Then load the bridge.yaml config file and start the talker to publish stuff on the `/chatter` topic:
+Then load the bridge.yaml config file and start the talker to publish on the `/chatter` topic:
 
 ```bash
 Shell B: (ROS1 only):
@@ -395,7 +396,7 @@ Shell C: (ROS1 only):
 rosrun roscpp_tutorials add_two_ints_server
 ```
 
-Then, in a few ROS2 terminals: 
+Then, in a few ROS 2 terminals:
 
 ```bash
 # Shell D:
@@ -403,18 +404,18 @@ Then, in a few ROS2 terminals:
 ros2 run ros1_bridge parameter_bridge
 ```
 
-If all is well, the logging shows it is creating bridges for the topic and service and you should be able to call the service and listen to the ROS1 talker from ROS2:
+If all is well, the logging shows it is creating bridges for the topic and service and you should be able to call the service and listen to the ROS 1 talker from ROS 2:
 
 ```bash
 # Shell E:
 . <install-space-with-ros2>/setup.bash
 ros2 run demo_nodes_cpp listener
 ```
-This should start spewing text like `I heard: [hello world ...]` with a timestamp. 
+This should start printing text like `I heard: [hello world ...]` with a timestamp.
 
 ```bash
 # Shell F:
 . <install-space-with-ros2>/setup.bash
-ros2 service call /add_two_ints example_interfaces/srv/AddTwoInts "{a: 1, b: 2}" 
+ros2 service call /add_two_ints example_interfaces/srv/AddTwoInts "{a: 1, b: 2}"
 ```
 If all is well, the output should contain `example_interfaces.srv.AddTwoInts_Response(sum=3)`
