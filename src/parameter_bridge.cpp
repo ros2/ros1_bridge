@@ -241,6 +241,7 @@ int main(int argc, char * argv[])
       try {
         if (topics[i].hasMember("qos"))
         {
+          printf("Setting up QoS for '%s'\n", topic_name.c_str());
           auto qos_settings = qos_from_params(topics[i]["qos"]);
           ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
             ros1_node, ros2_node, "", type_name, topic_name, queue_size, qos_settings);
