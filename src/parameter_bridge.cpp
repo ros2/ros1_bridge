@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <xmlrpcpp/XmlRpcException.h>
+
 #include <list>
 #include <string>
 
@@ -27,7 +29,6 @@
 
 // include ROS 2
 #include "rclcpp/rclcpp.hpp"
-#include <xmlrpcpp/XmlRpcException.h>
 
 #include "ros1_bridge/bridge.hpp"
 
@@ -57,7 +58,8 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
       } else {
         fprintf(
           stderr,
-          "invalid value for 'history': '%s', allowed values are 'keep_all', 'keep_last' (also requires 'depth' to be set)\n",
+          "invalid value for 'history': '%s', allowed values are 'keep_all',"
+          "'keep_last' (also requires 'depth' to be set)\n",
           history.c_str());
       }
     }
@@ -163,18 +165,19 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
             liveliness_str == "liveliness_system_default")
           {
             liveliness = rmw_qos_liveliness_policy_t::RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT;
-          } else if (liveliness_str == "LIVELINESS_AUTOMATIC" ||
+          } else if (liveliness_str == "LIVELINESS_AUTOMATIC" ||  // NOLINT
             liveliness_str == "liveliness_automatic")
           {
             liveliness = rmw_qos_liveliness_policy_t::RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
-          } else if (liveliness_str == "LIVELINESS_MANUAL_BY_TOPIC" ||
+          } else if (liveliness_str == "LIVELINESS_MANUAL_BY_TOPIC" ||  // NOLINT
             liveliness_str == "liveliness_manual_by_topic")
           {
             liveliness = rmw_qos_liveliness_policy_t::RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC;
           } else {
             fprintf(
               stderr,
-              "invalid value for 'liveliness': '%s', allowed values are LIVELINESS_{SYSTEM_DEFAULT, AUTOMATIC, MANUAL_BY_TOPIC}, upper or lower case\n",
+              "invalid value for 'liveliness': '%s', allowed values are "
+              "LIVELINESS_{SYSTEM_DEFAULT, AUTOMATIC, MANUAL_BY_TOPIC}, upper or lower case\n",
               liveliness_str.c_str());
           }
 
@@ -220,7 +223,7 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
   } else {
     fprintf(
       stderr,
-      "QoS parameters could not be read\n");   // TODO: clearer message
+      "QoS parameters could not be read\n");
   }
 
   printf(")");
@@ -295,7 +298,6 @@ int main(int argc, char * argv[])
             ros1_node, ros2_node, "", type_name, topic_name, queue_size);
           all_handles.push_back(handles);
         }
-
       } catch (std::runtime_error & e) {
         fprintf(
           stderr,
