@@ -2,8 +2,8 @@
 Changelog for package ros1_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.10.2 (2021-11-05)
+-------------------
 * Example for `parameter_bridge` (`#330 <https://github.com/ros2/ros1_bridge/issues/330>`_)
 * Use rcpputils/scope_exit.hpp instead of rclcpp/scope_exit.hpp (`#324 <https://github.com/ros2/ros1_bridge/issues/324>`_)
 * Use FindPython3 and make Python dependency explicit (`#322 <https://github.com/ros2/ros1_bridge/issues/322>`_)
