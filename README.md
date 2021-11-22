@@ -446,7 +446,7 @@ topics:
     type: std_msgs/msg/String
     queue_size: 1
     qos:
-      history: keep_last  # OR keep_last, then you can omit `depth` below
+      history: keep_last  # OR keep_all, then you can omit `depth` parameter below
       depth: 10  # Only required when history == keep_last
       reliability: reliable  # OR best_effort
       durability: transient_local  # OR volatile
