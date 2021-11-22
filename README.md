@@ -421,8 +421,8 @@ ros2 service call /add_two_ints example_interfaces/srv/AddTwoInts "{a: 1, b: 2}"
 If all is well, the output should contain `example_interfaces.srv.AddTwoInts_Response(sum=3)`
 
 ### Parametrizing Quality of Service
-An advantage or ROS 2 over ROS 1 is the possibility to define different Quality of Service settings per topic.
-The parameter bridge optionally allows for this as well: 
+An advantage of ROS 2 over ROS 1 is the possibility to define different Quality of Service settings per topic.
+The parameter bridge optionally allows for this as well.
 For some topics, like `/tf_static` this is actually required, as this is a latching topic in ROS 1.
 In ROS 2 with the `parameter_bridge`, this requires that topic to be configured as such:
 

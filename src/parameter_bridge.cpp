@@ -108,12 +108,12 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
       } catch (std::runtime_error & e) {
         fprintf(
           stderr,
-          "failed to create parametrize deadline: '%s'\n",
+          "failed to parse deadline: '%s'\n",
           e.what());
       } catch (XmlRpc::XmlRpcException & e) {
         fprintf(
           stderr,
-          "failed to create parametrize deadline: '%s'\n",
+          "failed to parse deadline: '%s'\n",
           e.getMessage().c_str());
       }
     }
@@ -128,19 +128,18 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
       } catch (std::runtime_error & e) {
         fprintf(
           stderr,
-          "failed to create parametrize lifespan: '%s'\n",
+          "failed to parse lifespan: '%s'\n",
           e.what());
       } catch (XmlRpc::XmlRpcException & e) {
         fprintf(
           stderr,
-          "failed to create parametrize lifespan: '%s'\n",
+          "failed to parse lifespan: '%s'\n",
           e.getMessage().c_str());
       }
     }
 
     if (qos_params.hasMember("liveliness")) {
       if (qos_params["liveliness"].getType() == XmlRpc::XmlRpcValue::TypeInt) {
-        printf("liviness is an int\n");
         try {
           auto liveliness = static_cast<int>(qos_params["liveliness"]);
           ros2_publisher_qos.liveliness(static_cast<rmw_qos_liveliness_policy_t>(liveliness));
@@ -148,12 +147,12 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
         } catch (std::runtime_error & e) {
           fprintf(
             stderr,
-            "failed to create parametrize liveliness: '%s'\n",
+            "failed to parse liveliness: '%s'\n",
             e.what());
         } catch (XmlRpc::XmlRpcException & e) {
           fprintf(
             stderr,
-            "failed to create parametrize liveliness: '%s'\n",
+            "failed to parse liveliness: '%s'\n",
             e.getMessage().c_str());
         }
       } else if (qos_params["liveliness"].getType() == XmlRpc::XmlRpcValue::TypeString) {
@@ -186,18 +185,18 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
         } catch (std::runtime_error & e) {
           fprintf(
             stderr,
-            "failed to create parametrize liveliness: '%s'\n",
+            "failed to parse liveliness: '%s'\n",
             e.what());
         } catch (XmlRpc::XmlRpcException & e) {
           fprintf(
             stderr,
-            "failed to create parametrize liveliness: '%s'\n",
+            "failed to parse liveliness: '%s'\n",
             e.getMessage().c_str());
         }
       } else {
         fprintf(
           stderr,
-          "failed to create parametrize liveliness, parameter was not a string or int \n");
+          "failed to parse liveliness, parameter was not a string or int \n");
       }
     }
 
@@ -211,12 +210,12 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
       } catch (std::runtime_error & e) {
         fprintf(
           stderr,
-          "failed to create parametrize liveliness_lease_duration: '%s'\n",
+          "failed to parse liveliness_lease_duration: '%s'\n",
           e.what());
       } catch (XmlRpc::XmlRpcException & e) {
         fprintf(
           stderr,
-          "failed to create parametrize liveliness_lease_duration: '%s'\n",
+          "failed to parse liveliness_lease_duration: '%s'\n",
           e.getMessage().c_str());
       }
     }
