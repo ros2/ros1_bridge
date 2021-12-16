@@ -58,6 +58,7 @@ int main(int argc, char * argv[])
   // type: the type of the service to bridge (e.g. 'pkgname/srv/SrvName')
   const char * services_1_to_2_parameter_name = "services_1_to_2";
   const char * services_2_to_1_parameter_name = "services_2_to_1";
+  const char * service_execution_timeout_parameter_name = "service_execution_timeout";
   if (argc > 1) {
     topics_parameter_name = argv[1];
   }
@@ -110,6 +111,9 @@ int main(int argc, char * argv[])
     ros1_node.getParam(services_1_to_2_parameter_name, services_1_to_2) &&
     services_1_to_2.getType() == XmlRpc::XmlRpcValue::TypeArray)
   {
+    int service_execution_timeout;
+    ros1_node.param<int>(
+      service_execution_timeout_parameter_name, service_execution_timeout, 5);
     for (size_t i = 0; i < static_cast<size_t>(services_1_to_2.size()); ++i) {
       std::string service_name = static_cast<std::string>(services_1_to_2[i]["service"]);
       std::string type_name = static_cast<std::string>(services_1_to_2[i]["type"]);
@@ -143,7 +147,7 @@ int main(int argc, char * argv[])
         try {
           service_bridges_1_to_2.push_back(
             factory->service_bridge_1_to_2(
-              ros1_node, ros2_node, service_name));
+              ros1_node, ros2_node, service_name, service_execution_timeout));
           printf("Created 1 to 2 bridge for service %s\n", service_name.c_str());
         } catch (std::runtime_error & e) {
           fprintf(
