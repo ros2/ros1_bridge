@@ -327,8 +327,9 @@ void update_bridge(
     }
   }
 
-  int service_execution_timeout;
-  ros1_node.param<int>("service_execution_timeout", service_execution_timeout, 5);
+  int service_execution_timeout{5};
+  ros1_node.getParamCached(
+    "ros1_bridge/dynamic_bridge/service_execution_timeout", service_execution_timeout);
 
   // create bridges for ros2 services
   for (auto & service : ros2_services) {

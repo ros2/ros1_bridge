@@ -319,8 +319,9 @@ public:
       auto response2 = future.get();
       translate_2_to_1(*response2, response1);
     } else {
-      RCLCPP_ERROR(logger, "Failed to get response from ROS 2 service %s within %d seconds",
-       cli->get_service_name(), service_execution_timeout);
+      RCLCPP_ERROR(
+        logger, "Failed to get response from ROS 2 service %s within %d seconds",
+        cli->get_service_name(), service_execution_timeout);
       return false;
     }
     return true;
