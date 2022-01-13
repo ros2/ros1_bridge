@@ -26,8 +26,8 @@ except ImportError:
     from io import StringIO  # Python 3.x
 
 import genmsg
-import genmsg.msg_loader
 from genmsg.base import COMMENTCHAR, IODELIM
+import genmsg.msg_loader
 
 import rosidl_adapter.parser
 from rosidl_cmake import expand_template
@@ -423,7 +423,7 @@ def get_ros1_actions(rospack=None):
     # actual function: rosmsg.iterate_packages(rospack, rosmsg.MODE_MSG))
     pkgs = sorted(x for x in iterate_action_packages(rospack))
     for package_name, path in pkgs:
-        for action_name in rosmsg._list_types(path, 'msg', ".action"):
+        for action_name in rosmsg._list_types(path, 'msg', '.action'):
             actions.append(Message(package_name, action_name, path))
     return actions
 
@@ -462,7 +462,8 @@ def get_ros2_actions():
                     file=sys.stderr)
                 continue
             for data in content:
-                if all(n not in data for n in ('ros1_message_name', 'ros2_message_name', 'ros1_service_name', 'ros2_service_name')):
+                if (all(n not in data for n in ('ros1_message_name', 'ros2_message_name',
+                        'ros1_service_name', 'ros2_service_name'))):
                     try:
                         rules.append(ActionMappingRule(data, package_name))
                     except Exception as e:
@@ -899,7 +900,9 @@ def determine_common_actions(
                         # the check for 'builtin_interfaces' should be removed
                         # once merged with __init__.py
                         # It seems to handle it already
-                        if (ros1_type, ros2_type) not in message_string_pairs and not ros2_type.startswith("builtin_interfaces") and "GripperCommand" not in ros2_type:
+                        if ((ros1_type, ros2_type) not in message_string_pairs and
+                                not ros2_type.startswith('builtin_interfaces') and
+                                'GripperCommand' not in ros2_type):
                             match = False
                             break
                 output[direction].append({
@@ -1112,6 +1115,7 @@ def load_ros1_service(ros1_srv):
 
 
 # genmsg/actions.py
+
 class ActionSpec(object):
 
     def __init__(self, goal, result, feedback, text, full_name='', short_name='', package=''):
@@ -1147,11 +1151,10 @@ class ActionSpec(object):
         return not self.__eq__(other)
 
     def __repr__(self):
-        return "ActionSpec[%s, %s, %s]" % (repr(self.goal), repr(self.result), repr(self.feedback))
+        return 'ActionSpec[%s, %s, %s]' % (repr(self.goal), repr(self.result), repr(self.feedback))
 
 
 # genmsg.msg_loader
-
 
 def load_action_from_string(msg_context, text, full_name):
     """
@@ -1170,15 +1173,15 @@ def load_action_from_string(msg_context, text, full_name):
     count = 0
     accum = text_goal
     for l in text.split('\n'):
-        l = l.split(COMMENTCHAR)[0].strip()  # strip comments
-        if l.startswith(IODELIM):  # lenient, by request
+        s = l.split(COMMENTCHAR)[0].strip()  # strip comments
+        if s.startswith(IODELIM):  # lenient, by request
             if count == 0:
                 accum = text_result
                 count = 1
             else:
                 accum = text_feedback
         else:
-            accum.write(l+'\n')
+            accum.write(s+'\n')
 
     # create separate MsgSpec objects for each half of file
     msg_goal = genmsg.msg_loader.load_msg_from_string(
@@ -1194,8 +1197,8 @@ def load_action_from_string(msg_context, text, full_name):
 def load_action_from_file(msg_context, file_path, full_name):
     """
     Convert the .action representation in the file to a :class:`MsgSpec` instance.
-    NOTE: this will register the message in the *msg_context*.
 
+    NOTE: this will register the message in the *msg_context*.
     :param file_path: path of file to load from, ``str``
     :returns: :class:`MsgSpec` instance
     :raises: :exc:`InvalidMsgSpec`: if syntax errors or other problems are detected in file
@@ -1215,7 +1218,8 @@ def load_ros1_action(ros1_action):
         ros1_action.prefix_path, ros1_action.message_name + '.action')
     try:
         spec = load_action_from_file(
-            msg_context, message_path, '%s/%s' % (ros1_action.package_name, ros1_action.message_name))
+            msg_context, message_path, '%s/%s' %
+            (ros1_action.package_name, ros1_action.message_name))
     except genmsg.InvalidMsgSpec:
         return None
     return spec
@@ -1283,7 +1287,7 @@ def load_ros2_action(ros2_action):
         spec = rosidl_adapter.parser.parse_action_file(
             ros2_action.package_name, actiom_path)
     except rosidl_adapter.parser.InvalidSpecification:
-        print("Invalid spec")
+        print('Invalid spec')
         return None
     return spec
 

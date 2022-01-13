@@ -78,7 +78,8 @@ public:
     client_ = rclcpp_action::create_client<ROS2_T>(ros2_node, action_name);
   }
 
-  virtual void shutdown() {
+  virtual void shutdown()
+  {
     std::lock_guard<std::mutex> lock(mutex_);
     for (auto goal : goals_) {
       std::thread([handler = goal.second]() mutable {handler->cancel();}).detach();
@@ -147,7 +148,8 @@ public:
       std::shared_future<ROS2ClientGoalHandle> gh2_future;
       // Changes as per Dashing
       auto send_goal_ops = ROS2SendGoalOptions();
-      send_goal_ops.goal_response_callback = [this, &gh2_future](std::shared_future<ROS2GoalHandle> gh2) mutable {
+      send_goal_ops.goal_response_callback =
+        [this, &gh2_future](std::shared_future<ROS2GoalHandle> gh2) mutable {
           auto goal_handle = gh2_future.get();
           if (!goal_handle) {
             gh1_.setRejected();          // goal was not accepted by remote server
@@ -253,7 +255,8 @@ public:
       std::bind(&ActionFactory_2_1::handle_accepted, this, std::placeholders::_1));
   }
 
-  virtual void shutdown() {
+  virtual void shutdown()
+  {
     std::lock_guard<std::mutex> lock(mutex_);
     for (auto goal : goals_) {
       std::thread([handler = goal.second]() mutable {handler->cancel();}).detach();
@@ -391,7 +394,7 @@ private:
 
   std::size_t get_goal_id_hash(const rclcpp_action::GoalUUID & uuid)
   {
-    return std::hash<rclcpp_action::GoalUUID>{} (uuid);
+    return std::hash<rclcpp_action::GoalUUID>{}(uuid);
   }
 
   ros::NodeHandle ros1_node_;

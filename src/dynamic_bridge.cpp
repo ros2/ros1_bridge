@@ -19,7 +19,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/predicate.hpp>   // NOLINT
 
 // include ROS 1
 #ifdef __clang__
@@ -151,8 +151,10 @@ void update_bridge(
   std::map<std::string, Bridge2to1HandlesAndMessageTypes> & bridges_2to1,
   std::map<std::string, ros1_bridge::ServiceBridge1to2> & service_bridges_1_to_2,
   std::map<std::string, ros1_bridge::ServiceBridge2to1> & service_bridges_2_to_1,
-  std::map<std::string, std::unique_ptr<ros1_bridge::ActionFactoryInterface>> & action_bridges_1_to_2,
-  std::map<std::string, std::unique_ptr<ros1_bridge::ActionFactoryInterface>> & action_bridges_2_to_1,
+  std::map<std::string,
+  std::unique_ptr<ros1_bridge::ActionFactoryInterface>> & action_bridges_1_to_2,
+  std::map<std::string,
+  std::unique_ptr<ros1_bridge::ActionFactoryInterface>> & action_bridges_2_to_1,
   bool bridge_all_1to2_topics, bool bridge_all_2to1_topics)
 {
   std::lock_guard<std::mutex> lock(g_bridge_mutex);
@@ -574,9 +576,12 @@ inline bool is_action_topic(
     // action type is 'Fibonacci'
     if (!type.empty() && is_action_type) {
       std::string pkg_name = type.substr(0, type.find("/"));
-      std::string action_type = type.substr(type.find_last_of("/") + 1, type.length() - (type.find_last_of("/") + type_ends_with.length() + 1));
+      std::string action_type =
+        type.substr(
+        type.find_last_of("/") + 1,
+        type.length() - (type.find_last_of("/") + type_ends_with.length() + 1));
       actions[name]["package"] = pkg_name;
-      if(is_ros2) {
+      if (is_ros2) {
         actions[name]["type"] = "action/" + action_type;
       } else {
         actions[name]["type"] = action_type;
@@ -610,31 +615,34 @@ void get_active_ros1_actions(
 
   for (it = publishers.begin(); it != publishers.end(); it++) {
     // check for action client
-    if (is_action_topic(
+    if (
+      is_action_topic(
         active_ros1_action_clients, action_client_nums, false,
         it->first.c_str(), "/cancel", it->second.c_str(), "/GoalID"))
     {
       continue;
-    } else if (is_action_topic(
+    } else if (   // NOLINT
+      is_action_topic(
         active_ros1_action_clients, action_client_nums, true,
         it->first.c_str(), "/goal", it->second.c_str(), "ActionGoal"))
     {
       continue;
-    }
-    // check for action server
-    else if (is_action_topic(
+    } else if (   // NOLINT // check for action server
+      is_action_topic(
         active_ros1_action_servers, action_server_nums, true,
         it->first.c_str(), "/feedback", it->second.c_str(),
         "ActionFeedback"))
     {
       continue;
     }
-    if (is_action_topic(
+    if (
+      is_action_topic(
         active_ros1_action_servers, action_server_nums, false,
         it->first.c_str(), "/result", it->second.c_str(), "ActionResult"))
     {
       continue;
-    } else if (is_action_topic(
+    } else if (   // NOLINT
+      is_action_topic(
         active_ros1_action_servers, action_server_nums, false,
         it->first.c_str(), "/status", it->second.c_str(),
         "GoalStatusArray"))
@@ -646,29 +654,32 @@ void get_active_ros1_actions(
   // subscribers do not report their types, but use it to confirm action
   for (it = subscribers.begin(); it != subscribers.end(); it++) {
     // check for action server
-    if (is_action_topic(
+    if (
+      is_action_topic(
         active_ros1_action_servers, action_server_nums, false,
         it->first.c_str(), "/cancel", it->second.c_str(), ""))
     {
       continue;
-    } else if (is_action_topic(
+    } else if (   // NOLINT
+      is_action_topic(
         active_ros1_action_servers, action_server_nums, false,
         it->first.c_str(), "/goal", it->second.c_str(), ""))
     {
       continue;
-    }
-    // check for action client
-    else if (is_action_topic(
+    } else if (   // NOLINT   // check for action client
+      is_action_topic(
         active_ros1_action_clients, action_client_nums, false,
         it->first.c_str(), "/feedback", it->second.c_str(), ""))
     {
       continue;
-    } else if (is_action_topic(
+    } else if (   // NOLINT
+      is_action_topic(
         active_ros1_action_clients, action_client_nums, false,
         it->first.c_str(), "/result", it->second.c_str(), ""))
     {
       continue;
-    } else if (is_action_topic(
+    } else if (   // NOLINT
+      is_action_topic(
         active_ros1_action_clients, action_client_nums, false,
         it->first.c_str(), "/status", it->second.c_str(), ""))
     {
@@ -701,12 +712,14 @@ void get_active_ros2_actions(
   std::map<std::string, uint8_t>::iterator it_num;
   std::map<std::string, uint8_t> action_server_nums, action_client_nums;
   for (it = active_ros2_publishers.begin(); it != active_ros2_publishers.end(); it++) {
-    if (is_action_topic(
+    if (
+      is_action_topic(
         active_ros2_action_servers, action_server_nums, true, it->first.c_str(),
         "/_action/feedback", it->second.c_str(), "_FeedbackMessage", true))
     {
       continue;
-    } else if (is_action_topic(
+    } else if (   // NOLINT
+      is_action_topic(
         active_ros2_action_servers, action_server_nums, false,
         it->first.c_str(), "/_action/status", it->second.c_str(),
         "GoalStatusArray"), true)
@@ -715,13 +728,15 @@ void get_active_ros2_actions(
     }
   }
   for (it = active_ros2_subscribers.begin(); it != active_ros2_subscribers.end(); it++) {
-    if (is_action_topic(
+    if (
+      is_action_topic(
         active_ros2_action_clients, action_client_nums, true,
         it->first.c_str(), "/_action/feedback", it->second.c_str(),
         "_FeedbackMessage", true))
     {
       continue;
-    } else if (is_action_topic(
+    } else if (   // NOLINT
+      is_action_topic(
         active_ros2_action_clients, action_client_nums, false,
         it->first.c_str(), "/_action/status", it->second.c_str(),
         "GoalStatusArray", true))
@@ -739,7 +754,6 @@ void get_active_ros2_actions(
       active_ros2_action_servers.erase(it_num->first);
     }
   }
-
 }
 
 int main(int argc, char * argv[])
@@ -894,7 +908,8 @@ int main(int argc, char * argv[])
       }
 
       // check actions
-      std::map<std::string, std::map<std::string, std::string>> active_ros1_action_servers, active_ros1_action_clients;
+      std::map<std::string, std::map<std::string, std::string>> active_ros1_action_servers,
+        active_ros1_action_clients;
       get_active_ros1_actions(
         current_ros1_publishers, current_ros1_subscribers,
         active_ros1_action_servers, active_ros1_action_clients);
@@ -1071,7 +1086,8 @@ int main(int argc, char * argv[])
         }
       }
 
-      std::map<std::string, std::map<std::string, std::string>> active_ros2_action_servers, active_ros2_action_clients;
+      std::map<std::string, std::map<std::string, std::string>> active_ros2_action_servers,
+        active_ros2_action_clients;
       get_active_ros2_actions(
         current_ros2_publishers, current_ros2_subscribers,
         active_ros2_action_servers, active_ros2_action_clients);
