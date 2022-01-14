@@ -15,12 +15,12 @@
 #ifndef ROS1_BRIDGE__BUILTIN_INTERFACES_FACTORIES_HPP_
 #define ROS1_BRIDGE__BUILTIN_INTERFACES_FACTORIES_HPP_
 
-#include <memory>
-#include <string>
-
 // include ROS 1 messages
 #include <std_msgs/Duration.h>
 #include <std_msgs/Time.h>
+
+#include <memory>
+#include <string>
 
 // include ROS 2 messages
 #include <builtin_interfaces/msg/duration.hpp>
