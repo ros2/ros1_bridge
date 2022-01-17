@@ -25,6 +25,7 @@
 # pragma clang diagnostic push
 # pragma clang diagnostic ignored "-Wunused-parameter"
 #endif
+#include "ros/callback_queue.h"
 #include "ros/ros.h"
 #ifdef __clang__
 # pragma clang diagnostic pop
@@ -70,7 +71,8 @@ bool get_flag_option(const std::vector<std::string> & args, const std::string & 
 
 bool parse_command_options(
   int argc, char ** argv, bool & output_topic_introspection,
-  bool & bridge_all_1to2_topics, bool & bridge_all_2to1_topics)
+  bool & bridge_all_1to2_topics, bool & bridge_all_2to1_topics,
+  bool & multi_threads)
 {
   std::vector<std::string> args(argv, argv + argc);
 
@@ -88,6 +90,8 @@ bool parse_command_options(
     ss << "a matching subscriber." << std::endl;
     ss << " --bridge-all-2to1-topics: Bridge all ROS 2 topics to ROS 1, whether or not there is ";
     ss << "a matching subscriber." << std::endl;
+    ss << " --multi-threads: Bridge with multiple threads for spinner of ROS 1 and ROS 2.";
+    ss << std::endl;
     std::cout << ss.str();
     return false;
   }
@@ -119,6 +123,7 @@ bool parse_command_options(
   bool bridge_all_topics = get_flag_option(args, "--bridge-all-topics");
   bridge_all_1to2_topics = bridge_all_topics || get_flag_option(args, "--bridge-all-1to2-topics");
   bridge_all_2to1_topics = bridge_all_topics || get_flag_option(args, "--bridge-all-2to1-topics");
+  multi_threads = get_flag_option(args, "--multi-threads");
 
   return true;
 }
@@ -136,7 +141,8 @@ void update_bridge(
   std::map<std::string, Bridge2to1HandlesAndMessageTypes> & bridges_2to1,
   std::map<std::string, ros1_bridge::ServiceBridge1to2> & service_bridges_1_to_2,
   std::map<std::string, ros1_bridge::ServiceBridge2to1> & service_bridges_2_to_1,
-  bool bridge_all_1to2_topics, bool bridge_all_2to1_topics)
+  bool bridge_all_1to2_topics, bool bridge_all_2to1_topics,
+  bool multi_threads = false)
 {
   std::lock_guard<std::mutex> lock(g_bridge_mutex);
 
@@ -256,7 +262,9 @@ void update_bridge(
       bridge.bridge_handles = ros1_bridge::create_bridge_from_2_to_1(
         ros2_node, ros1_node,
         bridge.ros2_type_name, topic_name, 10,
-        bridge.ros1_type_name, topic_name, 10);
+        bridge.ros1_type_name, topic_name, 10,
+        nullptr,
+        multi_threads);
     } catch (std::runtime_error & e) {
       fprintf(
         stderr,
@@ -318,7 +326,8 @@ void update_bridge(
         "ros1", details.at("package"), details.at("name"));
       if (factory) {
         try {
-          service_bridges_2_to_1[name] = factory->service_bridge_2_to_1(ros1_node, ros2_node, name);
+          service_bridges_2_to_1[name] = factory->service_bridge_2_to_1(
+            ros1_node, ros2_node, name, multi_threads);
           printf("Created 2 to 1 bridge for service %s\n", name.data());
         } catch (std::runtime_error & e) {
           fprintf(stderr, "Failed to created a bridge: %s\n", e.what());
@@ -339,7 +348,8 @@ void update_bridge(
         "ros2", details.at("package"), details.at("name"));
       if (factory) {
         try {
-          service_bridges_1_to_2[name] = factory->service_bridge_1_to_2(ros1_node, ros2_node, name);
+          service_bridges_1_to_2[name] = factory->service_bridge_1_to_2(
+            ros1_node, ros2_node, name, multi_threads);
           printf("Created 1 to 2 bridge for service %s\n", name.data());
         } catch (std::runtime_error & e) {
           fprintf(stderr, "Failed to created a bridge: %s\n", e.what());
@@ -457,8 +467,10 @@ int main(int argc, char * argv[])
   bool output_topic_introspection;
   bool bridge_all_1to2_topics;
   bool bridge_all_2to1_topics;
+  bool multi_threads;
   if (!parse_command_options(
-      argc, argv, output_topic_introspection, bridge_all_1to2_topics, bridge_all_2to1_topics))
+      argc, argv, output_topic_introspection, bridge_all_1to2_topics, bridge_all_2to1_topics,
+      multi_threads))
   {
     return 0;
   }
@@ -471,6 +483,12 @@ int main(int argc, char * argv[])
   // ROS 1 node
   ros::init(argc, argv, "ros_bridge");
   ros::NodeHandle ros1_node;
+  std::unique_ptr<ros::CallbackQueue> ros1_callback_queue = nullptr;
+  if (multi_threads) {
+    ros1_callback_queue = std::make_unique<ros::CallbackQueue>();
+    ros1_node.setCallbackQueue(ros1_callback_queue.get());
+  }
+
 
   // mapping of available topic names to type names
   std::map<std::string, std::string> ros1_publishers;
@@ -494,7 +512,8 @@ int main(int argc, char * argv[])
     &ros1_services, &ros2_services,
     &service_bridges_1_to_2, &service_bridges_2_to_1,
     &output_topic_introspection,
-    &bridge_all_1to2_topics, &bridge_all_2to1_topics
+    &bridge_all_1to2_topics, &bridge_all_2to1_topics,
+    multi_threads
     ](const ros::TimerEvent &) -> void
     {
       // collect all topics names which have at least one publisher or subscriber beside this bridge
@@ -612,7 +631,8 @@ int main(int argc, char * argv[])
         ros1_services, ros2_services,
         bridges_1to2, bridges_2to1,
         service_bridges_1_to_2, service_bridges_2_to_1,
-        bridge_all_1to2_topics, bridge_all_2to1_topics);
+        bridge_all_1to2_topics, bridge_all_2to1_topics,
+        multi_threads);
     };
 
   auto ros1_poll_timer = ros1_node.createTimer(ros::Duration(1.0), ros1_poll);
@@ -631,7 +651,8 @@ int main(int argc, char * argv[])
     &service_bridges_1_to_2, &service_bridges_2_to_1,
     &output_topic_introspection,
     &bridge_all_1to2_topics, &bridge_all_2to1_topics,
-    &already_ignored_topics, &already_ignored_services
+    &already_ignored_topics, &already_ignored_services,
+    multi_threads
     ]() -> void
     {
       auto ros2_topics = ros2_node->get_topic_names_and_types();
@@ -776,22 +797,41 @@ int main(int argc, char * argv[])
         ros1_services, ros2_services,
         bridges_1to2, bridges_2to1,
         service_bridges_1_to_2, service_bridges_2_to_1,
-        bridge_all_1to2_topics, bridge_all_2to1_topics);
+        bridge_all_1to2_topics, bridge_all_2to1_topics,
+        multi_threads);
+    };
+
+  auto check_ros1_flag = [&ros1_node] {
+      if (!ros1_node.ok()) {
+        rclcpp::shutdown();
+      }
     };
 
   auto ros2_poll_timer = ros2_node->create_wall_timer(
-    std::chrono::seconds(1), ros2_poll);
+    std::chrono::seconds(1), [&ros2_poll, &check_ros1_flag] {
+      ros2_poll();
+      check_ros1_flag();
+    });
 
 
   // ROS 1 asynchronous spinner
-  ros::AsyncSpinner async_spinner(1);
-  async_spinner.start();
+  std::unique_ptr<ros::AsyncSpinner> async_spinner = nullptr;
+  if (!multi_threads) {
+    async_spinner = std::make_unique<ros::AsyncSpinner>(1);
+  } else {
+    async_spinner = std::make_unique<ros::AsyncSpinner>(0, ros1_callback_queue.get());
+  }
+  async_spinner->start();
 
   // ROS 2 spinning loop
-  rclcpp::executors::SingleThreadedExecutor executor;
-  while (ros1_node.ok() && rclcpp::ok()) {
-    executor.spin_node_once(ros2_node);
+  std::unique_ptr<rclcpp::Executor> executor = nullptr;
+  if (!multi_threads) {
+    executor = std::make_unique<rclcpp::executors::SingleThreadedExecutor>();
+  } else {
+    executor = std::make_unique<rclcpp::executors::MultiThreadedExecutor>();
   }
+  executor->add_node(ros2_node);
+  executor->spin();
 
   return 0;
 }

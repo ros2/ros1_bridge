@@ -16,6 +16,7 @@
 #define  ROS1_BRIDGE__FACTORY_HPP_
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
 #include <utility>
@@ -32,6 +33,32 @@
 
 namespace ros1_bridge
 {
+
+static rclcpp::CallbackGroup::SharedPtr get_callback_group(
+  rclcpp::Node::SharedPtr ros2_node,
+  const std::string & topic_name = "")
+{
+  auto node_base = ros2_node->get_node_base_interface();
+  rclcpp::CallbackGroup::SharedPtr group = nullptr;
+
+  typedef std::map<std::string, rclcpp::CallbackGroup::SharedPtr> CallbackGroupMap;
+  static CallbackGroupMap s_callbackgroups;
+  auto iter = s_callbackgroups.find(topic_name);
+  if (iter != s_callbackgroups.end()) {
+    return iter->second;
+  }
+
+  group = ros2_node->create_callback_group(
+    topic_name.empty() ?
+    // create a shared callback group with Reentrant for creating all ros2 clients and services
+    rclcpp::CallbackGroupType::Reentrant :
+    // create one CallbackGroup with MutuallyExclusive for each topic
+    // to ensure that the message data of each topic is received in order
+    rclcpp::CallbackGroupType::MutuallyExclusive);
+  s_callbackgroups.insert({topic_name, group});
+
+  return group;
+}
 
 template<typename ROS1_T, typename ROS2_T>
 class Factory : public FactoryInterface
@@ -110,10 +137,12 @@ public:
     const std::string & topic_name,
     size_t queue_size,
     ros::Publisher ros1_pub,
-    rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr)
+    rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr,
+    bool custom_callback_group = false)
   {
     auto qos = rclcpp::SensorDataQoS(rclcpp::KeepLast(queue_size));
-    return create_ros2_subscriber(node, topic_name, qos, ros1_pub, ros2_pub);
+    return create_ros2_subscriber(
+      node, topic_name, qos, ros1_pub, ros2_pub, custom_callback_group);
   }
 
   rclcpp::SubscriptionBase::SharedPtr
@@ -122,12 +151,13 @@ public:
     const std::string & topic_name,
     const rmw_qos_profile_t & qos,
     ros::Publisher ros1_pub,
-    rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr)
+    rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr,
+    bool custom_callback_group = false)
   {
     auto rclcpp_qos = rclcpp::QoS(rclcpp::QoSInitialization::from_rmw(qos));
     rclcpp_qos.get_rmw_qos_profile() = qos;
     return create_ros2_subscriber(
-      node, topic_name, rclcpp_qos, ros1_pub, ros2_pub);
+      node, topic_name, rclcpp_qos, ros1_pub, ros2_pub, custom_callback_group);
   }
 
   rclcpp::SubscriptionBase::SharedPtr
@@ -136,7 +166,8 @@ public:
     const std::string & topic_name,
     const rclcpp::QoS & qos,
     ros::Publisher ros1_pub,
-    rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr)
+    rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr,
+    bool custom_callback_group = false)
   {
     std::function<
       void(const typename ROS2_T::SharedPtr msg, const rclcpp::MessageInfo & msg_info)> callback;
@@ -145,6 +176,9 @@ public:
       ros1_pub, ros1_type_name_, ros2_type_name_, node->get_logger(), ros2_pub);
     rclcpp::SubscriptionOptions options;
     options.ignore_local_publications = true;
+    if (custom_callback_group) {
+      options.callback_group = ros1_bridge::get_callback_group(node, topic_name);
+    }
     return node->create_subscription<ROS2_T>(
       topic_name, qos, callback, options);
   }
@@ -325,10 +359,16 @@ public:
   }
 
   ServiceBridge1to2 service_bridge_1_to_2(
-    ros::NodeHandle & ros1_node, rclcpp::Node::SharedPtr ros2_node, const std::string & name)
+    ros::NodeHandle & ros1_node, rclcpp::Node::SharedPtr ros2_node, const std::string & name,
+    bool custom_callback_group = false)
   {
     ServiceBridge1to2 bridge;
-    bridge.client = ros2_node->create_client<ROS2_T>(name);
+    rclcpp::CallbackGroup::SharedPtr group = nullptr;
+    if (custom_callback_group) {
+      group = ros1_bridge::get_callback_group(ros2_node);
+    }
+    bridge.client = ros2_node->create_client<ROS2_T>(
+      name, rmw_qos_profile_services_default, group);
     auto m = &ServiceFactory<ROS1_T, ROS2_T>::forward_1_to_2;
     auto f = std::bind(
       m, this, bridge.client, ros2_node->get_logger(), std::placeholders::_1,
@@ -338,7 +378,8 @@ public:
   }
 
   ServiceBridge2to1 service_bridge_2_to_1(
-    ros::NodeHandle & ros1_node, rclcpp::Node::SharedPtr ros2_node, const std::string & name)
+    ros::NodeHandle & ros1_node, rclcpp::Node::SharedPtr ros2_node, const std::string & name,
+    bool custom_callback_group = false)
   {
     ServiceBridge2to1 bridge;
     bridge.client = ros1_node.serviceClient<ROS1_T>(name);
@@ -351,7 +392,12 @@ public:
     f = std::bind(
       m, this, bridge.client, ros2_node->get_logger(), std::placeholders::_1,
       std::placeholders::_2, std::placeholders::_3);
-    bridge.server = ros2_node->create_service<ROS2_T>(name, f);
+    rclcpp::CallbackGroup::SharedPtr group = nullptr;
+    if (custom_callback_group) {
+      group = ros1_bridge::get_callback_group(ros2_node);
+    }
+    bridge.server = ros2_node->create_service<ROS2_T>(
+      name, f, rmw_qos_profile_services_default, group);
     return bridge;
   }
 
