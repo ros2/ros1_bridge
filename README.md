@@ -81,7 +81,7 @@ arguments. We don't recommend having your ROS 1 environment sourced during this
 step as it can add other libraries to the path.
 
 
-```
+```bash
 colcon build --symlink-install --packages-skip ros1_bridge
 ```
 
@@ -89,7 +89,7 @@ Next you need to source the ROS 1 environment, for Linux and ROS Melodic that
 would be:
 
 
-```
+```bash
 source /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
@@ -105,7 +105,7 @@ it builds the bridge. Alternatively you can do it manually by sourcing the
 relevant workspaces yourself, e.g.:
 
 
-```
+```bash
 # You have already sourced your ROS installation.
 # Source your ROS 2 installation:
 . <install-space-with-ros2>/local_setup.bash
@@ -118,7 +118,7 @@ relevant workspaces yourself, e.g.:
 Then build just the ROS 1 bridge:
 
 
-```
+```bash
 colcon build --symlink-install --packages-select ros1_bridge --cmake-force-configure
 ```
 
@@ -142,7 +142,7 @@ in their environment.
 First we start a ROS 1 `roscore`:
 
 
-```
+```bash
 # Shell A (ROS 1 only):
 . /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
@@ -157,7 +157,7 @@ topics. Once a *matching* topic has been detected it starts to bridge the
 messages on this topic.
 
 
-```
+```bash
 # Shell B (ROS 1 + ROS 2):
 # Source ROS 1 first:
 . /opt/ros/melodic/setup.bash
@@ -179,7 +179,7 @@ ROS 2 in a regular interval.
 Now we start the ROS 1 talker.
 
 
-```
+```bash
 # Shell C:
 . /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
@@ -194,7 +194,7 @@ The ROS 1 node will start printing the published messages to the console.
 Now we start the ROS 2 listener from the `demo_nodes_cpp` ROS 2 package.
 
 
-```
+```bash
 # Shell D:
 . <install-space-with-ros2>/setup.bash
 ros2 run demo_nodes_cpp listener
@@ -206,7 +206,7 @@ When looking at the output in *shell B* there will be a line stating that the
 bridge for this topic has been created:
 
 
-```
+```bash
 created 1to2 bridge for topic '/chatter' with ROS 1 type 'std_msgs/String' and ROS 2 type 'std_msgs/String'
 ```
 
@@ -215,7 +215,7 @@ the listener in *shell B* a line will be stating that the bridge has been torn
 down:
 
 
-```
+```bash
 removed 1to2 bridge for topic '/chatter'
 ```
 
@@ -230,7 +230,7 @@ The steps are very similar to the previous example and therefore only the
 commands are described.
 
 
-```
+```bash
 # Shell A:
 . /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
@@ -241,7 +241,7 @@ roscore
 ---
 
 
-```
+```bash
 # Shell B:
 . /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
@@ -255,7 +255,7 @@ ros2 run ros1_bridge dynamic_bridge
 
 Now we start the ROS 2 talker from the `demo_nodes_py` ROS 2 package.
 
-```
+```bash
 # Shell C:
 . <install-space-with-ros2>/setup.bash
 ros2 run demo_nodes_py talker
@@ -265,7 +265,7 @@ ros2 run demo_nodes_py talker
 
 Now we start the ROS 1 listener.
 
-```
+```bash
 # Shell D:
 . /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
@@ -283,7 +283,7 @@ node.
 
 First we start a ROS 1 `roscore` and the bridge:
 
-```
+```bash
 # Shell A:
 . /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
@@ -291,7 +291,7 @@ First we start a ROS 1 `roscore` and the bridge:
 roscore
 ```
 
-```
+```bash
 # Shell B:
 . /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
@@ -305,7 +305,7 @@ ros2 run ros1_bridge dynamic_bridge
 
 Now we start the ROS 1 GUI:
 
-```
+```bash
 # Shell C:
 . /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
@@ -316,7 +316,7 @@ rqt_image_view /image
 ---
 
 Now we start the ROS 2 image publisher from the `image_tools` ROS 2 package:
-```
+```bash
 # Shell D:
 . <workspace-with-ros2>/install/setup.bash
 ros2 run image_tools cam2image
@@ -335,7 +335,7 @@ image before sending it. You can either use the `Message Publisher` plugin in
 one of the two following `rostopic` commands:
 
 
-```
+```bash
 # Shell E:
 . /opt/ros/melodic/setup.bash
 # Or, on OSX, something like:
@@ -368,7 +368,7 @@ build ros1_bridge.
 
 Launch ROS master
 
-```
+```bash
 # Shell A:
 . <ros-install-dir>/setup.bash
 roscore -p 11311
@@ -376,7 +376,7 @@ roscore -p 11311
 
 Launch dynamic_bridge:
 
-```
+```bash
 # Shell B:
 . <ros-install-dir>/setup.bash
 . <ros2-install-dir>/setup.bash
@@ -386,7 +386,7 @@ ros2 run ros1_bridge dynamic_bridge
 
 Launch TwoInts server:
 
-```
+```bash
 # Shell C:
 . <ros-install-dir>/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
@@ -395,7 +395,7 @@ rosrun roscpp_tutorials add_two_ints_server
 
 Launch AddTwoInts client:
 
-```
+```bash
 # Shell D:
 . <ros2-install-dir>/setup.bash
 ros2 run demo_nodes_cpp add_two_ints_client
