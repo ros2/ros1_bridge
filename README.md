@@ -60,6 +60,39 @@ To run the following examples you will also need these ROS 1 packages:
 * `rostopic`
 * `rqt_image_view`
 
+### Prerequisites for the examples in this file
+
+In order to make the examples below portable between versions of ROS, we've
+chosen to define two environment variables, `ROS1_INSTALL_PATH` and
+`ROS2_INSTALL_PATH`.  These are defined as the paths to the installation
+location of their respective ROS versions.
+
+If you installed Noetic in the default location, then the definition of
+`ROS1_INSTALL_PATH` would likely be `/opt/ros/noetic`.
+
+Building the bridge as described below requires you to build all of ROS 2. I
+assume that you have downloaded it to `~/ros2_galactic`, and that is where you
+plan on building it. In this case, `ROS2_INSTALL_PATH` will be defined as
+`~/ros2_galactic/install`.
+
+If you've chosen to install either or both versions of ROS somewhere else, you
+will need adjust the definitions below to match your installation paths.
+
+Because these definitions are used continuously throughout this file, it would
+be useful to copy the following lines to your `.bashrc` file (if you're using
+`bash` as your shell).  Modify these definitions as appropriate for the
+versions of ROS that you're using, and for the shell that you're using.
+
+```bash
+export ROS1_INSTALL_PATH=/opt/ros/noetic
+export ROS2_INSTALL_PATH=~/ros2_galactic/install
+```
+
+As a note, there is no trailing '/' character in either definition.  If you have
+problems involving paths, please verify that you have the correct path to the
+installation location, and that you do not have a trailing '/' in either
+definition.
+
 ### Building the bridge from source
 
 Before continuing you should have the prerequisites for building ROS 2 from
@@ -90,7 +123,7 @@ would be:
 
 
 ```bash
-source /opt/ros/melodic/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 ```
@@ -108,7 +141,7 @@ relevant workspaces yourself, e.g.:
 ```bash
 # You have already sourced your ROS installation.
 # Source your ROS 2 installation:
-. <install-space-with-ros2>/local_setup.bash
+source ${ROS2_INSTALL_PATH}/setup.bash
 # And if you have a ROS 1 overlay workspace, something like:
 # . <install-space-to-ros1-overlay-ws>/setup.bash
 # And if you have a ROS 2 overlay workspace, something like:
@@ -144,7 +177,7 @@ First we start a ROS 1 `roscore`:
 
 ```bash
 # Shell A (ROS 1 only):
-. /opt/ros/melodic/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 roscore
@@ -160,11 +193,11 @@ messages on this topic.
 ```bash
 # Shell B (ROS 1 + ROS 2):
 # Source ROS 1 first:
-. /opt/ros/melodic/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 # Source ROS 2 next:
-. <install-space-with-bridge>/setup.bash
+source ${ROS2_INSTALL_PATH}/setup.bash
 # For example:
 # . /opt/ros/dashing/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
@@ -181,7 +214,7 @@ Now we start the ROS 1 talker.
 
 ```bash
 # Shell C:
-. /opt/ros/melodic/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 rosrun rospy_tutorials talker
@@ -196,7 +229,7 @@ Now we start the ROS 2 listener from the `demo_nodes_cpp` ROS 2 package.
 
 ```bash
 # Shell D:
-. <install-space-with-ros2>/setup.bash
+source ${ROS2_INSTALL_PATH}/setup.bash
 ros2 run demo_nodes_cpp listener
 ```
 
@@ -232,7 +265,7 @@ commands are described.
 
 ```bash
 # Shell A:
-. /opt/ros/melodic/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 roscore
@@ -243,10 +276,10 @@ roscore
 
 ```bash
 # Shell B:
-. /opt/ros/melodic/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
-. <install-space-with-bridge>/setup.bash
+source ${ROS2_INSTALL_PATH}/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
 ros2 run ros1_bridge dynamic_bridge
 ```
@@ -257,7 +290,7 @@ Now we start the ROS 2 talker from the `demo_nodes_py` ROS 2 package.
 
 ```bash
 # Shell C:
-. <install-space-with-ros2>/setup.bash
+source ${ROS2_INSTALL_PATH}/setup.bash
 ros2 run demo_nodes_py talker
 ```
 
@@ -267,7 +300,7 @@ Now we start the ROS 1 listener.
 
 ```bash
 # Shell D:
-. /opt/ros/melodic/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 rosrun roscpp_tutorials listener
@@ -285,7 +318,7 @@ First we start a ROS 1 `roscore` and the bridge:
 
 ```bash
 # Shell A:
-. /opt/ros/melodic/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 roscore
@@ -293,10 +326,10 @@ roscore
 
 ```bash
 # Shell B:
-. /opt/ros/melodic/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
-. <workspace-with-bridge>/install/setup.bash
+source ${ROS2_INSTALL_PATH}/install/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
 ros2 run ros1_bridge dynamic_bridge
 ```
@@ -307,7 +340,7 @@ Now we start the ROS 1 GUI:
 
 ```bash
 # Shell C:
-. /opt/ros/melodic/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 rqt_image_view /image
@@ -318,7 +351,7 @@ rqt_image_view /image
 Now we start the ROS 2 image publisher from the `image_tools` ROS 2 package:
 ```bash
 # Shell D:
-. <workspace-with-ros2>/install/setup.bash
+source ${ROS2_INSTALL_PATH}/install/setup.bash
 ros2 run image_tools cam2image
 ```
 
@@ -337,7 +370,7 @@ one of the two following `rostopic` commands:
 
 ```bash
 # Shell E:
-. /opt/ros/melodic/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 rostopic pub -r 1 /flip_image std_msgs/Bool "{data: true}"
@@ -370,7 +403,7 @@ Launch ROS master
 
 ```bash
 # Shell A:
-. <ros-install-dir>/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
 roscore -p 11311
 ```
 
@@ -378,8 +411,8 @@ Launch dynamic_bridge:
 
 ```bash
 # Shell B:
-. <ros-install-dir>/setup.bash
-. <ros2-install-dir>/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
+source ${ROS2_INSTALL_PATH}/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
 ros2 run ros1_bridge dynamic_bridge
 ```
@@ -388,7 +421,7 @@ Launch TwoInts server:
 
 ```bash
 # Shell C:
-. <ros-install-dir>/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
 export ROS_MASTER_URI=http://localhost:11311
 rosrun roscpp_tutorials add_two_ints_server
 ```
@@ -397,7 +430,7 @@ Launch AddTwoInts client:
 
 ```bash
 # Shell D:
-. <ros2-install-dir>/setup.bash
+source ${ROS2_INSTALL_PATH}/setup.bash
 ros2 run demo_nodes_cpp add_two_ints_client
 ```
 
@@ -428,7 +461,7 @@ Start a ROS 1 roscore:
 
 ```bash
 # Shell A (ROS 1 only):
-. /opt/ros/melodic/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 roscore
@@ -439,7 +472,7 @@ Then load the bridge.yaml config file and start the talker to publish on the
 
 ```bash
 Shell B: (ROS1 only):
-. /opt/ros/melodic/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 rosparam load bridge.yaml
@@ -449,7 +482,7 @@ rosrun rospy_tutorials talker
 
 ```bash
 Shell C: (ROS1 only):
-. /opt/ros/melodic/setup.bash
+source ${ROS1_INSTALL_PATH}/setup.bash
 # Or, on OSX, something like:
 # . ~/ros_catkin_ws/install_isolated/setup.bash
 
@@ -460,7 +493,7 @@ Then, in a few ROS 2 terminals:
 
 ```bash
 # Shell D:
-. <install-space-with-ros2>/setup.bash
+source ${ROS2_INSTALL_PATH}/setup.bash
 ros2 run ros1_bridge parameter_bridge
 ```
 
@@ -470,7 +503,7 @@ talker from ROS 2:
 
 ```bash
 # Shell E:
-. <install-space-with-ros2>/setup.bash
+source ${ROS2_INSTALL_PATH}/setup.bash
 ros2 run demo_nodes_cpp listener
 ```
 
@@ -480,7 +513,7 @@ timestamp.
 
 ```bash
 # Shell F:
-. <install-space-with-ros2>/setup.bash
+source ${ROS2_INSTALL_PATH}/setup.bash
 ros2 service call /add_two_ints example_interfaces/srv/AddTwoInts "{a: 1, b: 2}"
 ```
 
