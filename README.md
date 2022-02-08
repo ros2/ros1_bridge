@@ -55,7 +55,8 @@ Building the bridge as described below requires you to build all of ROS 2. I ass
 
 If you've chosen to install either or both versions of ROS somewhere else, you will need adjust the definitions below to match your installation paths.
 
-Because these definitions are used continuously throughout this file, it would be useful to copy the following lines to your `.bashrc` file (if you're using `bash` as your shell).  Modify these definitions as appropriate for the versions of ROS that you're using, and for the shell that you're using.
+Because these definitions are used continuously throughout this file, it would be useful to copy the following lines to your `.bashrc` file (if you're using `bash` as your shell).
+Modify these definitions as appropriate for the versions of ROS that you're using, and for the shell that you're using.
 
 
 ```bash
