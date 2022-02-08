@@ -46,7 +46,8 @@ To run the following examples you will also need these ROS 1 packages:
 
 ### Prerequisites for the examples in this file
 
-In order to make the examples below portable between versions of ROS, we've chosen to define two environment variables, `ROS1_INSTALL_PATH` and `ROS2_INSTALL_PATH`.  These are defined as the paths to the installation location of their respective ROS versions.
+In order to make the examples below portable between versions of ROS, we've chosen to define two environment variables, `ROS1_INSTALL_PATH` and `ROS2_INSTALL_PATH`. 
+These are defined as the paths to the installation location of their respective ROS versions.
 
 If you installed Noetic in the default location, then the definition of `ROS1_INSTALL_PATH` would likely be `/opt/ros/noetic`.
 
