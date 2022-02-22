@@ -90,7 +90,8 @@ We don't recommend having your ROS 1 environment sourced during this step as it 
 colcon build --symlink-install --packages-skip ros1_bridge
 ```
 
-Next you need to source the ROS 1 environment.  If you set up the `ROS1_INSTALL_PATH` environment variable as described earlier, then the following will source the correct `setup.bash` file.
+Next you need to source the ROS 1 environment.
+If you set the `ROS1_INSTALL_PATH` environment variable as described above, then the following will source the correct `setup.bash` file.
 
 
 ```bash
