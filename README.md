@@ -49,7 +49,7 @@ To run the following examples you will also need these ROS 1 packages:
 In order to make the examples below portable between versions of ROS, we define two environment variables, `ROS1_INSTALL_PATH` and `ROS2_INSTALL_PATH`. 
 These are defined as the paths to the installation location of their respective ROS versions.
 
-If you installed Noetic in the default location, then the definition of `ROS1_INSTALL_PATH` would likely be `/opt/ros/noetic`.
+If you installed Noetic in the default location, then the definition of `ROS1_INSTALL_PATH` will be `/opt/ros/noetic`.
 
 Building the bridge as described below requires you to build all of ROS 2.
 We assume that you have downloaded it to `~/ros2_galactic`, and that is where you plan on building it.
