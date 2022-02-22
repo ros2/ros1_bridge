@@ -57,7 +57,7 @@ In this case, `ROS2_INSTALL_PATH` will be defined as `~/ros2_galactic/install`.
 
 If you've chosen to install either or both versions of ROS somewhere else, you will need adjust the definitions below to match your installation paths.
 
-Because these definitions are used continuously throughout this file, it would be useful to copy the following lines to your `.bashrc` file (if you're using `bash` as your shell).
+Because these definitions are used continuously throughout this page, it is useful to add the following lines to your shell startup file (`~/.bashrc` if you are using `bash`, `~/.zshrc` if you are using `zsh`).
 Modify these definitions as appropriate for the versions of ROS that you're using, and for the shell that you're using.
 
 
