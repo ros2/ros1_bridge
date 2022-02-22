@@ -66,7 +66,7 @@ export ROS1_INSTALL_PATH=/opt/ros/noetic
 export ROS2_INSTALL_PATH=~/ros2_galactic/install
 ```
 
-As a note, there is no trailing '/' character in either definition.
+Note that no trailing '/' character is used in either definition.
 If you have problems involving paths, please verify that you have the correct path to the installation location, and that you do not have a trailing '/' in either definition.
 
 ### Building the bridge from source
