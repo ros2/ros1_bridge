@@ -52,8 +52,8 @@ These are defined as the paths to the installation location of their respective 
 If you installed Noetic in the default location, then the definition of `ROS1_INSTALL_PATH` will be `/opt/ros/noetic`.
 
 Building the bridge as described below requires you to build all of ROS 2.
-We assume that you have downloaded it to `~/ros2_galactic`, and that is where you plan on building it.
-In this case, `ROS2_INSTALL_PATH` will be defined as `~/ros2_galactic/install`.
+We assume that you have downloaded it to `~/ros2_rolling`, and that is where you plan on building it.
+In this case, `ROS2_INSTALL_PATH` will be defined as `~/ros2_rolling/install`.
 
 If you've chosen to install either or both versions of ROS somewhere else, you will need adjust the definitions below to match your installation paths.
 
@@ -63,7 +63,7 @@ Modify these definitions as appropriate for the versions of ROS that you're usin
 
 ```bash
 export ROS1_INSTALL_PATH=/opt/ros/noetic
-export ROS2_INSTALL_PATH=~/ros2_galactic/install
+export ROS2_INSTALL_PATH=~/ros2_rolling/install
 ```
 
 Note that no trailing '/' character is used in either definition.
