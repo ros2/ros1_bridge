@@ -2,6 +2,14 @@
 Changelog for package ros1_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Cleanup of README.md (`#342 <https://github.com/ros2/ros1_bridge/issues/342>`_)
+* Parametrizing service execution timeout (`#340 <https://github.com/ros2/ros1_bridge/issues/340>`_)
+* Fix cpplint error (`#341 <https://github.com/ros2/ros1_bridge/issues/341>`_)
+* Update package maintainers (`#335 <https://github.com/ros2/ros1_bridge/issues/335>`_)
+* Contributors: Cem Karan, Geoffrey Biggs, Jorge Perez, Marco Bassa, Tim Clephas, Tomoya Fujita
+
 0.10.2 (2021-11-05)
 -------------------
 * Example for `parameter_bridge` (`#330 <https://github.com/ros2/ros1_bridge/issues/330>`_)
