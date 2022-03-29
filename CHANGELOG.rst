@@ -2,8 +2,8 @@
 Changelog for package ros1_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.10.3 (2022-03-29)
+-------------------
 * Cleanup of README.md (`#342 <https://github.com/ros2/ros1_bridge/issues/342>`_)
 * Parametrizing service execution timeout (`#340 <https://github.com/ros2/ros1_bridge/issues/340>`_)
 * Fix cpplint error (`#341 <https://github.com/ros2/ros1_bridge/issues/341>`_)
