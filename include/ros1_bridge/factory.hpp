@@ -100,7 +100,7 @@ public:
       new ros::SubscriptionCallbackHelperT<const ros::MessageEvent<ROS1_T const> &>(
         boost::bind(
           &Factory<ROS1_T, ROS2_T>::ros1_callback,
-          _1, ros2_pub, ros1_type_name_, ros2_type_name_, logger)));
+          boost::placeholders::_1, ros2_pub, ros1_type_name_, ros2_type_name_, logger)));
     return node.subscribe(ops);
   }
 

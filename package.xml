@@ -19,6 +19,7 @@
   <buildtool_depend>rosidl_parser</buildtool_depend>
 
   <build_depend>builtin_interfaces</build_depend>
+  <build_depend>libboost-dev</build_depend>
   <build_depend>pkg-config</build_depend>
   <build_depend>python3-yaml</build_depend>
   <build_depend>rclcpp</build_depend>
