@@ -30,8 +30,8 @@ if(NOT PKG_CONFIG_FOUND)
 endif()
 
 find_ros1_package(roscpp)
-if(NOT ros1_roscpp_FOUND) 
-  if (NOT ROS1_PACKAGES_UNAVAILABLE)
+if(NOT ros1_roscpp_FOUND)
+  if(NOT ROS1_PACKAGES_UNAVAILABLE)
     # Only warn if ROS1 packages were expected to be available
     message(WARNING "Failed to find ROS 1 roscpp, skipping...")
   endif()
