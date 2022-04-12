@@ -31,7 +31,10 @@ endif()
 
 find_ros1_package(roscpp)
 if(NOT ros1_roscpp_FOUND)
-  message(WARNING "Failed to find ROS 1 roscpp, skipping...")
+  if(NOT ROS1_PACKAGES_UNAVAILABLE)
+    # Only warn if ROS1 packages were expected to be available
+    message(WARNING "Failed to find ROS 1 roscpp, skipping...")
+  endif()
   # call ament_package() to avoid ament_tools treating this as a plain CMake pkg
   ament_package(
     CONFIG_EXTRAS ${cmake_extras_files}
