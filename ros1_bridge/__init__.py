@@ -607,10 +607,10 @@ def determine_common_services(
                 ros2_type = str(ros2_fields[direction][i].type)
                 ros1_name = ros1_field[1]
                 ros2_name = ros2_fields[direction][i].name
-                if ros1_type != ros2_type or ros1_name != ros2_name:
+                if ros1_type != ros2_type:
                     # if the message types have a custom mapping their names
                     # might not be equal, therefore check the message pairs
-                    if (ros1_type, ros2_type) not in message_string_pairs:
+                    if (ros1_type.rstrip("[]"), ros2_type.rstrip("[]")) not in message_string_pairs:
                         match = False
                         break
                 output[direction].append({
