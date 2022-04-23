@@ -610,7 +610,7 @@ def determine_common_services(
                 if ros1_type != ros2_type:
                     # if the message types have a custom mapping their names
                     # might not be equal, therefore check the message pairs
-                    if (ros1_type, ros2_type) not in message_string_pairs:
+                    if (ros1_type.rstrip("[]"), ros2_type.rstrip("[]")) not in message_string_pairs:
                         match = False
                         break
                 output[direction].append({
