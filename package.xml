@@ -6,6 +6,7 @@
   <description>A simple bridge between ROS 1 and ROS 2</description>
   <maintainer email="sloretz@openrobotics.org">Shane Loretz</maintainer>
   <maintainer email="geoff@openrobotics.org">Geoffrey Biggs</maintainer>
+  <maintainer email="brandon@openrobotics.org">Brandon Ong</maintainer>
   <license>Apache License 2.0</license>
 
   <author email="dthomas@openrobotics.org">Dirk Thomas</author>
