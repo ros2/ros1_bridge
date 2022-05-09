@@ -4,13 +4,14 @@
   <name>ros1_bridge</name>
   <version>0.10.3</version>
   <description>A simple bridge between ROS 1 and ROS 2</description>
-  <maintainer email="sloretz@openrobotics.org">Shane Loretz</maintainer>
-  <maintainer email="geoff@openrobotics.org">Geoffrey Biggs</maintainer>
   <maintainer email="brandon@openrobotics.org">Brandon Ong</maintainer>
+  <maintainer email="dharini@openrobotics.org">Dharini Dutia</maintainer>
   <license>Apache License 2.0</license>
 
   <author email="dthomas@openrobotics.org">Dirk Thomas</author>
   <author email="jacob@openrobotics.org">Jacob Perron</author>
+  <author email="sloretz@openrobotics.org">Shane Loretz</author>
+  <author email="geoff@openrobotics.org">Geoffrey Biggs</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>ament_index_python</buildtool_depend>
