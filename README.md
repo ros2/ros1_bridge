@@ -397,10 +397,10 @@ topics:
     topic: /chatter  # ROS1 topic name
     type: std_msgs/msg/String  # ROS2 type name
     queue_size: 1  # For the publisher back to ROS1
-services_1_to_2:
+services_2_to_1:
   -
-    service: /add_two_ints  # ROS1 service name
-    type: example_interfaces/srv/AddTwoInts  # The ROS2 type name
+    service: /add_two_ints  # ROS2 service name
+    type: roscpp_tutorials/TwoInts  # The ROS1 type name
 ```
 
 Start a ROS 1 roscore:
