@@ -404,6 +404,7 @@ class MessageMappingRule(MappingRule):
         'ros1_message_name',
         'ros2_message_name',
         'fields_1_to_2',
+        'fields_2_to_1'
     ]
 
     def __init__(self, data, expected_package_name):
@@ -414,10 +415,14 @@ class MessageMappingRule(MappingRule):
         if all(n in data for n in ('ros1_message_name', 'ros2_message_name')):
             self.ros1_message_name = data['ros1_message_name']
             self.ros2_message_name = data['ros2_message_name']
-            if 'fields_1_to_2' in data:
+            if 'fields_1_to_2' or 'fields_2_to_1' in data:
                 self.fields_1_to_2 = OrderedDict()
-                for ros1_field_name, ros2_field_name in data['fields_1_to_2'].items():
-                    self.fields_1_to_2[ros1_field_name] = ros2_field_name
+                if 'fields_1_to_2' in data:
+                    for ros1_field_name, ros2_field_name in data['fields_1_to_2'].items():
+                        self.fields_1_to_2[ros1_field_name] = ros2_field_name
+                if 'fields_2_to_1' in data:
+                    for ros2_field_name, ros1_field_name in data['fields_2_to_1'].items():
+                        self.fields_1_to_2[ros1_field_name] = ros2_field_name
             elif len(data) > 4:
                 raise RuntimeError(
                     'Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
