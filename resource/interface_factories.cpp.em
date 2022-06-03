@@ -157,7 +157,7 @@ if isinstance(ros2_fields[-1].type, NamespacedType):
 @[      else]@
   // statically sized array
   static_assert(
-    (ros2_msg.@(ros2_field_selection).size()) >= (ros1_msg.@(ros1_field_selection).size()),
+    std::tuple_size<decltype(ros2_msg.@(ros2_field_selection))>::value >= (ros1_msg.@(ros1_field_selection).static_size),
     "destination array not large enough for source array"
   );
 @[      end if]@
@@ -244,7 +244,7 @@ if isinstance(ros2_fields[-1].type, NamespacedType):
 @[      else]@
   // statically sized array
   static_assert(
-    (ros1_msg.@(ros1_field_selection).size()) >= (ros2_msg.@(ros2_field_selection).size()),
+    (ros1_msg.@(ros1_field_selection).static_size) >= std::tuple_size<decltype(ros2_msg.@(ros2_field_selection))>::value,
     "destination array not large enough for source array"
   );
 @[      end if]@
