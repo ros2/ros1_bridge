@@ -959,7 +959,7 @@ class MessageIndex:
         """
         Get Message from ROS 2 index.
 
-        :type field: rosidl_parser.parser.NamespacedType
+        :type field: rosidl_parser.definition.NamespacedType
         :return: the message indexed for the fields `type.namespaces[0]` and
         `type.name` of `field`
         """
