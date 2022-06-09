@@ -959,8 +959,8 @@ class MessageIndex:
         """
         Get Message from ROS 2 index.
 
-        :type field: rosidl_adapter.parser.Field
-        :return: the message indexed for the fields `type.pkg_name` and
-        `type.type` of `field`
+        :type field: rosidl_parser.parser.NamespacedType
+        :return: the message indexed for the fields `type.namespaces[0]` and
+        `type.name` of `field`
         """
-        return self._ros2_idx[(field.type.pkg_name, field.type.type)]
+        return self._ros2_idx[(field.type.namespaces[0], field.type.name)]
