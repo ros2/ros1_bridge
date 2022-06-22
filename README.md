@@ -458,3 +458,47 @@ source ${ROS2_INSTALL_PATH}/setup.bash
 ros2 service call /add_two_ints example_interfaces/srv/AddTwoInts "{a: 1, b: 2}"
 ```
 If all is well, the output should contain `example_interfaces.srv.AddTwoInts_Response(sum=3)`
+
+### Parametrizing Quality of Service
+An advantage of ROS 2 over ROS 1 is the possibility to define different Quality of Service settings per topic.
+The parameter bridge optionally allows for this as well.
+For some topics, like `/tf_static` this is actually required, as this is a latching topic in ROS 1.
+In ROS 2 with the `parameter_bridge`, this requires that topic to be configured as such:
+
+```yaml
+topics:
+  -
+    topic: /tf_static
+    type: tf2_msgs/msg/TFMessage
+    queue_size: 1
+    qos:
+      history: keep_all
+      durability: transient_local
+```
+
+All other QoS options (as documented here in https://docs.ros.org/en/foxy/Concepts/About-Quality-of-Service-Settings.html) are available:
+
+```yaml
+topics:
+  -
+    topic: /some_ros1_topic
+    type: std_msgs/msg/String
+    queue_size: 1
+    qos:
+      history: keep_last  # OR keep_all, then you can omit `depth` parameter below
+      depth: 10  # Only required when history == keep_last
+      reliability: reliable  # OR best_effort
+      durability: transient_local  # OR volatile
+      deadline:
+          secs: 10
+          nsecs: 2345
+      lifespan:
+          secs: 20
+          nsecs: 3456
+      liveliness: liveliness_system_default  # Values from https://design.ros2.org/articles/qos_deadline_liveliness_lifespan.html, eg. LIVELINESS_AUTOMATIC
+      liveliness_lease_duration:
+          secs: 40
+          nsecs: 5678
+```
+
+Note that the `qos` section can be omitted entirely and options not set are left default.
