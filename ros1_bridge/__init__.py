@@ -381,11 +381,15 @@ class MappingRule:
 
     def __init__(self, data, expected_package_name):
         if all(n in data for n in ('ros1_package_name', 'ros2_package_name')):
-            if data['ros2_package_name'] != expected_package_name:
+            if (data['ros2_package_name'] != expected_package_name
+                    and not data.get('enable_foreign_mappings')):
                 raise Exception(
                     ('Ignoring rule which affects a different ROS 2 package (%s) '
-                     'then the one it is defined in (%s)') %
-                    (data['ros2_package_name'], expected_package_name))
+                     'then the one it is defined in (%s)\n\n'
+                     '(Please set `enable_foreign_mappings` to `true` if '
+                     'you explicitly want the rule to apply.)') %
+                    (data['ros2_package_name'], expected_package_name)
+                )
             self.ros1_package_name = data['ros1_package_name']
             self.ros2_package_name = data['ros2_package_name']
             self.package_mapping = (len(data) == 2)
