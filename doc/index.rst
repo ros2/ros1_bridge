@@ -34,7 +34,7 @@ Each mapping rule can have one of three types:
 1. A package mapping rule is defined by:
 
    - a ``ros1_package_name``
-   - a ``ros2_package_name`` (which must be the same as the ROS 2 package this mapping rule is defined in)
+   - a ``ros2_package_name`` (which, by default, must be the same as the ROS 2 package this mapping rule is defined in)
 
 2. A message mapping rule is defined by the attributes of a package mapping rule and:
 
@@ -66,7 +66,7 @@ In case of services, each mapping rule can have one of two types:
 1. A package mapping rule is defined by:
 
    - a ``ros1_package_name``
-   - a ``ros2_package_name`` (which must be the same as the ROS 2 package this mapping rule is defined in)
+   - a ``ros2_package_name`` (which, by default, must be the same as the ROS 2 package this mapping rule is defined in)
 
 2. A service name mapping rule is defined by the attributes of a package mapping rule and:
 
@@ -147,6 +147,25 @@ The mapping can optionally only define ``request_fields_1_to_2`` or ``response_f
       response_fields_1_to_2:
         foo: 'foo'
         ros1_bar: 'ros2_bar'
+
+
+How can I define a mapping rules for a foreign package?
+------------------------------------------------------
+
+In the previous sections, it was stated that the ``ros2_package_name`` mapping rule must be the same as the ROS 2 package the mapping rule was defined in.
+While this is **recommended** to prevent conflicting and/or duplicate rules, it is possible to override the check that enforces this with the ``enable_foreign_mappings`` field.
+
+This will mean that, for every package mapping rule defined in the ``yaml`` file, the check for ROS 2 package name equality will be skipped.
+Again, note that this is a dark art that should be wielded with responsibility, please be very careful with this!
+
+With ``enable_foreign_mappings`` set to ``true``, you can then specify mapping rules for ROS 2 packages that are not the same as the package your mapping rules file resides in::
+
+    -
+      enable_foreign_mappings: true
+      ros1_package_name: 'ros1_pkg_name'
+      ros1_service_name: 'ros1_srv_name'
+      ros2_package_name: 'ros2_FOREIGN_pkg_name'
+      ros2_service_name: 'ros2_srv_name'
 
 
 How does the bridge know about custom interfaces?
