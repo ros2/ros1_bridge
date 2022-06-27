@@ -404,7 +404,6 @@ class MessageMappingRule(MappingRule):
         'ros1_message_name',
         'ros2_message_name',
         'fields_1_to_2',
-        'fields_2_to_1'
     ]
 
     def __init__(self, data, expected_package_name):
