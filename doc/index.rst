@@ -78,13 +78,13 @@ A custom field mapping is currently not supported for services.
 How can I install mapping rule files?
 -------------------------------------
 
-The mapping rule files must be exported in the ``package.xml`` in order to be processed by this package::
+The mapping rule files must be exported in the ROS 2 package's ``package.xml`` in order to be processed by this package::
 
     <export>
       <ros1_bridge mapping_rules="my_mapping_rules.yaml"/>
     </export>
 
-The yaml files must also be installed in the ``CMakeLists.txt``::
+The yaml files must also be installed in the ROS 2 package's ``CMakeLists.txt``::
 
     install(
       FILES my_mapping_rules.yaml
