@@ -256,16 +256,16 @@ def get_ros2_messages():
     rules = []
     # get messages from packages
     resources = {
-        key: (val, "rosidl_interfaces") for key, val
-        in ament_index_python.get_resources("rosidl_interfaces").items()
+        key: (val, 'rosidl_interfaces') for key, val
+        in ament_index_python.get_resources('rosidl_interfaces').items()
     }
     resources.update({
         key: (val, 'ros1_bridge_foreign_mapping') for key, val
-        in ament_index_python.get_resources("ros1_bridge_foreign_mapping").items()
+        in ament_index_python.get_resources('ros1_bridge_foreign_mapping').items()
     })
     for package_name, val_tuple in resources.items():
         prefix_path, resource_type = val_tuple
-        if resource_type == "rosidl_interfaces":  # Required, otherwise linking fails
+        if resource_type == 'rosidl_interfaces':  # Required, otherwise linking fails
             pkgs.append(package_name)
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
@@ -317,17 +317,17 @@ def get_ros2_services():
     srvs = []
     rules = []
     resources = {
-        key: (val, "rosidl_interfaces") for key, val
-        in ament_index_python.get_resources("rosidl_interfaces").items()
+        key: (val, 'rosidl_interfaces') for key, val
+        in ament_index_python.get_resources('rosidl_interfaces').items()
     }
     resources.update({
         key: (val, 'ros1_bridge_foreign_mapping') for key, val
-        in ament_index_python.get_resources("ros1_bridge_foreign_mapping").items()
+        in ament_index_python.get_resources('ros1_bridge_foreign_mapping').items()
     })
     resource_type = 'rosidl_interfaces'
     for package_name, val_tuple in resources.items():
         prefix_path, resource_type = val_tuple
-        if resource_type == "rosidl_interfaces":  # Required, otherwise linking fails
+        if resource_type == 'rosidl_interfaces':  # Required, otherwise linking fails
             pkgs.append(package_name)
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
