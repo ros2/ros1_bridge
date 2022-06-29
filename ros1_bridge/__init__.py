@@ -265,7 +265,7 @@ def get_ros2_messages():
     })
     for package_name, val_tuple in resources.items():
         prefix_path, resource_type = val_tuple
-        if resource_type == "rosidl_interfaces":
+        if resource_type == "rosidl_interfaces":  # Required, otherwise linking fails
             pkgs.append(package_name)
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
@@ -327,7 +327,7 @@ def get_ros2_services():
     resource_type = 'rosidl_interfaces'
     for package_name, val_tuple in resources.items():
         prefix_path, resource_type = val_tuple
-        if resource_type == "rosidl_interfaces":
+        if resource_type == "rosidl_interfaces":  # Required, otherwise linking fails
             pkgs.append(package_name)
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
