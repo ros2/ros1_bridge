@@ -34,7 +34,7 @@ Each mapping rule can have one of three types:
 1. A package mapping rule is defined by:
 
    - a ``ros1_package_name``
-   - a ``ros2_package_name`` (which must be the same as the ROS 2 package this mapping rule is defined in)
+   - a ``ros2_package_name`` (which, by default, must be the same as the ROS 2 package this mapping rule is defined in)
 
 2. A message mapping rule is defined by the attributes of a package mapping rule and:
 
@@ -66,7 +66,7 @@ In case of services, each mapping rule can have one of two types:
 1. A package mapping rule is defined by:
 
    - a ``ros1_package_name``
-   - a ``ros2_package_name`` (which must be the same as the ROS 2 package this mapping rule is defined in)
+   - a ``ros2_package_name`` (which, by default, must be the same as the ROS 2 package this mapping rule is defined in)
 
 2. A service name mapping rule is defined by the attributes of a package mapping rule and:
 
@@ -78,13 +78,13 @@ A custom field mapping is currently not supported for services.
 How can I install mapping rule files?
 -------------------------------------
 
-The mapping rule files must be exported in the ``package.xml`` in order to be processed by this package::
+The mapping rule files must be exported in the ROS 2 package's ``package.xml`` in order to be processed by this package::
 
     <export>
       <ros1_bridge mapping_rules="my_mapping_rules.yaml"/>
     </export>
 
-The yaml files must also be installed in the ``CMakeLists.txt``::
+The yaml files must also be installed in the ROS 2 package's ``CMakeLists.txt``::
 
     install(
       FILES my_mapping_rules.yaml
@@ -237,6 +237,68 @@ Run the bridge, reusing shells from above::
     # Verify the topic is listed
     rostopic list
     rostopic echo /joint_command
+
+
+How can I define a mapping rules for a foreign package, from a foreign package?
+-------------------------------------------------------------------------------
+
+In the previous sections, it was stated that the ``ros2_package_name`` mapping rule must be the same as the ROS 2 package the mapping rule was defined in.
+While this is **recommended** to prevent conflicting and/or duplicate rules, it is possible to override the check that enforces this with the ``enable_foreign_mappings`` field.
+
+This will mean that, for every package mapping rule defined in the ``yaml`` file, the check for ROS 2 package name equality will be skipped.
+Again, note that this is a dark art that should be wielded with responsibility, please be very careful with this!
+If there are conflicting mapping rules, the last one that is parsed in sorting order is used!
+This is usually hard to predict, so be very careful!
+
+With ``enable_foreign_mappings`` set to ``true``, you can then specify mapping rules for ROS 2 packages that are not the same as the package your mapping rules file resides in::
+
+    -
+      enable_foreign_mappings: true
+      ros1_package_name: 'ros1_pkg_name'
+      ros1_service_name: 'ros1_srv_name'
+      ros2_package_name: 'ros2_FOREIGN_pkg_name'  # the package with the message definition
+      ros2_service_name: 'ros2_srv_name'
+
+You must also make the ``ros1_bridge_foreign_mapping`` ament resource available to the index in the mapping package's ``CMakeLists.txt``.
+A good place to put the line is to do this is before the install rule for your mapping rules, like so::
+
+    -
+      ament_index_register_resource("ros1_bridge_foreign_mapping")
+      install(
+        FILES YOUR_MAPPING_RULE_FILE.yaml
+        DESTINATION share/${PROJECT_NAME})
+
+**Note**: In this case, the package name you should put in ```ros2_package_name`` is the name of the package with the message definition.
+In effect, it'll be a foreign package, relative to the mapping package you're defining your mapping rules in.
+
+An example directory layout looks like this::
+
+    .
+    ├─ ros1_msgs_ws
+    │  └─ src
+    │     └─ ros1_bridge_msgs
+    │        └─ msg
+    │           └─ ros1_msg_name.msg
+    ├─ ros2_msgs_ws
+    │  └─ src
+    │     └─ ros2_bridge_msgs
+    │     │  ├─ msg
+    │     │  │  └─ ros2_msg_name.msg
+    │     └─ ros2_bridge_mappings
+    │        └─ # YAML file that defines mapping rules for bridge_msgs, or some other foreign msg package
+    └─ bridge_ws
+       └─ src
+          └─ ros1_bridge
+
+In the above example, the mapping rule would look like this::
+
+    -
+      enable_foreign_mappings: true
+      ros1_package_name: 'ros1_bridge_msgs'
+      ros1_message_name: 'ros1_msg_name'
+      ros2_package_name: 'ros2_bridge_msgs'  # this is a foreign package, relative to ros2_bridge_mappings!
+      ros2_message_name: 'ros2_msg_name'
+
 
 Known Issues
 ------------

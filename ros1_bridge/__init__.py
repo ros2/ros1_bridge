@@ -255,10 +255,18 @@ def get_ros2_messages():
     msgs = []
     rules = []
     # get messages from packages
-    resource_type = 'rosidl_interfaces'
-    resources = ament_index_python.get_resources(resource_type)
-    for package_name, prefix_path in resources.items():
-        pkgs.append(package_name)
+    resources = {
+        key: (val, 'rosidl_interfaces') for key, val
+        in ament_index_python.get_resources('rosidl_interfaces').items()
+    }
+    resources.update({
+        key: (val, 'ros1_bridge_foreign_mapping') for key, val
+        in ament_index_python.get_resources('ros1_bridge_foreign_mapping').items()
+    })
+    for package_name, val_tuple in resources.items():
+        prefix_path, resource_type = val_tuple
+        if resource_type == 'rosidl_interfaces':  # Required, otherwise linking fails
+            pkgs.append(package_name)
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
         message_names = {
@@ -308,10 +316,19 @@ def get_ros2_services():
     pkgs = []
     srvs = []
     rules = []
+    resources = {
+        key: (val, 'rosidl_interfaces') for key, val
+        in ament_index_python.get_resources('rosidl_interfaces').items()
+    }
+    resources.update({
+        key: (val, 'ros1_bridge_foreign_mapping') for key, val
+        in ament_index_python.get_resources('ros1_bridge_foreign_mapping').items()
+    })
     resource_type = 'rosidl_interfaces'
-    resources = ament_index_python.get_resources(resource_type)
-    for package_name, prefix_path in resources.items():
-        pkgs.append(package_name)
+    for package_name, val_tuple in resources.items():
+        prefix_path, resource_type = val_tuple
+        if resource_type == 'rosidl_interfaces':  # Required, otherwise linking fails
+            pkgs.append(package_name)
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
         service_names = {
@@ -376,24 +393,35 @@ class MappingRule:
     __slots__ = [
         'ros1_package_name',
         'ros2_package_name',
-        'package_mapping'
+        'package_mapping',
+        'foreign_mapping'
     ]
 
     def __init__(self, data, expected_package_name):
         if all(n in data for n in ('ros1_package_name', 'ros2_package_name')):
-            if data['ros2_package_name'] != expected_package_name:
+            if (data['ros2_package_name'] != expected_package_name
+                    and not data.get('enable_foreign_mappings')):
                 raise Exception(
                     ('Ignoring rule which affects a different ROS 2 package (%s) '
-                     'then the one it is defined in (%s)') %
-                    (data['ros2_package_name'], expected_package_name))
+                     'then the one it is defined in (%s)\n\n'
+                     '(Please set `enable_foreign_mappings` to `true` if '
+                     'you explicitly want the rule to apply.)') %
+                    (data['ros2_package_name'], expected_package_name)
+                )
             self.ros1_package_name = data['ros1_package_name']
             self.ros2_package_name = data['ros2_package_name']
-            self.package_mapping = (len(data) == 2)
+            self.foreign_mapping = bool(data.get('enable_foreign_mappings'))
+            self.package_mapping = (
+                len(data) == (2 + int('enable_foreign_mappings' in data))
+            )
         else:
             raise Exception('Ignoring a rule without a ros1_package_name and/or ros2_package_name')
 
     def is_package_mapping(self):
         return self.package_mapping
+
+    def is_foreign_mapping(self):
+        return self.foreign_mapping
 
     def __repr__(self):
         return self.__str__()
@@ -422,10 +450,10 @@ class MessageMappingRule(MappingRule):
                 if 'fields_2_to_1' in data:
                     for ros2_field_name, ros1_field_name in data['fields_2_to_1'].items():
                         self.fields_1_to_2[ros1_field_name] = ros2_field_name
-            elif len(data) > 4:
+            elif len(data) > 4 + int('enable_foreign_mappings' in data):
                 raise RuntimeError(
                     'Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
-        elif len(data) > 2:
+        elif len(data) > 2 + int('enable_foreign_mappings' in data):
             raise RuntimeError(
                 'Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
 
@@ -467,10 +495,10 @@ class ServiceMappingRule(MappingRule):
                 for ros1_field_name, ros2_field_name in data['response_fields_1_to_2'].items():
                     self.response_fields_1_to_2[ros1_field_name] = ros2_field_name
                 expected_keys += 1
-            elif len(data) > expected_keys:
+            elif len(data) > expected_keys + int('enable_foreign_mappings' in data):
                 raise RuntimeError(
                     'Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
-        elif len(data) > 2:
+        elif len(data) > 2 + int('enable_foreign_mappings' in data):
             raise RuntimeError(
                 'Mapping for package %s contains unknown field(s)' % self.ros2_package_name)
 
