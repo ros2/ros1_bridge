@@ -389,7 +389,7 @@ ros2 run demo_nodes_cpp add_two_ints_client
 This example expands on example 3 by selecting a subset of topics and services to be bridged.
 This is handy when, for example, you have a system that runs most of it's stuff in either ROS 1 or ROS 2 but needs a few nodes from the 'opposite' version of ROS.
 Where the `dynamic_bridge` bridges all topics and service, the `parameter_bridge` uses the ROS 1 parameter server to choose which topics and services are bridged.
-**Note**: The service bridge is **monodirectional**. You must use either `services_2_to_1` and/or `services_1_or_2` to bridge ROS 2 -> ROS 1 or ROS 1 -> ROS 2 services accordingly.
+**Note**: The service bridge is **monodirectional**. You must use either `services_2_to_1` and/or `services_1_to_2` to bridge ROS 2 -> ROS 1 or ROS 1 -> ROS 2 services accordingly.
 For example, to bridge only the `/chatter` topic bidirectionally, and the `/add_two_ints service` from ROS 2 to ROS 1 only, create this configuration file, `bridge.yaml`:
 
 ```yaml
