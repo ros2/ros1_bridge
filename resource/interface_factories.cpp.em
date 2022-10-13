@@ -24,6 +24,7 @@ from rosidl_parser.definition import AbstractNestedType
 from rosidl_parser.definition import AbstractSequence
 from rosidl_parser.definition import BoundedSequence
 from rosidl_parser.definition import NamespacedType
+from rosidl_parser.definition import UnboundedString
 }@
 #include "@(ros2_package_name)_factories.hpp"
 
@@ -43,6 +44,10 @@ from rosidl_parser.definition import NamespacedType
 @[for service in mapped_services]@
 #include <@(service["ros2_package"])/srv/@(camel_case_to_lower_case_underscore(service["ros2_name"])).hpp>
 @[end for]@
+
+// For custom serialization / deserialization
+#include <ros/message_traits.h>
+#include <ros/serialization.h>
 
 namespace ros1_bridge
 {
@@ -330,5 +335,199 @@ void ServiceFactory<
 
 @[    end for]@
 @[  end for]@
+@[end for]@
+}  // namespace ros1_bridge
+
+
+// ROS1 serialization functions
+namespace ros1_bridge
+{
+
+// This version is for write or length
+template<typename STREAM_T, typename VEC_T>
+static void streamVectorSize(STREAM_T& stream, const VEC_T& vec)
+{
+  // Output size of vector to stream
+  uint32_t data_len = vec.size();
+  stream.next(data_len);
+}
+
+// This version is for read
+template<typename STREAM_T, typename VEC_T>
+static void streamVectorSize(STREAM_T& stream, VEC_T& vec)
+{
+  // Resize vector to match size in stream
+  uint32_t data_len = 0;
+  stream.next(data_len);
+  vec.resize(data_len);
+}
+
+// This version is for write
+template<typename VEC_PRIMITIVE_T>
+static void streamPrimitiveVector(ros::serialization::OStream & stream, const VEC_PRIMITIVE_T& vec)
+{
+  const uint32_t data_len = vec.size() * sizeof(typename VEC_PRIMITIVE_T::value_type);
+  // copy data from std::vector/std::array into stream
+  memcpy(stream.advance(data_len), &vec.front(), data_len);
+}
+
+// This version is for length
+template<typename VEC_PRIMITIVE_T>
+static void streamPrimitiveVector(ros::serialization::LStream & stream, const VEC_PRIMITIVE_T& vec)
+{
+  const uint32_t data_len = vec.size() * sizeof(typename VEC_PRIMITIVE_T::value_type);
+  stream.advance(data_len);
+}
+
+// This version is for read
+template<typename VEC_PRIMITIVE_T>
+static void streamPrimitiveVector(ros::serialization::IStream & stream, VEC_PRIMITIVE_T& vec)
+{
+  const uint32_t data_len = vec.size() * sizeof(typename VEC_PRIMITIVE_T::value_type);
+  // copy data from stream into std::vector/std::array
+  memcpy(&vec.front(), stream.advance(data_len), data_len);
+}
+
+@[for m in mapped_msgs]@
+
+@[  if m.ros2_msg.package_name=="std_msgs" and m.ros2_msg.message_name=="Header"]
+// msg_2_to_1_stream for std_msgs::(msg)::Header should be specialized because of lack of seq
+@[  else]
+
+template<>
+template<typename STREAM_T, typename ROS2_MSG_T>
+void
+Factory<
+  @(m.ros1_msg.package_name)::@(m.ros1_msg.message_name),
+  @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name)
+>::msg_2_to_1_stream(STREAM_T& stream,
+                     ROS2_MSG_T& ros2_msg)
+{
+@[    if not m.fields_2_to_1]@
+  // No m.fields_1_to_2
+  // TODO : throw exception?
+@[    end if]@
+@[    for ros2_fields, ros1_fields in m.fields_2_to_1.items()]@
+@{
+ros2_field_selection = '.'.join((str(field.name) for field in ros2_fields))
+ros1_field_selection = '.'.join((str(field.name) for field in ros1_fields))
+
+if isinstance(ros2_fields[-1].type, NamespacedType):
+    namespaces = ros2_fields[-1].type.namespaces
+    assert len(namespaces) == 2 and namespaces[1] == 'msg', \
+      "messages not using the '<pkg_name>, msg, <type_name>' triplet are not supported"
+}
+@[      if not isinstance(ros2_fields[-1].type, AbstractNestedType)]@
+  // write non-array field
+@[        if not isinstance(ros2_fields[-1].type, NamespacedType)]@
+  // write primitive field
+  stream.next(ros2_msg.@(ros2_field_selection));
+@[        elif ros2_fields[-1].type.namespaces[0] == 'builtin_interfaces']@
+  // write builtin field
+  ros1_bridge::msg_2_to_1_stream(stream, ros2_msg.@(ros2_field_selection));
+@[        else]@
+  // write sub message field
+  Factory<
+    @(ros1_fields[-1].pkg_name)::@(ros1_fields[-1].msg_name),
+    @(ros2_fields[-1].type.namespaces[0])::msg::@(ros2_fields[-1].type.name)
+  >::msg_2_to_1_stream(stream, ros2_msg.@(ros2_field_selection));
+@[        end if]@
+@[      else]@
+  // write array or sequence field
+@[        if isinstance(ros2_fields[-1].type, AbstractSequence)]@
+  // dynamically sized sequence
+  streamVectorSize(stream, ros2_msg.@(ros2_field_selection));
+@[        else]@
+  // statically sized array
+  // TODO validate ROS1 and ROS2 field sizes match?
+@[        end if]@
+@[        if not isinstance(ros2_fields[-1].type.value_type, NamespacedType)]@
+  // write primitive array elements
+@[          if isinstance(ros2_fields[-1].type.value_type, UnboundedString)]@
+  // write UnboundedString
+  for (
+    auto ros2_it = ros2_msg.@(ros2_field_selection).begin();
+    ros2_it != ros2_msg.@(ros2_field_selection).end();
+    ++ros2_it
+  )
+  {
+    stream.next(*ros2_it);
+  }
+@[          elif ros2_fields[-1].type.value_type.typename == 'builtin_interfaces']@
+  // write builtin
+  for (
+    auto ros2_it = ros2_msg.@(ros2_field_selection).begin();
+    ros2_it != ros2_msg.@(ros2_field_selection).end();
+    ++ros2_it
+  )
+  {
+    ros1_bridge::msg_2_to_1_stream(stream, *ros2_it);
+  }
+@[          else]@
+  // write primitive type
+  streamPrimitiveVector(stream, ros2_msg.@(ros2_field_selection));
+@[          end if]@
+@[        else]@
+  // write element wise since the type is different
+  {
+    for (
+      auto ros2_it = ros2_msg.@(ros2_field_selection).begin();
+      ros2_it != ros2_msg.@(ros2_field_selection).end();
+      ++ros2_it
+    )
+    {
+      // write sub message element
+@[        if ros2_fields[-1].type.value_type.namespaces[0] == 'builtin_interfaces']@
+      ros1_bridge::msg_2_to_1_stream(stream, *ros2_it);
+@[          else]@
+      Factory<
+        @(ros1_fields[-1].pkg_name)::@(ros1_fields[-1].msg_name),
+        @(ros2_fields[-1].type.value_type.namespaces[0])::msg::@(ros2_fields[-1].type.value_type.name)
+      >::msg_2_to_1_stream(stream, *ros2_it);
+@[          end if]@
+    }
+  }
+@[        end if]@
+@[      end if]@
+@[    end for]@
+}
+
+template<>
+void
+Factory<
+  @(m.ros1_msg.package_name)::@(m.ros1_msg.message_name),
+  @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name)
+>::write_2_to_1_stream(ros::serialization::OStream& out_stream,
+                       const @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name)& ros2_msg)
+{
+  msg_2_to_1_stream(out_stream, ros2_msg);
+}
+
+
+template<>
+void
+Factory<
+  @(m.ros1_msg.package_name)::@(m.ros1_msg.message_name),
+  @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name)
+>::read_2_to_1_stream(ros::serialization::IStream& in_stream,
+                      @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name)& ros2_msg)
+{
+  msg_2_to_1_stream(in_stream, ros2_msg);
+}
+
+template<>
+uint32_t
+Factory<
+  @(m.ros1_msg.package_name)::@(m.ros1_msg.message_name),
+  @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name)
+>::length_2_to_1_stream(const @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name)& ros2_msg)
+{
+  ros::serialization::LStream len_stream;
+  msg_2_to_1_stream(len_stream, ros2_msg);
+  return len_stream.getLength();
+}
+
+@[  end if]
+
 @[end for]@
 }  // namespace ros1_bridge

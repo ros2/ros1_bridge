@@ -101,6 +101,19 @@ if(BUILD_TESTING)
       "rclcpp"
     )
     target_link_libraries(test_convert_generic ${PROJECT_NAME})
+
+    ament_add_gtest(test_ros2_to_ros1_serialization test/test_ros2_to_ros1_serialization.cpp)
+    ament_target_dependencies(test_ros2_to_ros1_serialization
+      "ros1_roscpp"
+      "ros1_sensor_msgs"
+      "ros1_std_msgs"
+      "ros1_geometry_msgs"
+      "sensor_msgs"
+      "std_msgs"
+      "geometry_msgs"
+      "rclcpp"
+    )
+    target_link_libraries(test_ros2_to_ros1_serialization ${PROJECT_NAME})
   endif()
 
 endif()
