@@ -753,7 +753,6 @@ def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, msg_idx):
                     file=sys.stderr)
                 continue
             mapping.add_field_pair(ros1_selected_fields, ros2_selected_fields)
-        return mapping
 
     # apply name based mapping of fields
     ros1_field_missing_in_ros2 = False
