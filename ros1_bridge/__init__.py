@@ -797,9 +797,11 @@ def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, msg_idx):
                 update_ros1_field_information(ros1_field, ros1_msg.package_name)
                 mapping.add_field_pair(ros1_field, ros2_member)
                 break
-    
-        ros1_fields_mapped_to_a_ros2_member = [field[0].name for field in mapping.fields_1_to_2.keys()]
-        if not ros1_field.name in ros1_fields_mapped_to_a_ros2_member:
+
+        ros1_fields_mapped_to_a_ros2_member = [field[0].name
+                                               for field
+                                               in mapping.fields_1_to_2.keys()]
+        if ros1_field.name not in ros1_fields_mapped_to_a_ros2_member:
             # this allows fields to exist in ROS 1 but not in ROS 2
             ros1_fields_not_mapped += [ros1_field]
 
