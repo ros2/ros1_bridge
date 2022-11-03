@@ -80,6 +80,29 @@ if(BUILD_TESTING)
     endif()
     set(TEST_ROS1_BRIDGE TRUE)
   endif()
+
+  find_package(ament_cmake_gtest REQUIRED)
+  find_package(geometry_msgs REQUIRED)
+  find_package(std_msgs REQUIRED)
+  find_package(sensor_msgs REQUIRED)
+  find_ros1_package(geometry_msgs)
+  find_ros1_package(std_msgs)
+  find_ros1_package(sensor_msgs)
+  if(ros1_geometry_msgs_FOUND AND ros1_sensor_msgs_FOUND AND ros1_std_msgs_FOUND)
+    ament_add_gtest(test_convert_generic test/test_convert_generic.cpp)
+    ament_target_dependencies(test_convert_generic
+      "ros1_roscpp"
+      "ros1_sensor_msgs"
+      "ros1_std_msgs"
+      "ros1_geometry_msgs"
+      "sensor_msgs"
+      "std_msgs"
+      "geometry_msgs"
+      "rclcpp"
+    )
+    target_link_libraries(test_convert_generic ${PROJECT_NAME})
+  endif()
+
 endif()
 
 ament_export_include_directories(include)

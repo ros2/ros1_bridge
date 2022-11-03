@@ -40,6 +40,7 @@
   <exec_depend>rcutils</exec_depend>
   <exec_depend>std_msgs</exec_depend>
 
+  <test_depend>ament_cmake_gtest</test_depend>
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
   <test_depend>demo_nodes_cpp</test_depend>
