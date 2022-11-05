@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+    ros1-ros2-bridge:
+        image: ros1-ros2-bridge-foxy:latest
+        container_name: ros1-ros2-bridge-foxy
+        build:
+            context: .
+        network_mode: host
+        tty: true
+        #command:  /bin/bash -c "source install/setup.bash && export ROS_MASTER_URI=http://localhost:11311 && ros2 run ros1_bridge dynamic_bridge"
+        volumes:
+            -   ./kitti/:/home/kitti

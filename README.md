@@ -502,3 +502,40 @@ topics:
 ```
 
 Note that the `qos` section can be omitted entirely and options not set are left default.
+
+
+### Dockerfile and Compose 
+image is only for ```ROS2 foxy``` integrated.
+This image has two main goals:
+1. run ROS1 bag files into ROS2 environment (You can create then new ros2 bag2 file)
+2. subscribe topics from ROS2 and transfer to ROS1 (topics have to be predefined) #todo: automatically create param dict file
+
+
+Lets assume our .bag file is located:
+```/home/kitti/kitti_2011_09_26_drive_0002_synced.bag```
+
+To run the bag1 file and read topics in ros2:
+
+```
+source /opt/ros/noetic/setup.bash && \
+source /opt/ros/foxy/setup.bash && \
+ros2 bag play -s rosbag_v2 /home/kitti/kitti_2011_09_26_drive_0002_synced.bag -l
+```
+
+To republish topics from ros2 to ros1:
+
+1. source
+```
+source /opt/ros/noetic/setup.bash && \
+source /opt/ros/foxy/setup.bash && \
+export ROS_MASTER_URI=http://localhost:11311
+```
+2. set a param to restream:
+```
+ rosparam set /topics 
+ "[{topic: '/kitti/velo/pointcloud', type: 'sensor_msgs/msg/PointCloud2'},
+   {topic: '/kitti/camera_color_left/image_raw', type: 'sensor_msgs/msg/Image'}]"
+```
+3. run 
+
+```ros2 run ros1_bridge parameter_bridge```
