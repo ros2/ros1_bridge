@@ -807,6 +807,8 @@ def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, msg_idx):
 
     ros1_field_missing_in_ros2 = any(ros1_fields_not_mapped)
 
+    mapping.ros1_field_missing_in_ros2 = ros1_field_missing_in_ros2
+            
     if ros1_field_missing_in_ros2:
         # if some fields exist in ROS 1 but not in ROS 2
         # check that no fields exist in ROS 2 but not in ROS 1
@@ -912,7 +914,8 @@ class Mapping:
         'ros2_msg',
         'fields_1_to_2',
         'fields_2_to_1',
-        'depends_on_ros2_messages'
+        'depends_on_ros2_messages',
+        'ros1_field_missing_in_ros2',
     ]
 
     def __init__(self, ros1_msg, ros2_msg):
@@ -921,6 +924,7 @@ class Mapping:
         self.fields_1_to_2 = OrderedDict()
         self.fields_2_to_1 = OrderedDict()
         self.depends_on_ros2_messages = set()
+        self.ros1_field_missing_in_ros2 = False
 
     def add_field_pair(self, ros1_fields, ros2_members):
         """

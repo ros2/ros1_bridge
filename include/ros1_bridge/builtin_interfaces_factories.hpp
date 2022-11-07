@@ -60,6 +60,19 @@ Factory<
   const builtin_interfaces::msg::Duration & ros2_msg,
   std_msgs::Duration & ros1_msg);
 
+/**
+ * The first template<> is a specialization for Factory class
+ * The second template<> is a specialization for the function argument types
+ *
+ * For reference:
+ *
+ *   template<typename ROS1_T, typename ROS2_T>
+ *   class Factory : public FactoryInterface
+ *   {
+ *      template<typename STREAM_T, typename ROS2_MSG_T>
+ *      static void msg_2_to_1_stream(STREAM_T & stream, ROS2_MSG_T & msg);
+ *   };
+ */
 template<>
 template<>
 void

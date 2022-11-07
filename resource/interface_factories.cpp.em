@@ -29,6 +29,7 @@ from rosidl_parser.definition import UnboundedString
 #include "@(ros2_package_name)_factories.hpp"
 
 #include <algorithm>
+#include <stdexcept>
 
 #include "rclcpp/rclcpp.hpp"
 
@@ -44,10 +45,6 @@ from rosidl_parser.definition import UnboundedString
 @[for service in mapped_services]@
 #include <@(service["ros2_package"])/srv/@(camel_case_to_lower_case_underscore(service["ros2_name"])).hpp>
 @[end for]@
-
-// For custom serialization / deserialization
-#include <ros/message_traits.h>
-#include <ros/serialization.h>
 
 namespace ros1_bridge
 {
@@ -391,7 +388,10 @@ static void streamPrimitiveVector(ros::serialization::IStream & stream, VEC_PRIM
 @[for m in mapped_msgs]@
 
 @[  if m.ros2_msg.package_name=="std_msgs" and m.ros2_msg.message_name=="Header"]
-// msg_2_to_1_stream for std_msgs::(msg)::Header should be specialized because of lack of seq
+// std_msgs/Header does not have a 1-to-1 field mapping because it ROS2 dropped the "seq" field.
+// Typically, the auto-generated msg_2_to_1_stream() function will throw an exception for this.
+// However, since Header is so fundimental, a hand-written template specialization is provided in
+// builtin_interfaces_factories.
 @[  else]
 
 template<>
@@ -403,11 +403,11 @@ Factory<
 >::msg_2_to_1_stream(STREAM_T& stream,
                      ROS2_MSG_T& ros2_msg)
 {
-@[    if not m.fields_2_to_1]@
-  // No m.fields_1_to_2
-  // TODO : throw exception?
-@[    end if]@
-@[    for ros2_fields, ros1_fields in m.fields_2_to_1.items()]@
+@[    if m.ros1_field_missing_in_ros2]@
+  // Only messages that have exactly matching fields are supported -- for now
+  throw std::runtime_error("direct stream conversion is unsupported for messages types where fields do not match exactly");
+@[    else]@
+@[      for ros2_fields, ros1_fields in m.fields_2_to_1.items()]@
 @{
 ros2_field_selection = '.'.join((str(field.name) for field in ros2_fields))
 ros1_field_selection = '.'.join((str(field.name) for field in ros1_fields))
@@ -417,33 +417,35 @@ if isinstance(ros2_fields[-1].type, NamespacedType):
     assert len(namespaces) == 2 and namespaces[1] == 'msg', \
       "messages not using the '<pkg_name>, msg, <type_name>' triplet are not supported"
 }
-@[      if not isinstance(ros2_fields[-1].type, AbstractNestedType)]@
+@[        if not isinstance(ros2_fields[-1].type, AbstractNestedType)]@
   // write non-array field
-@[        if not isinstance(ros2_fields[-1].type, NamespacedType)]@
+@[          if not isinstance(ros2_fields[-1].type, NamespacedType)]@
   // write primitive field
   stream.next(ros2_msg.@(ros2_field_selection));
 @[        elif ros2_fields[-1].type.namespaces[0] == 'builtin_interfaces']@
   // write builtin field
   ros1_bridge::msg_2_to_1_stream(stream, ros2_msg.@(ros2_field_selection));
-@[        else]@
+@[          else]@
   // write sub message field
   Factory<
     @(ros1_fields[-1].pkg_name)::@(ros1_fields[-1].msg_name),
     @(ros2_fields[-1].type.namespaces[0])::msg::@(ros2_fields[-1].type.name)
   >::msg_2_to_1_stream(stream, ros2_msg.@(ros2_field_selection));
-@[        end if]@
-@[      else]@
+@[          end if]@
+@[        else]@
   // write array or sequence field
-@[        if isinstance(ros2_fields[-1].type, AbstractSequence)]@
+@[          if isinstance(ros2_fields[-1].type, AbstractSequence)]@
   // dynamically sized sequence
   streamVectorSize(stream, ros2_msg.@(ros2_field_selection));
-@[        else]@
+@[          else]@
   // statically sized array
-  // TODO validate ROS1 and ROS2 field sizes match?
-@[        end if]@
-@[        if not isinstance(ros2_fields[-1].type.value_type, NamespacedType)]@
+  static_assert(std::tuple_size<decltype(ros2_msg.@(ros2_field_selection))>::value ==
+                decltype(@(m.ros1_msg.package_name)::@(m.ros1_msg.message_name)::@(ros1_field_selection))::static_size,
+                "size mismatch of static arrays");
+@[          end if]@
+@[          if not isinstance(ros2_fields[-1].type.value_type, NamespacedType)]@
   // write primitive array elements
-@[          if isinstance(ros2_fields[-1].type.value_type, UnboundedString)]@
+@[            if isinstance(ros2_fields[-1].type.value_type, UnboundedString)]@
   // write UnboundedString
   for (
     auto ros2_it = ros2_msg.@(ros2_field_selection).begin();
@@ -463,11 +465,11 @@ if isinstance(ros2_fields[-1].type, NamespacedType):
   {
     ros1_bridge::msg_2_to_1_stream(stream, *ros2_it);
   }
-@[          else]@
+@[            else]@
   // write primitive type
   streamPrimitiveVector(stream, ros2_msg.@(ros2_field_selection));
-@[          end if]@
-@[        else]@
+@[            end if]@
+@[          else]@
   // write element wise since the type is different
   {
     for (
@@ -477,19 +479,20 @@ if isinstance(ros2_fields[-1].type, NamespacedType):
     )
     {
       // write sub message element
-@[        if ros2_fields[-1].type.value_type.namespaces[0] == 'builtin_interfaces']@
+@[          if ros2_fields[-1].type.value_type.namespaces[0] == 'builtin_interfaces']@
       ros1_bridge::msg_2_to_1_stream(stream, *ros2_it);
-@[          else]@
+@[            else]@
       Factory<
         @(ros1_fields[-1].pkg_name)::@(ros1_fields[-1].msg_name),
         @(ros2_fields[-1].type.value_type.namespaces[0])::msg::@(ros2_fields[-1].type.value_type.name)
       >::msg_2_to_1_stream(stream, *ros2_it);
-@[          end if]@
+@[            end if]@
     }
   }
+@[          end if]@
 @[        end if]@
-@[      end if]@
-@[    end for]@
+@[      end for]@
+@[    end if]@
 }
 
 template<>
