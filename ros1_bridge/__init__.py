@@ -808,7 +808,7 @@ def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, msg_idx):
     ros1_field_missing_in_ros2 = any(ros1_fields_not_mapped)
 
     mapping.ros1_field_missing_in_ros2 = ros1_field_missing_in_ros2
-            
+
     if ros1_field_missing_in_ros2:
         # if some fields exist in ROS 1 but not in ROS 2
         # check that no fields exist in ROS 2 but not in ROS 1
