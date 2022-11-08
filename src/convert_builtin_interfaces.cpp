@@ -41,7 +41,7 @@ convert_2_to_1(
 
 template<>
 void
-msg_2_to_1_stream(
+convert_all_in_one_stream(
   ros::serialization::OStream & stream,
   const builtin_interfaces::msg::Duration & ros2_msg)
 {
@@ -51,7 +51,7 @@ msg_2_to_1_stream(
 
 template<>
 void
-msg_2_to_1_stream(
+convert_all_in_one_stream(
   ros::serialization::IStream & stream,
   builtin_interfaces::msg::Duration & ros2_msg)
 {
@@ -61,7 +61,7 @@ msg_2_to_1_stream(
 
 template<>
 void
-msg_2_to_1_stream(
+convert_all_in_one_stream(
   ros::serialization::LStream & stream,
   const builtin_interfaces::msg::Duration & ros2_msg)
 {
@@ -91,7 +91,7 @@ convert_2_to_1(
 
 template<>
 void
-msg_2_to_1_stream(
+convert_all_in_one_stream(
   ros::serialization::OStream & stream,
   const builtin_interfaces::msg::Time & ros2_msg)
 {
@@ -101,7 +101,7 @@ msg_2_to_1_stream(
 
 template<>
 void
-msg_2_to_1_stream(
+convert_all_in_one_stream(
   ros::serialization::IStream & stream,
   builtin_interfaces::msg::Time & ros2_msg)
 {
@@ -111,7 +111,7 @@ msg_2_to_1_stream(
 
 template<>
 void
-msg_2_to_1_stream(
+convert_all_in_one_stream(
   ros::serialization::LStream & stream,
   const builtin_interfaces::msg::Time & ros2_msg)
 {

@@ -355,20 +355,23 @@ public:
   /**
    * @brief Writes (serializes) a ROS2 class directly to a ROS1 stream
    */
-  static void write_2_to_1_stream(ros::serialization::OStream & out_stream, const ROS2_T & msg);
+  static void convert_2_to_1(const ROS2_T & msg, ros::serialization::OStream & out_stream);
 
   /**
    * @brief Reads (deserializes) a ROS2 class directly from a ROS1 stream
    */
-  static void read_2_to_1_stream(ros::serialization::IStream & in_stream, ROS2_T & msg);
+  static void convert_1_to_2(ros::serialization::IStream & in_stream, ROS2_T & msg);
 
   /**
    * @brief Determines the length of a ROS2 class if it was serialized to a ROS1 stream
    */
-  static uint32_t length_2_to_1_stream(const ROS2_T & msg);
+  static uint32_t length_2_as_1_stream(const ROS2_T & msg);
 
+  /**
+   * @brief All-in-one conversion for ROS2 message types to/from ROS1 streams
+   */
   template<typename STREAM_T, typename ROS2_MSG_T>
-  static void msg_2_to_1_stream(STREAM_T & stream, ROS2_MSG_T & msg);
+  static void convert_all_in_one_stream(STREAM_T & stream, ROS2_MSG_T & msg);
 
   std::string ros1_type_name_;
   std::string ros2_type_name_;

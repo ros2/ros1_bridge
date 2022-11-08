@@ -364,7 +364,7 @@ TYPED_TEST(Ros2ToRos1SerializationTest, test_length)
   const ROS1_T & ros1_msg = this->test.ros1_msg;
   const ROS2_T & ros2_msg = this->test.ros2_msg;
   uint32_t ros1_len = ros::serialization::serializationLength(ros1_msg);
-  uint32_t ros2_len = FACTORY_T::length_2_to_1_stream(ros2_msg);
+  uint32_t ros2_len = FACTORY_T::length_2_as_1_stream(ros2_msg);
   EXPECT_EQ(ros1_len, ros2_len);
 }
 
@@ -392,10 +392,10 @@ TYPED_TEST(Ros2ToRos1SerializationTest, test_deserialization)
   const uint32_t ros1_len = ros::serialization::serializationLength(ros1_msg);
   std::vector<uint8_t> buffer(ros1_len);
   ros::serialization::OStream out_stream(buffer.data(), ros1_len);
-  FACTORY_T::write_2_to_1_stream(out_stream, ros2_msg);
+  FACTORY_T::convert_2_to_1(ros2_msg, out_stream);
   ros::serialization::IStream in_stream(buffer.data(), ros1_len);
   ROS2_T ros2_msg2;
-  FACTORY_T::read_2_to_1_stream(in_stream, ros2_msg2);
+  FACTORY_T::convert_1_to_2(in_stream, ros2_msg2);
   EXPECT_TRUE(TestFixture::TEST_T::compare(ros2_msg, ros2_msg2));
 }
 
@@ -409,7 +409,7 @@ TYPED_TEST(Ros2ToRos1SerializationTest, test_serialization)
   const ROS1_T & ros1_msg = this->test.ros1_msg;
   const ROS2_T & ros2_msg = this->test.ros2_msg;
   const uint32_t ros1_len = ros::serialization::serializationLength(ros1_msg);
-  const uint32_t ros2_len = FACTORY_T::length_2_to_1_stream(ros2_msg);
+  const uint32_t ros2_len = FACTORY_T::length_2_as_1_stream(ros2_msg);
   ASSERT_EQ(ros1_len, ros2_len);
   const uint32_t len = ros1_len;
 
@@ -433,7 +433,7 @@ TYPED_TEST(Ros2ToRos1SerializationTest, test_serialization)
     buffer2.at(len) = guard_value;
     ros::serialization::OStream stream(buffer2.data(), len);
     EXPECT_EQ(stream.getLength(), len);
-    FACTORY_T::write_2_to_1_stream(stream, ros2_msg);
+    FACTORY_T::convert_2_to_1(ros2_msg, stream);
     EXPECT_EQ(stream.getLength(), 0ul);
     EXPECT_EQ(buffer2.at(len), guard_value);
   }
