@@ -70,7 +70,7 @@ Factory<
  *   class Factory : public FactoryInterface
  *   {
  *      template<typename STREAM_T, typename ROS2_MSG_T>
- *      static void convert_all_in_one_stream(STREAM_T & stream, ROS2_MSG_T & msg);
+ *      static void internal_stream_translate_helper(STREAM_T & stream, ROS2_MSG_T & msg);
  *   };
  */
 template<>
@@ -79,7 +79,7 @@ void
 Factory<
   std_msgs::Duration,
   builtin_interfaces::msg::Duration
->::convert_all_in_one_stream(
+>::internal_stream_translate_helper(
   ros::serialization::OStream & stream,
   const builtin_interfaces::msg::Duration & msg);
 
@@ -89,7 +89,7 @@ void
 Factory<
   std_msgs::Duration,
   builtin_interfaces::msg::Duration
->::convert_all_in_one_stream(
+>::internal_stream_translate_helper(
   ros::serialization::IStream & stream,
   builtin_interfaces::msg::Duration & msg);
 
@@ -99,7 +99,7 @@ void
 Factory<
   std_msgs::Duration,
   builtin_interfaces::msg::Duration
->::convert_all_in_one_stream(
+>::internal_stream_translate_helper(
   ros::serialization::LStream & stream,
   const builtin_interfaces::msg::Duration & msg);
 
@@ -127,7 +127,7 @@ void
 Factory<
   std_msgs::Time,
   builtin_interfaces::msg::Time
->::convert_all_in_one_stream(
+>::internal_stream_translate_helper(
   ros::serialization::OStream & stream,
   const builtin_interfaces::msg::Time & msg);
 
@@ -137,7 +137,7 @@ void
 Factory<
   std_msgs::Time,
   builtin_interfaces::msg::Time
->::convert_all_in_one_stream(
+>::internal_stream_translate_helper(
   ros::serialization::IStream & stream,
   builtin_interfaces::msg::Time & msg);
 
@@ -147,7 +147,7 @@ void
 Factory<
   std_msgs::Time,
   builtin_interfaces::msg::Time
->::convert_all_in_one_stream(
+>::internal_stream_translate_helper(
   ros::serialization::LStream & stream,
   const builtin_interfaces::msg::Time & msg);
 

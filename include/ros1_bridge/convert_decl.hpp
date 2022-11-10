@@ -32,7 +32,7 @@ convert_2_to_1(
 
 template<typename ROS2_T, typename STREAM_T>
 void
-convert_all_in_one_stream(
+internal_stream_translate_helper(
   STREAM_T & out_stream,
   const ROS2_T & msg);
 

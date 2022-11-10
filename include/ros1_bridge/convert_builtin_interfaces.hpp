@@ -42,13 +42,13 @@ convert_2_to_1(
 
 template<typename STREAM_T>
 void
-convert_all_in_one_stream(
+internal_stream_translate_helper(
   STREAM_T & stream,
   const builtin_interfaces::msg::Duration & msg);
 
 template<typename STREAM_T>
 void
-convert_all_in_one_stream(
+internal_stream_translate_helper(
   STREAM_T & stream,
   builtin_interfaces::msg::Duration & msg);
 
@@ -67,13 +67,13 @@ convert_2_to_1(
 
 template<typename STREAM_T>
 void
-convert_all_in_one_stream(
+internal_stream_translate_helper(
   STREAM_T & stream,
   const builtin_interfaces::msg::Time & msg);
 
 template<typename STREAM_T>
 void
-convert_all_in_one_stream(
+internal_stream_translate_helper(
   STREAM_T & stream,
   builtin_interfaces::msg::Time & msg);
 

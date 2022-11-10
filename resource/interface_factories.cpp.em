@@ -389,7 +389,7 @@ static void streamPrimitiveVector(ros::serialization::IStream & stream, VEC_PRIM
 
 @[  if m.ros2_msg.package_name=="std_msgs" and m.ros2_msg.message_name=="Header"]
 // std_msgs/Header does not have a 1-to-1 field mapping because it ROS2 dropped the "seq" field.
-// Typically, the auto-generated convert_all_in_one_stream() function will throw an exception for this.
+// Typically, the auto-generated internal_stream_translate_helper() function will throw an exception for this.
 // However, since Header is so fundimental, a hand-written template specialization is provided in
 // builtin_interfaces_factories.
 @[  else]
@@ -400,7 +400,7 @@ void
 Factory<
   @(m.ros1_msg.package_name)::@(m.ros1_msg.message_name),
   @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name)
->::convert_all_in_one_stream(STREAM_T& stream,
+>::internal_stream_translate_helper(STREAM_T& stream,
                      ROS2_MSG_T& ros2_msg)
 {
 @[    if m.ros1_field_missing_in_ros2]@
@@ -424,13 +424,13 @@ if isinstance(ros2_fields[-1].type, NamespacedType):
   stream.next(ros2_msg.@(ros2_field_selection));
 @[        elif ros2_fields[-1].type.namespaces[0] == 'builtin_interfaces']@
   // write builtin field
-  ros1_bridge::convert_all_in_one_stream(stream, ros2_msg.@(ros2_field_selection));
+  ros1_bridge::internal_stream_translate_helper(stream, ros2_msg.@(ros2_field_selection));
 @[          else]@
   // write sub message field
   Factory<
     @(ros1_fields[-1].pkg_name)::@(ros1_fields[-1].msg_name),
     @(ros2_fields[-1].type.namespaces[0])::msg::@(ros2_fields[-1].type.name)
-  >::convert_all_in_one_stream(stream, ros2_msg.@(ros2_field_selection));
+  >::internal_stream_translate_helper(stream, ros2_msg.@(ros2_field_selection));
 @[          end if]@
 @[        else]@
   // write array or sequence field
@@ -463,7 +463,7 @@ if isinstance(ros2_fields[-1].type, NamespacedType):
     ++ros2_it
   )
   {
-    ros1_bridge::convert_all_in_one_stream(stream, *ros2_it);
+    ros1_bridge::internal_stream_translate_helper(stream, *ros2_it);
   }
 @[            else]@
   // write primitive type
@@ -480,12 +480,12 @@ if isinstance(ros2_fields[-1].type, NamespacedType):
     {
       // write sub message element
 @[          if ros2_fields[-1].type.value_type.namespaces[0] == 'builtin_interfaces']@
-      ros1_bridge::convert_all_in_one_stream(stream, *ros2_it);
+      ros1_bridge::internal_stream_translate_helper(stream, *ros2_it);
 @[            else]@
       Factory<
         @(ros1_fields[-1].pkg_name)::@(ros1_fields[-1].msg_name),
         @(ros2_fields[-1].type.value_type.namespaces[0])::msg::@(ros2_fields[-1].type.value_type.name)
-      >::convert_all_in_one_stream(stream, *ros2_it);
+      >::internal_stream_translate_helper(stream, *ros2_it);
 @[            end if]@
     }
   }
@@ -503,7 +503,7 @@ Factory<
 >::convert_2_to_1(const @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name)& ros2_msg,
                   ros::serialization::OStream& out_stream)
 {
-  convert_all_in_one_stream(out_stream, ros2_msg);
+  internal_stream_translate_helper(out_stream, ros2_msg);
 }
 
 
@@ -515,7 +515,7 @@ Factory<
 >::convert_1_to_2(ros::serialization::IStream& in_stream,
                   @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name)& ros2_msg)
 {
-  convert_all_in_one_stream(in_stream, ros2_msg);
+  internal_stream_translate_helper(in_stream, ros2_msg);
 }
 
 template<>
@@ -526,7 +526,7 @@ Factory<
 >::length_2_as_1_stream(const @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name)& ros2_msg)
 {
   ros::serialization::LStream len_stream;
-  convert_all_in_one_stream(len_stream, ros2_msg);
+  internal_stream_translate_helper(len_stream, ros2_msg);
   return len_stream.getLength();
 }
 
