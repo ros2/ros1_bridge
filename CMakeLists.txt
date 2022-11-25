@@ -227,7 +227,8 @@ add_library(${PROJECT_NAME} SHARED
 ament_target_dependencies(${PROJECT_NAME}
   ${prefixed_ros1_message_packages}
   ${ros2_interface_packages}
-  "rclcpp" "rclcpp_action"
+  "rclcpp"
+  "rclcpp_action"
   "ros1_roscpp"
   "ros1_std_msgs")
 
