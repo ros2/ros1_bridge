@@ -796,10 +796,10 @@ def determine_common_services(
                 ros2_name = ros2_fields[direction][i].name
                 if ros1_name != ros2_name:
                     # if the names do not match, check first if the types are builtin
-                    ros1_is_buildin = genmsg.msgs.is_builtin(genmsg.msgs.bare_msg_type(ros1_type))
-                    ros2_is_buildin = ros2_fields[direction][i].type.is_primitive_type()
+                    ros1_is_builtin = genmsg.msgs.is_builtin(genmsg.msgs.bare_msg_type(ros1_type))
+                    ros2_is_builtin = ros2_fields[direction][i].type.is_primitive_type()
                     # Check if types are primitive types
-                    if not ros1_is_buildin or not ros2_is_buildin or ros1_type != ros2_type:
+                    if not ros1_is_builtin or not ros2_is_builtin or ros1_type != ros2_type:
                         # if the message types have a custom mapping their names
                         # might not be equal, therefore check the message pairs
                         if ((ros1_type, ros2_type) not in message_string_pairs and
@@ -892,11 +892,11 @@ def determine_common_actions(
                     # if the message types have a custom mapping their names
                     # might not be equal, therefore check the message pairs
 
-                    ros1_is_buildin = genmsg.msgs.is_builtin(genmsg.msgs.bare_msg_type(ros1_type))
-                    ros2_is_buildin = ros2_fields[direction][i].type.is_primitive_type()
+                    ros1_is_builtin = genmsg.msgs.is_builtin(genmsg.msgs.bare_msg_type(ros1_type))
+                    ros2_is_builtin = ros2_fields[direction][i].type.is_primitive_type()
 
                     # Check if types are primitive types
-                    if not ros1_is_buildin or not ros2_is_buildin or ros1_type != ros2_type:
+                    if not ros1_is_builtin or not ros2_is_builtin or ros1_type != ros2_type:
                         # the check for 'builtin_interfaces' should be removed
                         # once merged with __init__.py
                         # It seems to handle it already
@@ -1280,12 +1280,12 @@ def load_ros2_service(ros2_srv):
 
 
 def load_ros2_action(ros2_action):
-    actiom_path = os.path.join(
+    action_path = os.path.join(
         ros2_action.prefix_path, 'share', ros2_action.package_name, 'action',
         ros2_action.message_name + '.action')
     try:
         spec = rosidl_adapter.parser.parse_action_file(
-            ros2_action.package_name, actiom_path)
+            ros2_action.package_name, action_path)
     except rosidl_adapter.parser.InvalidSpecification:
         print('Invalid spec')
         return None
