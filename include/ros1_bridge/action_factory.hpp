@@ -122,7 +122,7 @@ public:
 private:
   class GoalHandler
   {
-public:
+  public:
     void cancel()
     {
       std::lock_guard<std::mutex> lock(mutex_);
@@ -131,6 +131,7 @@ public:
         auto fut = client_->async_cancel_goal(gh2_);
       }
     }
+
     void handle()
     {
       auto goal1 = gh1_.getGoal();
@@ -196,7 +197,7 @@ public:
     GoalHandler(ROS1GoalHandle & gh1, ROS2ClientSharedPtr & client)
     : gh1_(gh1), gh2_(nullptr), client_(client), canceled_(false) {}
 
-private:
+  private:
     ROS1GoalHandle gh1_;
     ROS2ClientGoalHandle gh2_;
     ROS2ClientSharedPtr client_;
@@ -314,7 +315,7 @@ public:
 private:
   class GoalHandler
   {
-public:
+  public:
     void cancel()
     {
       std::lock_guard<std::mutex> lock(mutex_);
@@ -384,7 +385,7 @@ public:
     GoalHandler(std::shared_ptr<ROS2ServerGoalHandle> & gh2, std::shared_ptr<ROS1Client> & client)
     : gh2_(gh2), client_(client), canceled_(false) {}
 
-private:
+  private:
     std::shared_ptr<ROS1ClientGoalHandle> gh1_;
     std::shared_ptr<ROS2ServerGoalHandle> gh2_;
     std::shared_ptr<ROS1Client> client_;
