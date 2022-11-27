@@ -394,14 +394,15 @@ static void streamPrimitiveVector(ros::serialization::IStream & stream, VEC_PRIM
 // builtin_interfaces_factories.
 @[  else]
 
+@[    for stream_type, msg_const in (("OStream", "const"), ("IStream", ""), ("LStream", "const")) ]@
 template<>
-template<typename STREAM_T, typename ROS2_MSG_T>
 void
 Factory<
   @(m.ros1_msg.package_name)::@(m.ros1_msg.message_name),
   @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name)
->::internal_stream_translate_helper(STREAM_T& stream,
-                     ROS2_MSG_T& ros2_msg)
+>::internal_stream_translate_helper(
+  ros::serialization::@(stream_type) & stream,
+  @(m.ros2_msg.package_name)::msg::@(m.ros2_msg.message_name) @(msg_const) & ros2_msg)
 {
 @[    if m.ros1_field_missing_in_ros2]@
   // Only messages that have exactly matching fields are supported -- for now
@@ -494,6 +495,9 @@ if isinstance(ros2_fields[-1].type, NamespacedType):
 @[      end for]@
 @[    end if]@
 }
+
+
+@[    end for]@
 
 template<>
 void

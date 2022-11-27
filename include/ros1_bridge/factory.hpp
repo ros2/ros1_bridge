@@ -368,13 +368,14 @@ public:
   static uint32_t length_2_as_1_stream(const ROS2_T & msg);
 
   /**
-   * @brief Internal helper function conversion for ROS2 message types to/from ROS1 streams
+   * @brief Internal helper functions conversion for ROS2 message types to/from ROS1 streams
    *
    * This function is not meant to be used externally. However, since this the internal helper
    * functions call each other for sub messages they must be public.
    */
-  template<typename STREAM_T, typename ROS2_MSG_T>
-  static void internal_stream_translate_helper(STREAM_T & stream, ROS2_MSG_T & msg);
+  static void internal_stream_translate_helper(ros::serialization::OStream & stream, const ROS2_T & msg);
+  static void internal_stream_translate_helper(ros::serialization::IStream & stream, ROS2_T & msg);
+  static void internal_stream_translate_helper(ros::serialization::LStream & stream, const ROS2_T & msg);
 
   std::string ros1_type_name_;
   std::string ros2_type_name_;
@@ -382,6 +383,7 @@ public:
   std::shared_ptr<rcpputils::SharedLibrary> ts_lib_;
   const rosidl_message_type_support_t * type_support_ = nullptr;
 };
+
 
 template<class ROS1_T, class ROS2_T>
 class ServiceFactory : public ServiceFactoryInterface

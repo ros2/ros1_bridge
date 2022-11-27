@@ -81,7 +81,6 @@ Factory<
 }
 
 template<>
-template<>
 void
 Factory<
   std_msgs::Duration,
@@ -94,7 +93,6 @@ Factory<
 }
 
 template<>
-template<>
 void
 Factory<
   std_msgs::Duration,
@@ -106,7 +104,6 @@ Factory<
   ros1_bridge::internal_stream_translate_helper(stream, ros2_msg);
 }
 
-template<>
 template<>
 void
 Factory<
@@ -180,7 +177,6 @@ Factory<
 }
 
 template<>
-template<>
 void
 Factory<
   std_msgs::Time,
@@ -193,7 +189,6 @@ Factory<
 }
 
 template<>
-template<>
 void
 Factory<
   std_msgs::Time,
@@ -205,7 +200,6 @@ Factory<
   ros1_bridge::internal_stream_translate_helper(stream, ros2_msg);
 }
 
-template<>
 template<>
 void
 Factory<
@@ -255,14 +249,57 @@ Factory<
 }
 
 template<>
-template<typename STREAM_T, typename ROS2_MSG_T>
 void
 Factory<
   std_msgs::Header,
   std_msgs::msg::Header
 >::internal_stream_translate_helper(
-  STREAM_T & stream,
-  ROS2_MSG_T & ros2_msg)
+  ros::serialization::OStream & stream,
+  const std_msgs::msg::Header & ros2_msg)
+{
+  // ROS2 Header is missing seq, provide a fake one so stream matches
+  uint32_t seq = 0;
+  stream.next(seq);
+
+  // write non-array field
+  // write builtin field
+  ros1_bridge::internal_stream_translate_helper(stream, ros2_msg.stamp);
+
+  // write non-array field
+  // write primitive field
+  stream.next(ros2_msg.frame_id);
+}
+
+template<>
+void
+Factory<
+  std_msgs::Header,
+  std_msgs::msg::Header
+>::internal_stream_translate_helper(
+  ros::serialization::IStream & stream,
+  std_msgs::msg::Header & ros2_msg)
+{
+  // ROS2 Header is missing seq, provide a fake one so stream matches
+  uint32_t seq = 0;
+  stream.next(seq);
+
+  // write non-array field
+  // write builtin field
+  ros1_bridge::internal_stream_translate_helper(stream, ros2_msg.stamp);
+
+  // write non-array field
+  // write primitive field
+  stream.next(ros2_msg.frame_id);
+}
+
+template<>
+void
+Factory<
+  std_msgs::Header,
+  std_msgs::msg::Header
+>::internal_stream_translate_helper(
+  ros::serialization::LStream & stream,
+  const std_msgs::msg::Header & ros2_msg)
 {
   // ROS2 Header is missing seq, provide a fake one so stream matches
   uint32_t seq = 0;
