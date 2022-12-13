@@ -373,9 +373,15 @@ public:
    * This function is not meant to be used externally. However, since this the internal helper
    * functions call each other for sub messages they must be public.
    */
-  static void internal_stream_translate_helper(ros::serialization::OStream & stream, const ROS2_T & msg);
-  static void internal_stream_translate_helper(ros::serialization::IStream & stream, ROS2_T & msg);
-  static void internal_stream_translate_helper(ros::serialization::LStream & stream, const ROS2_T & msg);
+  static void internal_stream_translate_helper(
+    ros::serialization::OStream & stream,
+    const ROS2_T & msg);
+  static void internal_stream_translate_helper(
+    ros::serialization::IStream & stream,
+    ROS2_T & msg);
+  static void internal_stream_translate_helper(
+    ros::serialization::LStream & stream,
+    const ROS2_T & msg);
 
   std::string ros1_type_name_;
   std::string ros2_type_name_;
