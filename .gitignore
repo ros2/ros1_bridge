@@ -1,1 +1,32 @@
+
+# Python Caching
 __pycache__
+
+# ROS2 Build Folders
+build/
+_build/
+log/
+install/
+
+# Editors
+.vscode
+.idea
+.#*
+.project
+.cproject
+
+*~ 
+
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
