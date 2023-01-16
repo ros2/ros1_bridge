@@ -15,8 +15,11 @@
 #ifndef ROS1_BRIDGE__BUILTIN_INTERFACES_FACTORIES_HPP_
 #define ROS1_BRIDGE__BUILTIN_INTERFACES_FACTORIES_HPP_
 
+#include <ros/serialization.h>
+
 // include ROS 1 messages
 #include <std_msgs/Duration.h>
+#include <std_msgs/Header.h>
 #include <std_msgs/Time.h>
 
 #include <memory>
@@ -25,6 +28,7 @@
 // include ROS 2 messages
 #include <builtin_interfaces/msg/duration.hpp>
 #include <builtin_interfaces/msg/time.hpp>
+#include <std_msgs/msg/header.hpp>
 
 #include "ros1_bridge/factory.hpp"
 
@@ -59,6 +63,33 @@ Factory<
 template<>
 void
 Factory<
+  std_msgs::Duration,
+  builtin_interfaces::msg::Duration
+>::internal_stream_translate_helper(
+  ros::serialization::OStream & stream,
+  const builtin_interfaces::msg::Duration & msg);
+
+template<>
+void
+Factory<
+  std_msgs::Duration,
+  builtin_interfaces::msg::Duration
+>::internal_stream_translate_helper(
+  ros::serialization::IStream & stream,
+  builtin_interfaces::msg::Duration & msg);
+
+template<>
+void
+Factory<
+  std_msgs::Duration,
+  builtin_interfaces::msg::Duration
+>::internal_stream_translate_helper(
+  ros::serialization::LStream & stream,
+  const builtin_interfaces::msg::Duration & msg);
+
+template<>
+void
+Factory<
   std_msgs::Time,
   builtin_interfaces::msg::Time
 >::convert_1_to_2(
@@ -73,6 +104,33 @@ Factory<
 >::convert_2_to_1(
   const builtin_interfaces::msg::Time & ros2_msg,
   std_msgs::Time & ros1_msg);
+
+template<>
+void
+Factory<
+  std_msgs::Time,
+  builtin_interfaces::msg::Time
+>::internal_stream_translate_helper(
+  ros::serialization::OStream & stream,
+  const builtin_interfaces::msg::Time & msg);
+
+template<>
+void
+Factory<
+  std_msgs::Time,
+  builtin_interfaces::msg::Time
+>::internal_stream_translate_helper(
+  ros::serialization::IStream & stream,
+  builtin_interfaces::msg::Time & msg);
+
+template<>
+void
+Factory<
+  std_msgs::Time,
+  builtin_interfaces::msg::Time
+>::internal_stream_translate_helper(
+  ros::serialization::LStream & stream,
+  const builtin_interfaces::msg::Time & msg);
 
 }  // namespace ros1_bridge
 

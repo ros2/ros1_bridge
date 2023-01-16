@@ -30,6 +30,12 @@ convert_2_to_1(
   const ROS2_T & ros2_msg,
   ROS1_T & ros1_msg);
 
+template<typename ROS2_T, typename STREAM_T>
+void
+internal_stream_translate_helper(
+  STREAM_T & out_stream,
+  const ROS2_T & msg);
+
 }  // namespace ros1_bridge
 
 #endif  // ROS1_BRIDGE__CONVERT_DECL_HPP_

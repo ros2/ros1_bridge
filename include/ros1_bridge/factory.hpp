@@ -352,12 +352,44 @@ public:
     return true;
   }
 
+  /**
+   * @brief Writes (serializes) a ROS2 class directly to a ROS1 stream
+   */
+  static void convert_2_to_1(const ROS2_T & msg, ros::serialization::OStream & out_stream);
+
+  /**
+   * @brief Reads (deserializes) a ROS2 class directly from a ROS1 stream
+   */
+  static void convert_1_to_2(ros::serialization::IStream & in_stream, ROS2_T & msg);
+
+  /**
+   * @brief Determines the length of a ROS2 class if it was serialized to a ROS1 stream
+   */
+  static uint32_t length_2_as_1_stream(const ROS2_T & msg);
+
+  /**
+   * @brief Internal helper functions conversion for ROS2 message types to/from ROS1 streams
+   *
+   * This function is not meant to be used externally. However, since this the internal helper
+   * functions call each other for sub messages they must be public.
+   */
+  static void internal_stream_translate_helper(
+    ros::serialization::OStream & stream,
+    const ROS2_T & msg);
+  static void internal_stream_translate_helper(
+    ros::serialization::IStream & stream,
+    ROS2_T & msg);
+  static void internal_stream_translate_helper(
+    ros::serialization::LStream & stream,
+    const ROS2_T & msg);
+
   std::string ros1_type_name_;
   std::string ros2_type_name_;
 
   std::shared_ptr<rcpputils::SharedLibrary> ts_lib_;
   const rosidl_message_type_support_t * type_support_ = nullptr;
 };
+
 
 template<class ROS1_T, class ROS2_T>
 class ServiceFactory : public ServiceFactoryInterface

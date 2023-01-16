@@ -14,6 +14,8 @@
 
 #include "ros1_bridge/convert_builtin_interfaces.hpp"
 
+#include "ros/serialization.h"
+
 namespace ros1_bridge
 {
 
@@ -37,6 +39,35 @@ convert_2_to_1(
   ros1_type.nsec = ros2_msg.nanosec;
 }
 
+template<>
+void
+internal_stream_translate_helper(
+  ros::serialization::OStream & stream,
+  const builtin_interfaces::msg::Duration & ros2_msg)
+{
+  stream.next(ros2_msg.sec);
+  stream.next(ros2_msg.nanosec);
+}
+
+template<>
+void
+internal_stream_translate_helper(
+  ros::serialization::IStream & stream,
+  builtin_interfaces::msg::Duration & ros2_msg)
+{
+  stream.next(ros2_msg.sec);
+  stream.next(ros2_msg.nanosec);
+}
+
+template<>
+void
+internal_stream_translate_helper(
+  ros::serialization::LStream & stream,
+  const builtin_interfaces::msg::Duration & ros2_msg)
+{
+  stream.next(ros2_msg.sec);
+  stream.next(ros2_msg.nanosec);
+}
 
 template<>
 void
@@ -56,6 +87,36 @@ convert_2_to_1(
 {
   ros1_type.sec = ros2_msg.sec;
   ros1_type.nsec = ros2_msg.nanosec;
+}
+
+template<>
+void
+internal_stream_translate_helper(
+  ros::serialization::OStream & stream,
+  const builtin_interfaces::msg::Time & ros2_msg)
+{
+  stream.next(ros2_msg.sec);
+  stream.next(ros2_msg.nanosec);
+}
+
+template<>
+void
+internal_stream_translate_helper(
+  ros::serialization::IStream & stream,
+  builtin_interfaces::msg::Time & ros2_msg)
+{
+  stream.next(ros2_msg.sec);
+  stream.next(ros2_msg.nanosec);
+}
+
+template<>
+void
+internal_stream_translate_helper(
+  ros::serialization::LStream & stream,
+  const builtin_interfaces::msg::Time & ros2_msg)
+{
+  stream.next(ros2_msg.sec);
+  stream.next(ros2_msg.nanosec);
 }
 
 }  // namespace ros1_bridge

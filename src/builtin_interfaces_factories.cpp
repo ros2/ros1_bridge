@@ -83,6 +83,78 @@ Factory<
 template<>
 void
 Factory<
+  std_msgs::Duration,
+  builtin_interfaces::msg::Duration
+>::internal_stream_translate_helper(
+  ros::serialization::OStream & stream,
+  const builtin_interfaces::msg::Duration & ros2_msg)
+{
+  ros1_bridge::internal_stream_translate_helper(stream, ros2_msg);
+}
+
+template<>
+void
+Factory<
+  std_msgs::Duration,
+  builtin_interfaces::msg::Duration
+>::internal_stream_translate_helper(
+  ros::serialization::IStream & stream,
+  builtin_interfaces::msg::Duration & ros2_msg)
+{
+  ros1_bridge::internal_stream_translate_helper(stream, ros2_msg);
+}
+
+template<>
+void
+Factory<
+  std_msgs::Duration,
+  builtin_interfaces::msg::Duration
+>::internal_stream_translate_helper(
+  ros::serialization::LStream & stream,
+  const builtin_interfaces::msg::Duration & ros2_msg)
+{
+  ros1_bridge::internal_stream_translate_helper(stream, ros2_msg);
+}
+
+template<>
+void
+Factory<
+  std_msgs::Duration,
+  builtin_interfaces::msg::Duration
+>::convert_2_to_1(
+  const builtin_interfaces::msg::Duration & ros2_msg,
+  ros::serialization::OStream & out_stream)
+{
+  internal_stream_translate_helper(out_stream, ros2_msg);
+}
+
+template<>
+void
+Factory<
+  std_msgs::Duration,
+  builtin_interfaces::msg::Duration
+>::convert_1_to_2(
+  ros::serialization::IStream & in_stream,
+  builtin_interfaces::msg::Duration & ros2_msg)
+{
+  internal_stream_translate_helper(in_stream, ros2_msg);
+}
+
+template<>
+uint32_t
+Factory<
+  std_msgs::Duration,
+  builtin_interfaces::msg::Duration
+>::length_2_as_1_stream(const builtin_interfaces::msg::Duration & ros2_msg)
+{
+  ros::serialization::LStream len_stream;
+  internal_stream_translate_helper(len_stream, ros2_msg);
+  return len_stream.getLength();
+}
+
+template<>
+void
+Factory<
   std_msgs::Time,
   builtin_interfaces::msg::Time
 >::convert_1_to_2(
@@ -102,6 +174,181 @@ Factory<
   std_msgs::Time & ros1_msg)
 {
   ros1_bridge::convert_2_to_1(ros2_msg, ros1_msg.data);
+}
+
+template<>
+void
+Factory<
+  std_msgs::Time,
+  builtin_interfaces::msg::Time
+>::internal_stream_translate_helper(
+  ros::serialization::OStream & stream,
+  const builtin_interfaces::msg::Time & ros2_msg)
+{
+  ros1_bridge::internal_stream_translate_helper(stream, ros2_msg);
+}
+
+template<>
+void
+Factory<
+  std_msgs::Time,
+  builtin_interfaces::msg::Time
+>::internal_stream_translate_helper(
+  ros::serialization::IStream & stream,
+  builtin_interfaces::msg::Time & ros2_msg)
+{
+  ros1_bridge::internal_stream_translate_helper(stream, ros2_msg);
+}
+
+template<>
+void
+Factory<
+  std_msgs::Time,
+  builtin_interfaces::msg::Time
+>::internal_stream_translate_helper(
+  ros::serialization::LStream & stream,
+  const builtin_interfaces::msg::Time & ros2_msg)
+{
+  ros1_bridge::internal_stream_translate_helper(stream, ros2_msg);
+}
+
+template<>
+void
+Factory<
+  std_msgs::Time,
+  builtin_interfaces::msg::Time
+>::convert_2_to_1(
+  const builtin_interfaces::msg::Time & ros2_msg,
+  ros::serialization::OStream & out_stream)
+{
+  internal_stream_translate_helper(out_stream, ros2_msg);
+}
+
+template<>
+void
+Factory<
+  std_msgs::Time,
+  builtin_interfaces::msg::Time
+>::convert_1_to_2(
+  ros::serialization::IStream & in_stream,
+  builtin_interfaces::msg::Time & ros2_msg)
+{
+  internal_stream_translate_helper(in_stream, ros2_msg);
+}
+
+template<>
+uint32_t
+Factory<
+  std_msgs::Time,
+  builtin_interfaces::msg::Time
+>::length_2_as_1_stream(const builtin_interfaces::msg::Time & ros2_msg)
+{
+  ros::serialization::LStream len_stream;
+  internal_stream_translate_helper(len_stream, ros2_msg);
+  return len_stream.getLength();
+}
+
+template<>
+void
+Factory<
+  std_msgs::Header,
+  std_msgs::msg::Header
+>::internal_stream_translate_helper(
+  ros::serialization::OStream & stream,
+  const std_msgs::msg::Header & ros2_msg)
+{
+  // ROS2 Header is missing seq, provide a fake one so stream matches
+  uint32_t seq = 0;
+  stream.next(seq);
+
+  // write non-array field
+  // write builtin field
+  ros1_bridge::internal_stream_translate_helper(stream, ros2_msg.stamp);
+
+  // write non-array field
+  // write primitive field
+  stream.next(ros2_msg.frame_id);
+}
+
+template<>
+void
+Factory<
+  std_msgs::Header,
+  std_msgs::msg::Header
+>::internal_stream_translate_helper(
+  ros::serialization::IStream & stream,
+  std_msgs::msg::Header & ros2_msg)
+{
+  // ROS2 Header is missing seq, provide a fake one so stream matches
+  uint32_t seq = 0;
+  stream.next(seq);
+
+  // write non-array field
+  // write builtin field
+  ros1_bridge::internal_stream_translate_helper(stream, ros2_msg.stamp);
+
+  // write non-array field
+  // write primitive field
+  stream.next(ros2_msg.frame_id);
+}
+
+template<>
+void
+Factory<
+  std_msgs::Header,
+  std_msgs::msg::Header
+>::internal_stream_translate_helper(
+  ros::serialization::LStream & stream,
+  const std_msgs::msg::Header & ros2_msg)
+{
+  // ROS2 Header is missing seq, provide a fake one so stream matches
+  uint32_t seq = 0;
+  stream.next(seq);
+
+  // write non-array field
+  // write builtin field
+  ros1_bridge::internal_stream_translate_helper(stream, ros2_msg.stamp);
+
+  // write non-array field
+  // write primitive field
+  stream.next(ros2_msg.frame_id);
+}
+
+template<>
+void
+Factory<
+  std_msgs::Header,
+  std_msgs::msg::Header
+>::convert_2_to_1(
+  const std_msgs::msg::Header & ros2_msg,
+  ros::serialization::OStream & out_stream)
+{
+  internal_stream_translate_helper(out_stream, ros2_msg);
+}
+
+
+template<>
+void
+Factory<
+  std_msgs::Header,
+  std_msgs::msg::Header
+>::convert_1_to_2(
+  ros::serialization::IStream & in_stream,
+  std_msgs::msg::Header & ros2_msg)
+{
+  internal_stream_translate_helper(in_stream, ros2_msg);
+}
+
+template<>
+uint32_t
+Factory<
+  std_msgs::Header,
+  std_msgs::msg::Header
+>::length_2_as_1_stream(const std_msgs::msg::Header & ros2_msg)
+{
+  ros::serialization::LStream len_stream;
+  internal_stream_translate_helper(len_stream, ros2_msg);
+  return len_stream.getLength();
 }
 
 }  // namespace ros1_bridge
