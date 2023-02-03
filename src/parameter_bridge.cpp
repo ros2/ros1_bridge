@@ -252,7 +252,8 @@ int main(int argc, char * argv[])
 {
   std::vector<const char *> ros1_args;
   std::vector<const char *> ros2_args;
-  split_ros1_ros2_args(std::vector<const char *>(argv, argv + argc), ros1_args, ros2_args);
+  std::vector<const char *> args(argv, argv + argc);
+  split_ros1_ros2_args(args, ros1_args, ros2_args);
 
   // ROS 1 node
   ros::init(ros1_args.size(), ros1_args.data(), "ros_bridge");
