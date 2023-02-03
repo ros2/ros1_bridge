@@ -229,14 +229,37 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
   return ros2_publisher_qos;
 }
 
+void split_ros1_ros2_args(
+  const std::vector<const char *> & args, std::vector<const char *> & ros1_args,
+  std::vector<const char *> & ros2_args)
+{
+  // Start iterating from the second argument, since the first argument is the executable name
+  auto it = std::find_if(args.begin() + 1, args.end(), [] (const char * & element) {
+    return strcmp(element, "--ros-args") == 0;
+    });
+
+  if (it != args.end()) {
+    ros1_args = std::vector<const char *>(args.begin(), it);
+    ros2_args = std::vector<const char *>(it, args.end());
+    ros2_args.insert(ros2_args.begin(), args.at(0));
+  } else {
+    ros1_args = args;
+    ros2_args = args;
+  }
+}
+
 int main(int argc, char * argv[])
 {
+  std::vector<const char *> ros1_args;
+  std::vector<const char *> ros2_args;
+  split_ros1_ros2_args(std::vector<const char *>(argv, argv + argc), ros1_args, ros2_args);
+
   // ROS 1 node
-  ros::init(argc, argv, "ros_bridge");
+  ros::init(ros1_args.size(), ros1_args.data(), "ros_bridge");
   ros::NodeHandle ros1_node;
 
   // ROS 2 node
-  rclcpp::init(argc, argv);
+  rclcpp::init(ros2_args.size(), ros2_args.data());
   auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
 
   std::list<ros1_bridge::BridgeHandles> all_handles;
