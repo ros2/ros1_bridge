@@ -81,10 +81,29 @@ bool get_flag_option(std::vector<const char *> & args, const std::string & optio
 
   return false;
 }
+
+void split_ros1_ros2_args(
+  const std::vector<const char *> & args, std::vector<const char *> & ros1_args,
+  std::vector<const char *> & ros2_args)
+{
+  // Start iterating from the second argument, since the first argument is the executable name
+  auto it = std::find_if(args.begin() + 1, args.end(), [] (const char * & element) {
+    return strcmp(element, "--ros-args") == 0;
+    });
+
+  if (it != args.end()) {
+    ros1_args = std::vector<const char *>(args.begin(), it);
+    ros2_args = std::vector<const char *>(it, args.end());
+    ros2_args.insert(ros2_args.begin(), args.at(0));
+  } else {
+    ros1_args = args;
+    ros2_args = args;
+  }
 }
 
 bool parse_command_options(
-  int argc, char ** argv, bool & output_topic_introspection,
+  int argc, char ** argv, std::vector<const char *> & ros1_args,
+  std::vector<const char *> & ros2_args, bool & output_topic_introspection,
   bool & bridge_all_1to2_topics, bool & bridge_all_2to1_topics)
 {
   std::vector<const char *> args(argv, argv + argc);
@@ -129,11 +148,13 @@ bool parse_command_options(
     return false;
   }
 
-  output_topic_introspection = get_flag_option(args, "--show-introspection");
+  output_topic_introspection = get_flag_option(args, "--show-introspection", true);
 
-  bool bridge_all_topics = get_flag_option(args, "--bridge-all-topics");
-  bridge_all_1to2_topics = bridge_all_topics || get_flag_option(args, "--bridge-all-1to2-topics");
-  bridge_all_2to1_topics = bridge_all_topics || get_flag_option(args, "--bridge-all-2to1-topics");
+  bool bridge_all_topics = get_flag_option(args, "--bridge-all-topics", true);
+  bridge_all_1to2_topics = bridge_all_topics || get_flag_option(args, "--bridge-all-1to2-topics", true);
+  bridge_all_2to1_topics = bridge_all_topics || get_flag_option(args, "--bridge-all-2to1-topics", true);
+
+  split_ros1_ros2_args(args, ros1_args, ros2_args);
 
   return true;
 }
@@ -477,19 +498,24 @@ int main(int argc, char * argv[])
   bool output_topic_introspection;
   bool bridge_all_1to2_topics;
   bool bridge_all_2to1_topics;
+
+  std::vector<char *> ros1_args;
+  std::vector<char *> ros2_args;
+
   if (!parse_command_options(
-      argc, argv, output_topic_introspection, bridge_all_1to2_topics, bridge_all_2to1_topics))
+      argc, argv, ros1_args, ros2_args, output_topic_introspection,
+      bridge_all_1to2_topics, bridge_all_2to1_topics))
   {
     return 0;
   }
 
   // ROS 2 node
-  rclcpp::init(argc, argv);
+  rclcpp::init(ros2_args.size(), ros2_args.data());
 
   auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
 
   // ROS 1 node
-  ros::init(argc, argv, "ros_bridge");
+  ros::init(ros1_args.size(), ros1_args.data(), "ros_bridge");
   ros::NodeHandle ros1_node;
 
   // mapping of available topic names to type names
