@@ -282,15 +282,6 @@ int main(int argc, char * argv[])
   const char * services_2_to_1_parameter_name = "services_2_to_1";
   const char * service_execution_timeout_parameter_name =
     "ros1_bridge/parameter_bridge/service_execution_timeout";
-  if (argc > 1) {
-    topics_parameter_name = argv[1];
-  }
-  if (argc > 2) {
-    services_1_to_2_parameter_name = argv[2];
-  }
-  if (argc > 3) {
-    services_2_to_1_parameter_name = argv[3];
-  }
 
   // Topics
   XmlRpc::XmlRpcValue topics;
