@@ -231,16 +231,16 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
 
 bool find_command_option(const std::vector<const char *> & args, const std::string & option)
 {
-  auto it = std::find_if(args.begin(), args.end(), [] (const char * & element) {
+  auto it = std::find_if(args.begin(), args.end(), [&option] (const char * & element) {
     return strcmp(element, option) == 0;
     });
 
   return it != args.end();
 }
 
-bool get_flag_option(std::vector<const char *> & args, const std::string & option, char * & value, bool & remove = false)
+bool get_flag_option(std::vector<const char *> & args, const std::string & option, char * & value, bool remove = false)
 {
-  auto it = std::find_if(args.begin(), args.end(), [] (const char * & element) {
+  auto it = std::find_if(args.begin(), args.end(), [&option] (const char * & element) {
     return strcmp(element, option) == 0;
     });
 
@@ -283,8 +283,8 @@ void split_ros1_ros2_args(
 
 bool parse_command_options(
   int argc, char ** argv, std::vector<const char *> & ros1_args,
-  std::vector<const char *> & ros2_args, const char * & topics_parameter_name,
-  const char * & services_1_to_2_parameter_name, const char * & services_2_to_1_parameter_name)
+  std::vector<const char *> & ros2_args, char * & topics_parameter_name,
+  char * & services_1_to_2_parameter_name, char * & services_2_to_1_parameter_name)
 {
   topics_parameter_name = "topics";
   services_1_to_2_parameter_name = "services_1_to_2";
@@ -334,13 +334,13 @@ int main(int argc, char * argv[])
   // topic: the name of the topic to bridge (e.g. '/topic_name')
   // type: the type of the topic to bridge (e.g. 'pkgname/msg/MsgName')
   // queue_size: the queue size to use (default: 100)
-  const char * topics_parameter_name;
+  char * topics_parameter_name;
   // the services parameters need to be arrays
   // and each item needs to be a dictionary with the following keys;
   // service: the name of the service to bridge (e.g. '/service_name')
   // type: the type of the service to bridge (e.g. 'pkgname/srv/SrvName')
-  const char * services_1_to_2_parameter_name;
-  const char * services_2_to_1_parameter_name;
+  char * services_1_to_2_parameter_name;
+  char * services_2_to_1_parameter_name;
   const char * service_execution_timeout_parameter_name =
     "ros1_bridge/parameter_bridge/service_execution_timeout";
 

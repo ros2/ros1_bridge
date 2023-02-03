@@ -66,7 +66,7 @@ bool find_command_option(const std::vector<const char *> & args, const std::stri
   return it != args.end();
 }
 
-bool get_flag_option(std::vector<const char *> & args, const std::string & option, bool & remove = false)
+bool get_flag_option(std::vector<const char *> & args, const std::string & option, bool remove = false)
 {
   auto it = std::find_if(args.begin(), args.end(), [] (const char * & element) {
     return strcmp(element, option) == 0;
