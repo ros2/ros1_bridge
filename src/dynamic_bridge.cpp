@@ -57,22 +57,37 @@ struct Bridge2to1HandlesAndMessageTypes
   std::string ros2_type_name;
 };
 
-bool find_command_option(const std::vector<std::string> & args, const std::string & option)
+bool find_command_option(const std::vector<const char *> & args, const std::string & option)
 {
-  return std::find(args.begin(), args.end(), option) != args.end();
+  auto it = std::find_if(args.begin(), args.end(), [] (const char * & element) {
+    return strcmp(element, option) == 0;
+    });
+
+  return it != args.end();
 }
 
-bool get_flag_option(const std::vector<std::string> & args, const std::string & option)
+bool get_flag_option(std::vector<const char *> & args, const std::string & option, bool & remove = false)
 {
-  auto it = std::find(args.begin(), args.end(), option);
-  return it != args.end();
+  auto it = std::find_if(args.begin(), args.end(), [] (const char * & element) {
+    return strcmp(element, option) == 0;
+    });
+
+  if (it != args.end()) {
+    if (remove) {
+      args.erase(it);
+    }
+    return true;
+  }
+
+  return false;
+}
 }
 
 bool parse_command_options(
   int argc, char ** argv, bool & output_topic_introspection,
   bool & bridge_all_1to2_topics, bool & bridge_all_2to1_topics)
 {
-  std::vector<std::string> args(argv, argv + argc);
+  std::vector<const char *> args(argv, argv + argc);
 
   if (find_command_option(args, "-h") || find_command_option(args, "--help")) {
     std::stringstream ss;
