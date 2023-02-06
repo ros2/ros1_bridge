@@ -31,6 +31,7 @@
 #include "rclcpp/rclcpp.hpp"
 
 #include "ros1_bridge/bridge.hpp"
+#include "ros1_bridge/command_parser_utils.hpp"
 
 rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
 {
@@ -229,58 +230,6 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
   return ros2_publisher_qos;
 }
 
-bool find_command_option(const std::vector<const char *> & args, const std::string & option)
-{
-  auto it = std::find_if(args.begin(), args.end(), [&option] (const char * const & element) {
-    return strcmp(element, option.c_str()) == 0;
-    });
-
-  return it != args.end();
-}
-
-bool get_flag_option(std::vector<const char *> & args, const std::string & option, const char * & value, bool remove = false)
-{
-  auto it = std::find_if(args.begin(), args.end(), [&option] (const char * const & element) {
-    return strcmp(element, option.c_str()) == 0;
-    });
-
-  if (it != args.end()) {
-    auto value_it = std::next(it);
-
-    if (value_it != args.end()) {
-      value = *value_it;
-
-      if (remove) {
-        args.erase(it);  // Remove option
-        args.erase(it);  // Remove value
-      }
-
-      return true;
-    }
-  }
-
-  return false;
-}
-
-void split_ros1_ros2_args(
-  const std::vector<const char *> & args, std::vector<const char *> & ros1_args,
-  std::vector<const char *> & ros2_args)
-{
-  // Start iterating from the second argument, since the first argument is the executable name
-  auto it = std::find_if(args.begin() + 1, args.end(), [] (const char * const & element) {
-    return strcmp(element, "--ros-args") == 0;
-    });
-
-  if (it != args.end()) {
-    ros1_args = std::vector<const char *>(args.begin(), it);
-    ros2_args = std::vector<const char *>(it, args.end());
-    ros2_args.insert(ros2_args.begin(), args.at(0));
-  } else {
-    ros1_args = args;
-    ros2_args = args;
-  }
-}
-
 bool parse_command_options(
   int argc, char ** argv, std::vector<const char *> & ros1_args,
   std::vector<const char *> & ros2_args, const char * & topics_parameter_name,
@@ -292,7 +241,7 @@ bool parse_command_options(
 
   std::vector<const char *> args(argv, argv + argc);
 
-  if (find_command_option(args, "-h") || find_command_option(args, "--help")) {
+  if (ros1_bridge::find_command_option(args, "-h") || ros1_bridge::find_command_option(args, "--help")) {
     std::stringstream ss;
     ss << "Usage:" << std::endl;
     ss << " -h, --help: This message." << std::endl;
@@ -306,19 +255,19 @@ bool parse_command_options(
     return false;
   }
 
-  if (!get_flag_option(args, "--topics", topics_parameter_name, true)) {
+  if (!ros1_bridge::get_flag_option(args, "--topics", topics_parameter_name, true)) {
     printf("Using default topics parameter name: %s\n", topics_parameter_name);
   }
 
-  if (!get_flag_option(args, "--services-1-to-2", services_1_to_2_parameter_name, true)) {
+  if (!ros1_bridge::get_flag_option(args, "--services-1-to-2", services_1_to_2_parameter_name, true)) {
     printf("Using default services 1 to 2 parameter name: %s\n", services_1_to_2_parameter_name);
   }
 
-  if (!get_flag_option(args, "--services-2-to-1", services_2_to_1_parameter_name, true)) {
+  if (!ros1_bridge::get_flag_option(args, "--services-2-to-1", services_2_to_1_parameter_name, true)) {
     printf("Using default services 2 to 1 parameter name: %s\n", services_2_to_1_parameter_name);
   }
 
-  split_ros1_ros2_args(args, ros1_args, ros2_args);
+  ros1_bridge::split_ros1_ros2_args(args, ros1_args, ros2_args);
 
   return true;
 }

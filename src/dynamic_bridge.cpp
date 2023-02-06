@@ -39,6 +39,7 @@
 #include "rcpputils/scope_exit.hpp"
 
 #include "ros1_bridge/bridge.hpp"
+#include "ros1_bridge/command_parser_utils.hpp"
 
 
 std::mutex g_bridge_mutex;
@@ -57,50 +58,6 @@ struct Bridge2to1HandlesAndMessageTypes
   std::string ros2_type_name;
 };
 
-bool find_command_option(const std::vector<const char *> & args, const std::string & option)
-{
-  auto it = std::find_if(args.begin(), args.end(), [&option] (const char * const & element) {
-    return strcmp(element, option.c_str()) == 0;
-    });
-
-  return it != args.end();
-}
-
-bool get_flag_option(std::vector<const char *> & args, const std::string & option, bool remove = false)
-{
-  auto it = std::find_if(args.begin(), args.end(), [&option] (const char * const & element) {
-    return strcmp(element, option.c_str()) == 0;
-    });
-
-  if (it != args.end()) {
-    if (remove) {
-      args.erase(it);
-    }
-    return true;
-  }
-
-  return false;
-}
-
-void split_ros1_ros2_args(
-  const std::vector<const char *> & args, std::vector<const char *> & ros1_args,
-  std::vector<const char *> & ros2_args)
-{
-  // Start iterating from the second argument, since the first argument is the executable name
-  auto it = std::find_if(args.begin() + 1, args.end(), [] (const char * const & element) {
-    return strcmp(element, "--ros-args") == 0;
-    });
-
-  if (it != args.end()) {
-    ros1_args = std::vector<const char *>(args.begin(), it);
-    ros2_args = std::vector<const char *>(it, args.end());
-    ros2_args.insert(ros2_args.begin(), args.at(0));
-  } else {
-    ros1_args = args;
-    ros2_args = args;
-  }
-}
-
 bool parse_command_options(
   int argc, char ** argv, std::vector<const char *> & ros1_args,
   std::vector<const char *> & ros2_args, bool & output_topic_introspection,
@@ -108,7 +65,7 @@ bool parse_command_options(
 {
   std::vector<const char *> args(argv, argv + argc);
 
-  if (find_command_option(args, "-h") || find_command_option(args, "--help")) {
+  if (ros1_bridge::find_command_option(args, "-h") || ros1_bridge::find_command_option(args, "--help")) {
     std::stringstream ss;
     ss << "Usage:" << std::endl;
     ss << " -h, --help: This message." << std::endl;
@@ -126,7 +83,7 @@ bool parse_command_options(
     return false;
   }
 
-  if (get_flag_option(args, "--print-pairs")) {
+  if (ros1_bridge::get_flag_option(args, "--print-pairs")) {
     auto mappings_2to1 = ros1_bridge::get_all_message_mappings_2to1();
     if (mappings_2to1.size() > 0) {
       printf("Supported ROS 2 <=> ROS 1 message type conversion pairs:\n");
@@ -148,13 +105,13 @@ bool parse_command_options(
     return false;
   }
 
-  output_topic_introspection = get_flag_option(args, "--show-introspection", true);
+  output_topic_introspection = ros1_bridge::get_flag_option(args, "--show-introspection", true);
 
-  bool bridge_all_topics = get_flag_option(args, "--bridge-all-topics", true);
-  bridge_all_1to2_topics = bridge_all_topics || get_flag_option(args, "--bridge-all-1to2-topics", true);
-  bridge_all_2to1_topics = bridge_all_topics || get_flag_option(args, "--bridge-all-2to1-topics", true);
+  bool bridge_all_topics = ros1_bridge::get_flag_option(args, "--bridge-all-topics", true);
+  bridge_all_1to2_topics = bridge_all_topics || ros1_bridge::get_flag_option(args, "--bridge-all-1to2-topics", true);
+  bridge_all_2to1_topics = bridge_all_topics || ros1_bridge::get_flag_option(args, "--bridge-all-2to1-topics", true);
 
-  split_ros1_ros2_args(args, ros1_args, ros2_args);
+  ros1_bridge::split_ros1_ros2_args(args, ros1_args, ros2_args);
 
   return true;
 }
