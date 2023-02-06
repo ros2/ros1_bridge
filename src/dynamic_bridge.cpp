@@ -59,8 +59,8 @@ struct Bridge2to1HandlesAndMessageTypes
 
 bool find_command_option(const std::vector<const char *> & args, const std::string & option)
 {
-  auto it = std::find_if(args.begin(), args.end(), [] (const char * & element) {
-    return strcmp(element, option) == 0;
+  auto it = std::find_if(args.begin(), args.end(), [&option] (const char * const & element) {
+    return strcmp(element, option.c_str()) == 0;
     });
 
   return it != args.end();
@@ -68,8 +68,8 @@ bool find_command_option(const std::vector<const char *> & args, const std::stri
 
 bool get_flag_option(std::vector<const char *> & args, const std::string & option, bool remove = false)
 {
-  auto it = std::find_if(args.begin(), args.end(), [] (const char * & element) {
-    return strcmp(element, option) == 0;
+  auto it = std::find_if(args.begin(), args.end(), [&option] (const char * const & element) {
+    return strcmp(element, option.c_str()) == 0;
     });
 
   if (it != args.end()) {
@@ -87,7 +87,7 @@ void split_ros1_ros2_args(
   std::vector<const char *> & ros2_args)
 {
   // Start iterating from the second argument, since the first argument is the executable name
-  auto it = std::find_if(args.begin() + 1, args.end(), [] (const char * & element) {
+  auto it = std::find_if(args.begin() + 1, args.end(), [] (const char * const & element) {
     return strcmp(element, "--ros-args") == 0;
     });
 
@@ -499,8 +499,8 @@ int main(int argc, char * argv[])
   bool bridge_all_1to2_topics;
   bool bridge_all_2to1_topics;
 
-  std::vector<char *> ros1_args;
-  std::vector<char *> ros2_args;
+  std::vector<const char *> ros1_args;
+  std::vector<const char *> ros2_args;
 
   if (!parse_command_options(
       argc, argv, ros1_args, ros2_args, output_topic_introspection,
@@ -515,7 +515,8 @@ int main(int argc, char * argv[])
   auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
 
   // ROS 1 node
-  ros::init(ros1_args.size(), ros1_args.data(), "ros_bridge");
+  int argc_ros1 = ros1_args.size();
+  ros::init(argc_ros1, const_cast<char **>(ros1_args.data()), "ros_bridge");
   ros::NodeHandle ros1_node;
 
   // mapping of available topic names to type names
