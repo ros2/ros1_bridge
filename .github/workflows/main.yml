@@ -7,6 +7,9 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
+      - name: Workaround for https://github.com/actions/runner-images/issues/675
+        run: |
+          sudo sed -i 's/azure\.//' /etc/apt/sources.list
       - uses: ros-tooling/setup-ros@v0.5
         with:
           required-ros-distributions: "noetic rolling"
