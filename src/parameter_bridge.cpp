@@ -245,14 +245,14 @@ bool get_flag_option(std::vector<const char *> & args, const std::string & optio
     });
 
   if (it != args.end()) {
-    auto value_it = it++;
+    auto value_it = std::next(it);
 
     if (value_it != args.end()) {
       value = *value_it;
 
       if (remove) {
-        args.erase(it);
-        args.erase(value_it);
+        args.erase(it);  // Remove option
+        args.erase(it);  // Remove value
       }
 
       return true;
@@ -306,16 +306,16 @@ bool parse_command_options(
     return false;
   }
 
-  if (get_flag_option(args, "--topics", topics_parameter_name, true)) {
-    printf("Using default topics parameter name: %s", topics_parameter_name);
+  if (!get_flag_option(args, "--topics", topics_parameter_name, true)) {
+    printf("Using default topics parameter name: %s\n", topics_parameter_name);
   }
 
-  if (get_flag_option(args, "--services_1_to_2", services_1_to_2_parameter_name, true)) {
-    printf("Using default services_1_to_2 parameter name: %s", services_1_to_2_parameter_name);
+  if (!get_flag_option(args, "--services-1-to-2", services_1_to_2_parameter_name, true)) {
+    printf("Using default services 1 to 2 parameter name: %s\n", services_1_to_2_parameter_name);
   }
 
-  if (get_flag_option(args, "--services_2_to_1", services_2_to_1_parameter_name, true)) {
-    printf("Using default services_2_to_1 parameter name: %s", services_2_to_1_parameter_name);
+  if (!get_flag_option(args, "--services-2-to-1", services_2_to_1_parameter_name, true)) {
+    printf("Using default services 2 to 1 parameter name: %s\n", services_2_to_1_parameter_name);
   }
 
   split_ros1_ros2_args(args, ros1_args, ros2_args);
