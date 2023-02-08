@@ -81,11 +81,12 @@ void split_ros1_ros2_args(
   if (it != args.end()) {
     ros1_args = std::vector<const char *>(args.begin(), it);
     ros2_args = std::vector<const char *>(it, args.end());
-    ros2_args.insert(ros2_args.begin(), args.at(0));
   } else {
     ros1_args = args;
-    ros2_args = args;
+    ros2_args = {};
   }
+
+  ros2_args.insert(ros2_args.begin(), args.at(0));
 }
 
 }  // namespace ros1_bridge
