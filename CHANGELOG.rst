@@ -32,8 +32,8 @@ Changelog for package ros1_bridge
 * Update maintainers (`#286 <https://github.com/ros2/ros1_bridge/issues/286>`_)
 * Contributors: Jacob Perron, William Woodall
 
-Forthcoming
------------
+0.11.0 (2023-02-22)
+-------------------
 * Tailor: Updating Jenkinsfile
 * Tailor: Creating Jenkinsfile
 * ROS1 message libraries don't need dynamic linkage
