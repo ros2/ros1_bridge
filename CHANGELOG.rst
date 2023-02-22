@@ -32,6 +32,34 @@ Changelog for package ros1_bridge
 * Update maintainers (`#286 <https://github.com/ros2/ros1_bridge/issues/286>`_)
 * Contributors: Jacob Perron, William Woodall
 
+Forthcoming
+-----------
+* Tailor: Updating Jenkinsfile
+* Tailor: Creating Jenkinsfile
+* ROS1 message libraries don't need dynamic linkage
+* 0.10.1
+* Changelog.
+* Fix logging for updated rclcpp interface (#303)
+  * Fix logging for updated rclcpp interface
+  * Update src/bridge.cpp
+  Co-authored-by: Ivan Santiago Paunovic <ivanpauno@ekumenlabs.com>
+  * Update to pass char *
+  * Uncrustify
+  Co-authored-by: Ivan Santiago Paunovic <ivanpauno@ekumenlabs.com>
+* Fix typo in comments (#297)
+  * very minor typo in comments
+  * Fix other copy-paste typos.
+  Co-authored-by: Steven! Ragnarök <nuclearsandwich@users.noreply.github.com>
+  Co-authored-by: tomoya <Tomoya.Fujita@sony.com>
+* 0.10.0
+* fix bug with sizeof when type of the arrays differ (#298)
+* 0.9.5
+* [forward port] update to use rosidl_parser and .idl files rather than rosidl_adapter and .msg files (#296)
+  * update to use rosidl_parser and .idl files rather than rosidl_adapter and .msg files
+  * fix quote style linting error
+* Update maintainers (#286)
+* Contributors: Chris Lalancette, Jacob Perron, Michael Carroll, Paul Bovbel, Vicidel, William Woodall, locus-services
+
 0.9.4 (2020-09-10)
 ------------------
 * use hardcoded QoS (keep all, transient local) for /tf_static topic in dynamic_bridge (`#282 <https://github.com/ros2/ros1_bridge/issues/282>`_)
