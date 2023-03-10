@@ -299,14 +299,14 @@ int main(int argc, char * argv[])
     return 0;
   }
 
+  // ROS 2 node
+  rclcpp::init(ros2_args.size(), ros2_args.data());
+  auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
+
   // ROS 1 node
   int argc_ros1 = ros1_args.size();
   ros::init(argc_ros1, const_cast<char **>(ros1_args.data()), "ros_bridge");
   ros::NodeHandle ros1_node;
-
-  // ROS 2 node
-  rclcpp::init(ros2_args.size(), ros2_args.data());
-  auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
 
   std::list<ros1_bridge::BridgeHandles> all_handles;
   std::list<ros1_bridge::ServiceBridge1to2> service_bridges_1_to_2;
