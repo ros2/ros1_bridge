@@ -83,7 +83,7 @@ bool parse_command_options(
     return false;
   }
 
-  if (ros1_bridge::get_flag_option(args, "--print-pairs")) {
+  if (ros1_bridge::get_option_flag(args, "--print-pairs")) {
     auto mappings_2to1 = ros1_bridge::get_all_message_mappings_2to1();
     if (mappings_2to1.size() > 0) {
       printf("Supported ROS 2 <=> ROS 1 message type conversion pairs:\n");
@@ -105,11 +105,11 @@ bool parse_command_options(
     return false;
   }
 
-  output_topic_introspection = ros1_bridge::get_flag_option(args, "--show-introspection", true);
+  output_topic_introspection = ros1_bridge::get_option_flag(args, "--show-introspection", true);
 
-  bool bridge_all_topics = ros1_bridge::get_flag_option(args, "--bridge-all-topics", true);
-  bridge_all_1to2_topics = bridge_all_topics || ros1_bridge::get_flag_option(args, "--bridge-all-1to2-topics", true);
-  bridge_all_2to1_topics = bridge_all_topics || ros1_bridge::get_flag_option(args, "--bridge-all-2to1-topics", true);
+  bool bridge_all_topics = ros1_bridge::get_option_flag(args, "--bridge-all-topics", true);
+  bridge_all_1to2_topics = bridge_all_topics || ros1_bridge::get_option_flag(args, "--bridge-all-1to2-topics", true);
+  bridge_all_2to1_topics = bridge_all_topics || ros1_bridge::get_option_flag(args, "--bridge-all-2to1-topics", true);
 
   ros1_bridge::split_ros1_ros2_args(args, ros1_args, ros2_args);
 

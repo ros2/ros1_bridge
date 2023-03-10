@@ -29,7 +29,7 @@ bool find_command_option(const std::vector<const char *> & args, const std::stri
   return it != args.end();
 }
 
-bool get_flag_option(std::vector<const char *> & args, const std::string & option, const char * & value, bool remove)
+bool get_option_value(std::vector<const char *> & args, const std::string & option, const char * & value, bool remove)
 {
   auto it = std::find_if(args.begin(), args.end(), [&option] (const char * const & element) {
     return strcmp(element, option.c_str()) == 0;
@@ -53,7 +53,7 @@ bool get_flag_option(std::vector<const char *> & args, const std::string & optio
   return false;
 }
 
-bool get_flag_option(std::vector<const char *> & args, const std::string & option, bool remove)
+bool get_option_flag(std::vector<const char *> & args, const std::string & option, bool remove)
 {
   auto it = std::find_if(args.begin(), args.end(), [&option] (const char * const & element) {
     return strcmp(element, option.c_str()) == 0;

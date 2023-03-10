@@ -255,15 +255,15 @@ bool parse_command_options(
     return false;
   }
 
-  if (!ros1_bridge::get_flag_option(args, "--topics", topics_parameter_name, true)) {
+  if (!ros1_bridge::get_option_value(args, "--topics", topics_parameter_name, true)) {
     printf("Using default topics parameter name: %s\n", topics_parameter_name);
   }
 
-  if (!ros1_bridge::get_flag_option(args, "--services-1-to-2", services_1_to_2_parameter_name, true)) {
+  if (!ros1_bridge::get_option_value(args, "--services-1-to-2", services_1_to_2_parameter_name, true)) {
     printf("Using default services 1 to 2 parameter name: %s\n", services_1_to_2_parameter_name);
   }
 
-  if (!ros1_bridge::get_flag_option(args, "--services-2-to-1", services_2_to_1_parameter_name, true)) {
+  if (!ros1_bridge::get_option_value(args, "--services-2-to-1", services_2_to_1_parameter_name, true)) {
     printf("Using default services 2 to 1 parameter name: %s\n", services_2_to_1_parameter_name);
   }
 

@@ -25,13 +25,13 @@ bool find_command_option(
     const std::vector<const char *> & args,
     const std::string & option);
 
-bool get_flag_option(
+bool get_option_value(
     std::vector<const char *> & args,
     const std::string & option,
     const char * & value,
     bool remove = false);
 
-bool get_flag_option(
+bool get_option_flag(
     std::vector<const char *> & args,
     const std::string & option,
     bool remove = false);
