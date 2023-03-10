@@ -53,6 +53,40 @@ bool get_option_value(std::vector<const char *> & args, const std::string & opti
   return false;
 }
 
+bool get_option_values(
+  std::vector<const char *> & args, const std::string & option,
+  std::vector<const char *> & available_options,
+  std::vector<const char *> & values, bool remove)
+{
+  auto it = std::find_if(args.begin(), args.end(), [&option] (const char * const & element) {
+    return strcmp(element, option.c_str()) == 0;
+    });
+
+  if (it != args.end()) {
+    auto value_it = std::next(it);
+
+    while (value_it != args.end() and
+      std::none_of(available_options.begin(), available_options.end(),
+        [value_it](const char * available_option) { return *value_it == available_option; })) {
+      values.push_back(*value_it);
+
+      if (remove) {
+        args.erase(value_it);
+      } else {
+        ++value_it;
+      }
+    }
+
+    if (remove) {
+      args.erase(it);  // Remove option
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
 bool get_option_flag(std::vector<const char *> & args, const std::string & option, bool remove)
 {
   auto it = std::find_if(args.begin(), args.end(), [&option] (const char * const & element) {

@@ -31,6 +31,11 @@ bool get_option_value(
     const char * & value,
     bool remove = false);
 
+bool get_option_values(
+  std::vector<const char *> & args, const std::string & option,
+  std::vector<const char *> & available_options,
+  std::vector<const char *> & values, bool remove = false);
+
 bool get_option_flag(
     std::vector<const char *> & args,
     const std::string & option,
