@@ -67,7 +67,9 @@ bool get_option_values(
 
     while (value_it != args.end() and
       std::none_of(available_options.begin(), available_options.end(),
-        [value_it](const char * available_option) { return *value_it == available_option; })) {
+        [value_it](const char * available_option) {
+          return strcmp(*value_it, available_option) == 0;
+        })) {
       values.push_back(*value_it);
 
       if (remove) {
