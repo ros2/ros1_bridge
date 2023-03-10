@@ -241,9 +241,22 @@ bool parse_command_options(
 
   std::vector<const char *> args(argv, argv + argc);
 
+  std::vector<const char *> available_options = {
+    "-h", "--help",
+    "--topics",
+    "--services-1-to-2",
+    "--services-2-to-1",
+    "--ros1-args",
+    "--ros2-args",
+  };
+
   if (ros1_bridge::find_command_option(args, "-h") || ros1_bridge::find_command_option(args, "--help")) {
     std::stringstream ss;
     ss << "Usage:" << std::endl;
+    ss << "ros2 run ros1_bridge parameter_bridge [Bridge specific options] \\" << std::endl;
+    ss << "    [--ros1-args [ROS1 arguments]] [--ros2-args [ROS2 arguments]]" << std::endl;
+    ss << std::endl;
+    ss << "Options:" << std::endl;
     ss << " -h, --help: This message." << std::endl;
     ss << " --topics: Name of the parameter that contains the list of topics to bridge.";
     ss << std::endl;
@@ -251,6 +264,8 @@ bool parse_command_options(
     ss << std::endl;
     ss << " --services-2-to-1: Name of the parameter that contains the list of services to bridge from ROS 2 to ROS 1.";
     ss << std::endl;
+    ss << " --ros1-args: Arguments to pass to the ROS 1 bridge node." << std::endl;
+    ss << " --ros2-args: Arguments to pass to the ROS 2 bridge node." << std::endl;
     std::cout << ss.str();
     return false;
   }
@@ -267,7 +282,35 @@ bool parse_command_options(
     printf("Using default services 2 to 1 parameter name: %s\n", services_2_to_1_parameter_name);
   }
 
-  ros1_bridge::split_ros1_ros2_args(args, ros1_args, ros2_args);
+  auto logger = rclcpp::get_logger("ros1_bridge");
+
+  // Get ROS1 arguments
+  if (ros1_bridge::get_option_values(args, "--ros1-args", available_options, ros1_args, true)) {
+    if (ros1_args.size() == 0) {
+      RCLCPP_ERROR(logger, "Error: --ros1-args specified but no arguments provided.");
+      return false;
+    }
+  }
+
+  ros1_args.insert(ros1_args.begin(), args.at(0));
+
+  // Get ROS2 arguments
+  if (ros1_bridge::get_option_values(args, "--ros2-args", available_options, ros2_args, true)) {
+    if (ros2_args.size() == 0) {
+      RCLCPP_ERROR(logger, "Error: --ros2-args specified but no arguments provided.");
+      return false;
+    }
+
+    ros2_args.insert(ros2_args.begin(), "--ros-args");
+  }
+
+  ros2_args.insert(ros2_args.begin(), args.at(0));
+
+  if (ros1_bridge::find_command_option(args, "--ros-args") or args.size() > 1) {
+    RCLCPP_WARN(logger, "Warning: passing the ROS node arguments directly to the node is deprecated, use --ros1-args and --ros2-args instead.");
+
+    ros1_bridge::split_ros1_ros2_args(args, ros1_args, ros2_args);
+  }
 
   return true;
 }

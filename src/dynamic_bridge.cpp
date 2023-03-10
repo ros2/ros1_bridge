@@ -65,9 +65,24 @@ bool parse_command_options(
 {
   std::vector<const char *> args(argv, argv + argc);
 
+  std::vector<const char *> available_options = {
+    "-h", "--help",
+    "--show-introspection",
+    "--print-pairs",
+    "--bridge-all-topics",
+    "--bridge-all-1to2-topics",
+    "--bridge-all-2to1-topics",
+    "--ros1-args",
+    "--ros2-args",
+  };
+
   if (ros1_bridge::find_command_option(args, "-h") || ros1_bridge::find_command_option(args, "--help")) {
     std::stringstream ss;
     ss << "Usage:" << std::endl;
+    ss << "ros2 run ros1_bridge dynamic_bridge [Bridge specific options] \\" << std::endl;
+    ss << "    [--ros1-args [ROS1 arguments]] [--ros2-args [ROS2 arguments]]" << std::endl;
+    ss << std::endl;
+    ss << "Options:" << std::endl;
     ss << " -h, --help: This message." << std::endl;
     ss << " --show-introspection: Print output of introspection of both sides of the bridge.";
     ss << std::endl;
@@ -79,6 +94,8 @@ bool parse_command_options(
     ss << "a matching subscriber." << std::endl;
     ss << " --bridge-all-2to1-topics: Bridge all ROS 2 topics to ROS 1, whether or not there is ";
     ss << "a matching subscriber." << std::endl;
+    ss << " --ros1-args: Arguments to pass to the ROS 1 bridge node." << std::endl;
+    ss << " --ros2-args: Arguments to pass to the ROS 2 bridge node." << std::endl;
     std::cout << ss.str();
     return false;
   }
@@ -111,7 +128,35 @@ bool parse_command_options(
   bridge_all_1to2_topics = bridge_all_topics || ros1_bridge::get_option_flag(args, "--bridge-all-1to2-topics", true);
   bridge_all_2to1_topics = bridge_all_topics || ros1_bridge::get_option_flag(args, "--bridge-all-2to1-topics", true);
 
-  ros1_bridge::split_ros1_ros2_args(args, ros1_args, ros2_args);
+  auto logger = rclcpp::get_logger("ros1_bridge");
+
+  // Get ROS1 arguments
+  if (ros1_bridge::get_option_values(args, "--ros1-args", available_options, ros1_args, true)) {
+    if (ros1_args.size() == 0) {
+      RCLCPP_ERROR(logger, "Error: --ros1-args specified but no arguments provided.");
+      return false;
+    }
+  }
+
+  ros1_args.insert(ros1_args.begin(), args.at(0));
+
+  // Get ROS2 arguments
+  if (ros1_bridge::get_option_values(args, "--ros2-args", available_options, ros2_args, true)) {
+    if (ros2_args.size() == 0) {
+      RCLCPP_ERROR(logger, "Error: --ros2-args specified but no arguments provided.");
+      return false;
+    }
+
+    ros2_args.insert(ros2_args.begin(), "--ros-args");
+  }
+
+  ros2_args.insert(ros2_args.begin(), args.at(0));
+
+  if (ros1_bridge::find_command_option(args, "--ros-args") or args.size() > 1) {
+    RCLCPP_WARN(logger, "Warning: passing the ROS node arguments directly to the node is deprecated, use --ros1-args and --ros2-args instead.");
+
+    ros1_bridge::split_ros1_ros2_args(args, ros1_args, ros2_args);
+  }
 
   return true;
 }
@@ -185,14 +230,14 @@ void update_bridge(
         bridge.ros1_type_name, topic_name, 10,
         bridge.ros2_type_name, topic_name, ros2_publisher_qos);
     } catch (std::runtime_error & e) {
-      fprintf(
-        stderr,
-        "failed to create 1to2 bridge for topic '%s' "
-        "with ROS 1 type '%s' and ROS 2 type '%s': %s\n",
-        topic_name.c_str(), bridge.ros1_type_name.c_str(), bridge.ros2_type_name.c_str(), e.what());
-      if (std::string(e.what()).find("No template specialization") != std::string::npos) {
-        fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
-      }
+      // fprintf(
+      //   stderr,
+      //   "failed to create 1to2 bridge for topic '%s' "
+      //   "with ROS 1 type '%s' and ROS 2 type '%s': %s\n",
+      //   topic_name.c_str(), bridge.ros1_type_name.c_str(), bridge.ros2_type_name.c_str(), e.what());
+      // if (std::string(e.what()).find("No template specialization") != std::string::npos) {
+      //   fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
+      // }
       continue;
     }
 
@@ -251,14 +296,14 @@ void update_bridge(
         bridge.ros2_type_name, topic_name, 10,
         bridge.ros1_type_name, topic_name, 10);
     } catch (std::runtime_error & e) {
-      fprintf(
-        stderr,
-        "failed to create 2to1 bridge for topic '%s' "
-        "with ROS 2 type '%s' and ROS 1 type '%s': %s\n",
-        topic_name.c_str(), bridge.ros2_type_name.c_str(), bridge.ros1_type_name.c_str(), e.what());
-      if (std::string(e.what()).find("No template specialization") != std::string::npos) {
-        fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
-      }
+      // fprintf(
+      //   stderr,
+      //   "failed to create 2to1 bridge for topic '%s' "
+      //   "with ROS 2 type '%s' and ROS 1 type '%s': %s\n",
+      //   topic_name.c_str(), bridge.ros2_type_name.c_str(), bridge.ros1_type_name.c_str(), e.what());
+      // if (std::string(e.what()).find("No template specialization") != std::string::npos) {
+      //   fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
+      // }
       continue;
     }
 
