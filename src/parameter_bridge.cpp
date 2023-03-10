@@ -247,9 +247,9 @@ bool parse_command_options(
     ss << " -h, --help: This message." << std::endl;
     ss << " --topics: Name of the parameter that contains the list of topics to bridge.";
     ss << std::endl;
-    ss << " --services_1_to_2: Name of the parameter that contains the list of services to bridge from ROS 1 to ROS 2.";
+    ss << " --services-1-to-2: Name of the parameter that contains the list of services to bridge from ROS 1 to ROS 2.";
     ss << std::endl;
-    ss << " --services_2_to_1: Name of the parameter that contains the list of services to bridge from ROS 2 to ROS 1.";
+    ss << " --services-2-to-1: Name of the parameter that contains the list of services to bridge from ROS 2 to ROS 1.";
     ss << std::endl;
     std::cout << ss.str();
     return false;
