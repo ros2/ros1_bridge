@@ -258,6 +258,8 @@ bool parse_command_options(
     ss << std::endl;
     ss << "Options:" << std::endl;
     ss << " -h, --help: This message." << std::endl;
+    ss << " --print-pairs: Print a list of the supported ROS 2 <=> ROS 1 conversion pairs.";
+    ss << std::endl;
     ss << " --topics: Name of the parameter that contains the list of topics to bridge.";
     ss << std::endl;
     ss << " --services-1-to-2: Name of the parameter that contains the list of services to bridge from ROS 1 to ROS 2.";
@@ -267,6 +269,28 @@ bool parse_command_options(
     ss << " --ros1-args: Arguments to pass to the ROS 1 bridge node." << std::endl;
     ss << " --ros2-args: Arguments to pass to the ROS 2 bridge node." << std::endl;
     std::cout << ss.str();
+    return false;
+  }
+
+  if (ros1_bridge::get_option_flag(args, "--print-pairs")) {
+    auto mappings_2to1 = ros1_bridge::get_all_message_mappings_2to1();
+    if (mappings_2to1.size() > 0) {
+      printf("Supported ROS 2 <=> ROS 1 message type conversion pairs:\n");
+      for (auto & pair : mappings_2to1) {
+        printf("  - '%s' (ROS 2) <=> '%s' (ROS 1)\n", pair.first.c_str(), pair.second.c_str());
+      }
+    } else {
+      printf("No message type conversion pairs supported.\n");
+    }
+    mappings_2to1 = ros1_bridge::get_all_service_mappings_2to1();
+    if (mappings_2to1.size() > 0) {
+      printf("Supported ROS 2 <=> ROS 1 service type conversion pairs:\n");
+      for (auto & pair : mappings_2to1) {
+        printf("  - '%s' (ROS 2) <=> '%s' (ROS 1)\n", pair.first.c_str(), pair.second.c_str());
+      }
+    } else {
+      printf("No service type conversion pairs supported.\n");
+    }
     return false;
   }
 
