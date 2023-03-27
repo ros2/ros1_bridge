@@ -102,7 +102,7 @@ public:
 
     // create a new handler for the goal
     std::shared_ptr<GoalHandler> handler;
-    handler = std::make_shared<GoalHandler>(gh1, client_);
+    handler = std::make_shared<GoalHandler>(gh1, client_, ros2_node_->get_logger());
     std::lock_guard<std::mutex> lock(mutex_);
     goals_.insert(std::make_pair(goal_id, handler));
 
@@ -138,7 +138,7 @@ private:
       translate_goal_1_to_2(*gh1_.getGoal(), goal2);
 
       if (!client_->wait_for_action_server(std::chrono::seconds(1))) {
-        RCLCPP_INFO(ros2_node_->get_logger(), "Action server not available after waiting");
+        RCLCPP_INFO(this->logger_, "Action server not available after waiting");
         gh1_.setRejected();
         return;
       }
@@ -190,13 +190,14 @@ private:
       }
     }
 
-    GoalHandler(ROS1GoalHandle & gh1, ROS2ClientSharedPtr & client)
-    : gh1_(gh1), gh2_(nullptr), client_(client), canceled_(false) {}
+    GoalHandler(ROS1GoalHandle & gh1, ROS2ClientSharedPtr & client, rclcpp::Logger logger)
+    : gh1_(gh1), gh2_(nullptr), client_(client), logger_(logger), canceled_(false) {}
 
   private:
     ROS1GoalHandle gh1_;
     ROS2ClientGoalHandle gh2_;
     ROS2ClientSharedPtr client_;
+    rclcpp::Logger logger_;
     bool canceled_;      // cancel was called
     std::mutex mutex_gh_;
   };
