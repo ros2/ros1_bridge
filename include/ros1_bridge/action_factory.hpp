@@ -107,7 +107,7 @@ public:
     std::lock_guard<std::mutex> lock(mutex_);
     goals_.insert(std::make_pair(goal_id, handler));
 
-    RCLCPP_INFO(ros2_node_->get_logger(), "Sending goal");
+    RCLCPP_INFO_STREAM(ros2_node_->get_logger(), "Sending goal " << goal_id);
     std::thread(
       [handler, goal_id, this]() mutable {
         // execute the goal remotely
