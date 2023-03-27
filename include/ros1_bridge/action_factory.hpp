@@ -143,10 +143,7 @@ private:
         return;
       }
 
-      // goal_response_callback signature changed after foxy, this implementation
-      // works with both
       std::shared_future<ROS2ClientGoalHandle> gh2_future;
-      // Changes as per Dashing
       auto send_goal_ops = ROS2SendGoalOptions();
       send_goal_ops.goal_response_callback =
         [this, &gh2_future](std::shared_future<ROS2GoalHandle> gh2) mutable {
