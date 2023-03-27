@@ -64,6 +64,9 @@ get_all_message_mappings_2to1();
 std::multimap<std::string, std::string>
 get_all_service_mappings_2to1();
 
+std::multimap<std::string, std::string>
+get_all_action_mappings_2to1();
+
 std::shared_ptr<FactoryInterface>
 get_factory(
   const std::string & ros1_type_name,
@@ -71,6 +74,9 @@ get_factory(
 
 std::unique_ptr<ServiceFactoryInterface>
 get_service_factory(const std::string &, const std::string &, const std::string &);
+
+std::unique_ptr<ActionFactoryInterface>
+get_action_factory(const std::string &, const std::string &, const std::string &);
 
 Bridge1to2Handles
 create_bridge_from_1_to_2(
