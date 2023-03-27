@@ -139,7 +139,7 @@ private:
       translate_goal_1_to_2(*gh1_.getGoal(), goal2);
 
       if (!client_->wait_for_action_server(std::chrono::seconds(1))) {
-        std::cout << "Action server not available after waiting" << std::endl;
+        RCLCPP_INFO(ros2_node_->get_logger(), "Action server not available after waiting");
         gh1_.setRejected();
         return;
       }
@@ -273,7 +273,7 @@ public:
     (void)uuid;
     (void)goal;
     if (!client_->waitForActionServerToStart(ros::Duration(1))) {
-      std::cout << "Action server not available after waiting" << std::endl;
+      RCLCPP_INFO(ros2_node_->get_logger(), "Action server not available after waiting");
       return rclcpp_action::GoalResponse::REJECT;
     }
 
