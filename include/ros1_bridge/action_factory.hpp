@@ -125,7 +125,7 @@ private:
   public:
     void cancel()
     {
-      std::lock_guard<std::mutex> lock(mutex_);
+      std::lock_guard<std::mutex> lock(mutex_gh_);
       canceled_ = true;
       if (gh2_) {        // cancel goal if possible
         auto fut = client_->async_cancel_goal(gh2_);
@@ -160,7 +160,7 @@ private:
           gh1_.setAccepted();
 
           {
-            std::lock_guard<std::mutex> lock(mutex_);
+            std::lock_guard<std::mutex> lock(mutex_gh_);
             gh2_ = goal_handle;
 
             if (canceled_) {          // cancel was called in between
@@ -184,7 +184,7 @@ private:
       ROS1Result res1;
       translate_result_2_to_1(res1, *(res2.result));
 
-      std::lock_guard<std::mutex> lock(mutex_);
+      std::lock_guard<std::mutex> lock(mutex_gh_);
       if (res2.code == rclcpp_action::ResultCode::SUCCEEDED) {
         gh1_.setSucceeded(res1);
       } else if (res2.code == rclcpp_action::ResultCode::CANCELED) {
@@ -202,7 +202,7 @@ private:
     ROS2ClientGoalHandle gh2_;
     ROS2ClientSharedPtr client_;
     bool canceled_;      // cancel was called
-    std::mutex mutex_;
+    std::mutex mutex_gh_;
   };
 
   ros::NodeHandle ros1_node_;
