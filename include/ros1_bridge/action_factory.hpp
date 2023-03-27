@@ -27,7 +27,6 @@
 
 #ifdef __clang__
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunused-parameter"
 #endif
 #include <actionlib/client/action_client.h>
 #include <actionlib/client/simple_action_client.h>  // Need this for the goal state. Need a better solution
@@ -103,7 +102,7 @@ public:
 
     // create a new handler for the goal
     std::shared_ptr<GoalHandler> handler;
-    handler = std::make_shared<GoalHandler>(gh1, client_));
+    handler = std::make_shared<GoalHandler>(gh1, client_);
     std::lock_guard<std::mutex> lock(mutex_);
     goals_.insert(std::make_pair(goal_id, handler));
 
@@ -296,7 +295,7 @@ public:
   {
     std::size_t goal_id = get_goal_id_hash(gh2->get_goal_id());
     std::shared_ptr<GoalHandler> handler;
-    handler = std::make_shared<GoalHandler>(gh2, client_));
+    handler = std::make_shared<GoalHandler>(gh2, client_);
     std::lock_guard<std::mutex> lock(mutex_);
     goals_.insert(std::make_pair(goal_id, handler));
 
