@@ -83,7 +83,7 @@ std::unique_ptr<ActionFactoryInterface> get_action_factory(const std::string & r
     return factory;
   }
 @[end for]@
-  return null_ptr;
+  return nullptr;
 }
 
 }  // namespace ros1_bridge
