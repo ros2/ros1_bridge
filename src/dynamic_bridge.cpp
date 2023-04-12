@@ -39,6 +39,7 @@
 #include "rcpputils/scope_exit.hpp"
 
 #include "ros1_bridge/bridge.hpp"
+#include "ros1_bridge/command_parser_utils.hpp"
 
 
 std::mutex g_bridge_mutex;
@@ -57,26 +58,31 @@ struct Bridge2to1HandlesAndMessageTypes
   std::string ros2_type_name;
 };
 
-bool find_command_option(const std::vector<std::string> & args, const std::string & option)
-{
-  return std::find(args.begin(), args.end(), option) != args.end();
-}
-
-bool get_flag_option(const std::vector<std::string> & args, const std::string & option)
-{
-  auto it = std::find(args.begin(), args.end(), option);
-  return it != args.end();
-}
-
 bool parse_command_options(
-  int argc, char ** argv, bool & output_topic_introspection,
+  int argc, char ** argv, std::vector<const char *> & ros1_args,
+  std::vector<const char *> & ros2_args, bool & output_topic_introspection,
   bool & bridge_all_1to2_topics, bool & bridge_all_2to1_topics)
 {
-  std::vector<std::string> args(argv, argv + argc);
+  std::vector<const char *> args(argv, argv + argc);
 
-  if (find_command_option(args, "-h") || find_command_option(args, "--help")) {
+  std::vector<const char *> available_options = {
+    "-h", "--help",
+    "--show-introspection",
+    "--print-pairs",
+    "--bridge-all-topics",
+    "--bridge-all-1to2-topics",
+    "--bridge-all-2to1-topics",
+    "--ros1-args",
+    "--ros2-args",
+  };
+
+  if (ros1_bridge::find_command_option(args, "-h") || ros1_bridge::find_command_option(args, "--help")) {
     std::stringstream ss;
     ss << "Usage:" << std::endl;
+    ss << "ros2 run ros1_bridge dynamic_bridge [Bridge specific options] \\" << std::endl;
+    ss << "    [--ros1-args [ROS1 arguments]] [--ros2-args [ROS2 arguments]]" << std::endl;
+    ss << std::endl;
+    ss << "Options:" << std::endl;
     ss << " -h, --help: This message." << std::endl;
     ss << " --show-introspection: Print output of introspection of both sides of the bridge.";
     ss << std::endl;
@@ -88,11 +94,13 @@ bool parse_command_options(
     ss << "a matching subscriber." << std::endl;
     ss << " --bridge-all-2to1-topics: Bridge all ROS 2 topics to ROS 1, whether or not there is ";
     ss << "a matching subscriber." << std::endl;
+    ss << " --ros1-args: Arguments to pass to the ROS 1 bridge node." << std::endl;
+    ss << " --ros2-args: Arguments to pass to the ROS 2 bridge node." << std::endl;
     std::cout << ss.str();
     return false;
   }
 
-  if (get_flag_option(args, "--print-pairs")) {
+  if (ros1_bridge::get_option_flag(args, "--print-pairs")) {
     auto mappings_2to1 = ros1_bridge::get_all_message_mappings_2to1();
     if (mappings_2to1.size() > 0) {
       printf("Supported ROS 2 <=> ROS 1 message type conversion pairs:\n");
@@ -114,11 +122,41 @@ bool parse_command_options(
     return false;
   }
 
-  output_topic_introspection = get_flag_option(args, "--show-introspection");
+  output_topic_introspection = ros1_bridge::get_option_flag(args, "--show-introspection", true);
 
-  bool bridge_all_topics = get_flag_option(args, "--bridge-all-topics");
-  bridge_all_1to2_topics = bridge_all_topics || get_flag_option(args, "--bridge-all-1to2-topics");
-  bridge_all_2to1_topics = bridge_all_topics || get_flag_option(args, "--bridge-all-2to1-topics");
+  bool bridge_all_topics = ros1_bridge::get_option_flag(args, "--bridge-all-topics", true);
+  bridge_all_1to2_topics = bridge_all_topics || ros1_bridge::get_option_flag(args, "--bridge-all-1to2-topics", true);
+  bridge_all_2to1_topics = bridge_all_topics || ros1_bridge::get_option_flag(args, "--bridge-all-2to1-topics", true);
+
+  auto logger = rclcpp::get_logger("ros1_bridge");
+
+  // Get ROS1 arguments
+  if (ros1_bridge::get_option_values(args, "--ros1-args", available_options, ros1_args, true)) {
+    if (ros1_args.size() == 0) {
+      RCLCPP_ERROR(logger, "Error: --ros1-args specified but no arguments provided.");
+      return false;
+    }
+  }
+
+  ros1_args.insert(ros1_args.begin(), args.at(0));
+
+  // Get ROS2 arguments
+  if (ros1_bridge::get_option_values(args, "--ros2-args", available_options, ros2_args, true)) {
+    if (ros2_args.size() == 0) {
+      RCLCPP_ERROR(logger, "Error: --ros2-args specified but no arguments provided.");
+      return false;
+    }
+
+    ros2_args.insert(ros2_args.begin(), "--ros-args");
+  }
+
+  ros2_args.insert(ros2_args.begin(), args.at(0));
+
+  if (ros1_bridge::find_command_option(args, "--ros-args") or args.size() > 1) {
+    RCLCPP_WARN(logger, "Warning: passing the ROS node arguments directly to the node is deprecated, use --ros1-args and --ros2-args instead.");
+
+    ros1_bridge::split_ros1_ros2_args(args, ros1_args, ros2_args);
+  }
 
   return true;
 }
@@ -192,14 +230,14 @@ void update_bridge(
         bridge.ros1_type_name, topic_name, 10,
         bridge.ros2_type_name, topic_name, ros2_publisher_qos);
     } catch (std::runtime_error & e) {
-      fprintf(
-        stderr,
-        "failed to create 1to2 bridge for topic '%s' "
-        "with ROS 1 type '%s' and ROS 2 type '%s': %s\n",
-        topic_name.c_str(), bridge.ros1_type_name.c_str(), bridge.ros2_type_name.c_str(), e.what());
-      if (std::string(e.what()).find("No template specialization") != std::string::npos) {
-        fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
-      }
+      // fprintf(
+      //   stderr,
+      //   "failed to create 1to2 bridge for topic '%s' "
+      //   "with ROS 1 type '%s' and ROS 2 type '%s': %s\n",
+      //   topic_name.c_str(), bridge.ros1_type_name.c_str(), bridge.ros2_type_name.c_str(), e.what());
+      // if (std::string(e.what()).find("No template specialization") != std::string::npos) {
+      //   fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
+      // }
       continue;
     }
 
@@ -258,14 +296,14 @@ void update_bridge(
         bridge.ros2_type_name, topic_name, 10,
         bridge.ros1_type_name, topic_name, 10);
     } catch (std::runtime_error & e) {
-      fprintf(
-        stderr,
-        "failed to create 2to1 bridge for topic '%s' "
-        "with ROS 2 type '%s' and ROS 1 type '%s': %s\n",
-        topic_name.c_str(), bridge.ros2_type_name.c_str(), bridge.ros1_type_name.c_str(), e.what());
-      if (std::string(e.what()).find("No template specialization") != std::string::npos) {
-        fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
-      }
+      // fprintf(
+      //   stderr,
+      //   "failed to create 2to1 bridge for topic '%s' "
+      //   "with ROS 2 type '%s' and ROS 1 type '%s': %s\n",
+      //   topic_name.c_str(), bridge.ros2_type_name.c_str(), bridge.ros1_type_name.c_str(), e.what());
+      // if (std::string(e.what()).find("No template specialization") != std::string::npos) {
+      //   fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
+      // }
       continue;
     }
 
@@ -462,19 +500,25 @@ int main(int argc, char * argv[])
   bool output_topic_introspection;
   bool bridge_all_1to2_topics;
   bool bridge_all_2to1_topics;
+
+  std::vector<const char *> ros1_args;
+  std::vector<const char *> ros2_args;
+
   if (!parse_command_options(
-      argc, argv, output_topic_introspection, bridge_all_1to2_topics, bridge_all_2to1_topics))
+      argc, argv, ros1_args, ros2_args, output_topic_introspection,
+      bridge_all_1to2_topics, bridge_all_2to1_topics))
   {
     return 0;
   }
 
   // ROS 2 node
-  rclcpp::init(argc, argv);
+  rclcpp::init(ros2_args.size(), ros2_args.data());
 
   auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
 
   // ROS 1 node
-  ros::init(argc, argv, "ros_bridge");
+  int argc_ros1 = ros1_args.size();
+  ros::init(argc_ros1, const_cast<char **>(ros1_args.data()), "ros_bridge");
   ros::NodeHandle ros1_node;
 
   // mapping of available topic names to type names
