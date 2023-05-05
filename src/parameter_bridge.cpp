@@ -33,13 +33,24 @@
 
 int main(int argc, char * argv[])
 {
-  // ROS 1 node
-  ros::init(argc, argv, "ros_bridge");
-  ros::NodeHandle ros1_node;
-
   // ROS 2 node
   rclcpp::init(argc, argv);
   auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
+
+
+  if (argc == 4) {
+    std::string argv_s = argv[argc-1];
+
+    std::string delimiter = "__node:=";
+    argv_s.erase(0, delimiter.length());
+    argv_s.insert(0, "__name:=");
+    strcpy(argv[0], argv_s.c_str());
+    argc = 1;
+  }
+  
+  // ROS 1 node
+  ros::init(argc, argv, "ros_bridge");
+  ros::NodeHandle ros1_node;
 
   std::list<ros1_bridge::BridgeHandles> all_handles;
   std::list<ros1_bridge::ServiceBridge1to2> service_bridges_1_to_2;
