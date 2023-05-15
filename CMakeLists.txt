@@ -16,7 +16,6 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
 find_package(std_msgs REQUIRED)
-find_package(xmlrpcpp REQUIRED)
 
 # find ROS 1 packages
 set(cmake_extras_files cmake/find_ros1_package.cmake cmake/find_ros1_interface_packages.cmake)
@@ -41,6 +40,10 @@ if(NOT ros1_roscpp_FOUND)
 endif()
 
 find_ros1_package(std_msgs REQUIRED)
+
+# Dependency that we should only look for if ROS 1 is installed (it's not present on a ROS 2
+# system; see https://github.com/ros2/ros1_bridge/pull/331#issuecomment-1188111510)
+find_package(xmlrpcpp REQUIRED)
 
 # find ROS 1 packages with messages / services
 include(cmake/find_ros1_interface_packages.cmake)
