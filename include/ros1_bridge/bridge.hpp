@@ -136,7 +136,7 @@ create_bidirectional_bridge(
   const std::string & topic_name,
   size_t queue_size,
   const rclcpp::QoS & publisher_qos);
-  
+
 }  // namespace ros1_bridge
 
 #endif  // ROS1_BRIDGE__BRIDGE_HPP_
