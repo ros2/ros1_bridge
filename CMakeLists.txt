@@ -41,6 +41,10 @@ endif()
 
 find_ros1_package(std_msgs REQUIRED)
 
+# Dependency that we should only look for if ROS 1 is installed (it's not present on a ROS 2
+# system; see https://github.com/ros2/ros1_bridge/pull/331#issuecomment-1188111510)
+find_package(xmlrpcpp REQUIRED)
+
 # find ROS 1 packages with messages / services
 include(cmake/find_ros1_interface_packages.cmake)
 find_ros1_interface_packages(ros1_message_packages)

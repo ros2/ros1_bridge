@@ -127,6 +127,16 @@ create_bidirectional_bridge(
   const std::string & topic_name,
   size_t queue_size = 10);
 
+BridgeHandles
+create_bidirectional_bridge(
+  ros::NodeHandle ros1_node,
+  rclcpp::Node::SharedPtr ros2_node,
+  const std::string & ros1_type_name,
+  const std::string & ros2_type_name,
+  const std::string & topic_name,
+  size_t queue_size,
+  const rclcpp::QoS & publisher_qos);
+
 }  // namespace ros1_bridge
 
 #endif  // ROS1_BRIDGE__BRIDGE_HPP_
