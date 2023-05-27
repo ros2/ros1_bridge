@@ -2,6 +2,12 @@
 Changelog for package ros1_bridge
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* remove xmlrpcpp from package.xml (`#406 <https://github.com/ros2/ros1_bridge/issues/406>`_)
+* Parametrization of `parameter_bridge` quality of service [Port of the commits (ec44770) and (86b4245) to foxy branch] (`#401 <https://github.com/ros2/ros1_bridge/issues/401>`_)
+* Contributors: Dharini Dutia, Lucyanno Frota
+
 0.9.4 (2020-09-10)
 ------------------
 * use hardcoded QoS (keep all, transient local) for /tf_static topic in dynamic_bridge (`#282 <https://github.com/ros2/ros1_bridge/issues/282>`_)
