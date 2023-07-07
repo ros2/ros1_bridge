@@ -16,4 +16,3 @@ jobs:
           package-name: ros1_bridge
           target-ros1-distro: noetic
           target-ros2-distro: rolling
-
