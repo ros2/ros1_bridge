@@ -36,9 +36,9 @@
 
 // include ROS 2
 #include "rclcpp/rclcpp.hpp"
-#include "rclcpp/scope_exit.hpp"
+#include "rcpputils/scope_exit.hpp"
 
-#include "rcutils/get_env.h"
+#include "rcutils/env.h"
 
 #include "ros1_bridge/bridge.hpp"
 
@@ -398,7 +398,7 @@ void get_ros1_service_info(
     return;
   }
   ros::TransportTCPPtr transport(new ros::TransportTCP(nullptr, ros::TransportTCP::SYNCHRONOUS));
-  auto transport_exit = rclcpp::make_scope_exit(
+  auto transport_exit = rcpputils::make_scope_exit(
     [transport]() {
       transport->close();
     });
