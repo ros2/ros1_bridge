@@ -306,26 +306,18 @@ void ServiceFactory<
 @[      for field in service["fields"][type.lower()]]@
 @[        if field["array"]]@
   req@(to).@(field["ros" + to]["name"]).resize(req@(frm).@(field["ros" + frm]["name"]).size());
-  auto @(field["ros1"]["name"])1_it = req1.@(field["ros1"]["name"]).begin();
-  auto @(field["ros2"]["name"])2_it = req2.@(field["ros2"]["name"]).begin();
-  while (
-    @(field["ros1"]["name"])1_it != req1.@(field["ros1"]["name"]).end() &&
-    @(field["ros2"]["name"])2_it != req2.@(field["ros2"]["name"]).end()
-  ) {
-    auto & @(field["ros1"]["name"])1 = *(@(field["ros1"]["name"])1_it++);
-    auto & @(field["ros2"]["name"])2 = *(@(field["ros2"]["name"])2_it++);
-@[      else]@
-  auto & @(field["ros1"]["name"])1 = req1.@(field["ros1"]["name"]);
-  auto & @(field["ros2"]["name"])2 = req2.@(field["ros2"]["name"]);
-@[        end if]@
-@[        if field["basic"]]@
-  @(field["ros2"]["name"])@(to) = @(field["ros1"]["name"])@(frm);
+  for ( size_t i = 0; i < req1.@(field["ros1"]["name"]).size(); ++i)
+@[          if field["basic"]]@
+    req@(to).@(field["ros" + to]["name"])[i] = req@(frm).@(field["ros" + frm]["name"])[i];
+@[          else]@
+    Factory<@(field["ros1"]["cpptype"]),@(field["ros2"]["cpptype"])>::convert_@(frm)_to_@(to)(@
+req@(frm).@(field["ros" + frm]["name"])[i], req@(to).@(field["ros" + to]["name"])[i]);
+@[          end if]@
+@[        elif field["basic"]]@
+  req@(to).@(field["ros" + to]["name"]) = req@(frm).@(field["ros" + frm]["name"]);
 @[        else]@
   Factory<@(field["ros1"]["cpptype"]),@(field["ros2"]["cpptype"])>::convert_@(frm)_to_@(to)(@
-@(field["ros2"]["name"])@(frm), @(field["ros1"]["name"])@(to));
-@[        end if]@
-@[        if field["array"]]@
-  }
+req@(frm).@(field["ros" + frm]["name"]), req@(to).@(field["ros" + to]["name"]));
 @[        end if]@
 @[      end for]@
 }
