@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+
+import os
+import sys
+import argparse
+
+# add ros1_bridge to the Python path
+ros1_bridge_root = os.path.join(os.path.dirname(__file__), '..')
+sys.path.insert(0, os.path.abspath(ros1_bridge_root))
+
+from ros1_bridge import generate_bridged_pairs
+
+
+def get_include_path(msg):
+    tail = f'/share/{msg.package_name}/msg'
+    return msg.prefix_path[:-len(tail)] + '/include'
+
+
+def main(argv=sys.argv[1:]):
+
+    parser = argparse.ArgumentParser(description='Get relevant ROS 1 and ROS 2 messages to generate.',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('--only', type=str, help='Compile only these packages', default='')
+    parser.add_argument('--ignore', type=str, help='Skip these packages', default='')
+    args = parser.parse_args(argv)
+
+    try:
+        pairs = generate_bridged_pairs(args.only, args.ignore)
+
+        # isolate useful ROS 2 idls amongst these packages, to tell CMake what will be generated
+        ros2_pkgs = {pkg: pkg for pkg in pairs['ros2_package_names']}
+        for pkg in ros2_pkgs:
+            for interface in ('msg', 'srv'):
+                interfaces = [f'{interface}/{m.message_name}' for m in pairs[f'all_ros2_{interface}s'] if m.package_name == pkg]
+                if interfaces:
+                    ros2_pkgs[pkg] += '+'+'+'.join(interfaces)
+        ros2_interfaces = ':'.join(ros2_pkgs.values())
+
+        # ROS 1 packages
+        ros1_interfaces = set(m.ros1_msg for m in pairs['mappings'])
+        ros1_srv_pkgs = set(srv['ros1_package'] for srv in pairs['services'])
+        ros1_interfaces.update(srv for srv in pairs['all_ros1_srvs'] if srv.package_name in ros1_srv_pkgs)
+        ros1_pkgs = ':'.join(set(msg.package_name for msg in ros1_interfaces))
+
+        # return as nested list for CMake, no linebreak to avoid passing it to CMake
+        print(f'{ros1_pkgs};{ros2_interfaces}', end='')
+
+        return 0
+    except RuntimeError as e:
+        print(str(e), file=sys.stderr)
+        return 1
+
+
+if __name__ == '__main__':
+    sys.exit(main())

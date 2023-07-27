@@ -125,6 +125,16 @@ colcon build --symlink-install --packages-select ros1_bridge --cmake-force-confi
 
 *Note:* If you are building on a memory constrained system you might want to limit the number of parallel jobs by setting e.g. the environment variable `MAKEFLAGS=-j1`.
 
+#### Compilation options
+
+The bridge can be compiled to consider only some ROS 2 packages, or to ignore some. This is set through two CMake variables:
+
+- -DROS1_BRIDGE_ONLY='std_msgs;geometry_msgs'
+- -DROS1_BRIDGE_IGNORE='my_disfunctionning_pkg_msgs;another_undesired_pkg'
+
+
+
+
 
 ## Example 1: run the bridge and the example talker and listener
 
