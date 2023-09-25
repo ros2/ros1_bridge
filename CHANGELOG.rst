@@ -60,8 +60,8 @@ Changelog for package ros1_bridge
 * Update maintainers (#286)
 * Contributors: Chris Lalancette, Jacob Perron, Michael Carroll, Paul Bovbel, Vicidel, William Woodall, locus-services
 
-Forthcoming
------------
+0.12.0 (2023-09-25)
+-------------------
 * 0.11.0
 * Update changelogs
 * Improve bridge command parser (#1)
