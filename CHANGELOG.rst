@@ -60,6 +60,202 @@ Changelog for package ros1_bridge
 * Update maintainers (#286)
 * Contributors: Chris Lalancette, Jacob Perron, Michael Carroll, Paul Bovbel, Vicidel, William Woodall, locus-services
 
+Forthcoming
+-----------
+* 0.11.0
+* Update changelogs
+* Improve bridge command parser (#1)
+  * Refactor command parser to use vector of char*
+  * Add argc argv splitter to dynamic bridge
+  * Add argc argv splitter to paramter bridge
+  * Update github action
+  * Fix parameter bridge argv split
+  * Remove static argv reading
+  * Add command parser to parameter bridge
+  * Fix compilation errors
+  * Fix compilation errors
+  * Fix parameter bidge command parser
+  * Refactor to add command parser utils file
+  * Add github action issue workaround
+  * Ty to run github action inside container
+  * Fix ROS2 args when no ROS1 args
+  * ⏪ Revert changes on GitHub Action config
+  * Change parameter bridge ROS init order
+  * Rename parser functions
+  * Add get_option_values function
+  * Fix wrong help for the parameter bridge
+  * Fix get_option_values parser function
+  * Refactor bridges to use the get_option_values
+  * Add running scetion to README
+  * Add print pairs to parameter bridge
+  ---------
+  Co-authored-by: LucasHaug <lucas.haug@hotmail.com>
+* Tailor: Creating Jenkinsfile
+* Improved gitignore to exclude build files and similar editor-based tools (#392)
+* Provide direct serialization of ROS2 messsage to ROS1 streams (#381)
+  * Generated functions for (de)serializing ROS2 messages to ROS1 streams.
+  * Partial set of fixes from review.
+  * Rename functions based on discussion from review
+  * Whitespace fix.
+  * Name change for conversion helper fucntion.
+  * Use explicit function overloading instead of template for stream types.
+  * Fix factory.hpp crustify errors.
+* [master] Update maintainers - 2022-11-07 (#386)
+* Apply automatic mapping rules in case only package+message mapping exists (#382)
+  * Fix message mapping by removing early return so other rules can still be applied
+  In determine_field_mapping, there was an early return inside a loop over all mapping rules.
+  IF there we any mapping rules but they don't specify field mappings, the early return made the function return without creating mappings automatically.
+  For a particular message type, ROS 1's uuid_msgs/UniqueID vs ROS 2's unique_identifier_msgs/UUID, the message definition is exacly the same but type name is not.
+  The only mapping fule defined in for unique_identifier_msgs/UUID is that it maps to uuid_msgs/UniqueID, but no field mappings are needed because the definitions are the same.
+  But, then we hit the early return (because the for-loop is ran without any rule applying to the message at hand and thus not `continue`-ing in a code branch handling a rule)
+  and return without applying the normal automatic field mapping generation rules.
+  By removing the early return, the other rules are applied and the mapping rules for handling the exact same message defintions are applied
+  * Account for fields mapped by rules when checking for missed fields
+  The code after the early return mentioned in the previous commit assumed all fields would match by name,
+  which was of course true. But not anymore, so the missing check now only fails when the missing fields are also not already accounted for via a mapping
+  * Fix flake8 violations
+* New function for converting between ROS1 and ROS2 generic message formats. (#377)
+* Fix typo (`services_1_or_2` -> `services_1_to_2`) (#379)
+* Move xmlrpcpp find_package so it only searches if ROS 1 is found (#371)
+* Implement Foreign Mapping Check Override (#367)
+* removing unused slot
+* Parametrize Quality of Service in `parameter_bridge`.  (#331)
+  * Extend create_bidirectional_bridge to take qos param for ROS2 publisher
+  * Busy setting up a way to read QoS parameters from ROS1 params
+  * Parse history qos params
+  * Call qos_from_params when setting up topics
+  * Configure deadline, lifespan, liveliness_lease_durations
+  * Configure liveliness
+  * Add some basic debug text
+  * Print the QoS settings to stdout when setting them up
+  * Catch XmlRpc::XmlRpcExceptions when constructing QoS from parameters
+  * Parse liveliness as either int enum value or upper/lower case string representation of liveliness enum values
+  * Fix formatting with uncrustify
+  * Fix cpplint formatting
+  In 2 cases the formatting conflicts with what uncrustify wants; // NOLINT got rid of the complaints of cpplint, favouring uncrustify
+  * Clearer logging as suggested by code review
+  Co-authored-by: Geoffrey Biggs <gbiggs@killbots.net>
+  * Clarify keep_last vs keep_all setting for history
+  Co-authored-by: Geoffrey Biggs <gbiggs@killbots.net>
+* updated description
+* fixed ros2 message index
+* added fields_2_to_1 to print message mapping
+* Clarify example 4 (#362)
+* Fix array static_assertion with newer compilers (#363)
+* to correct Examples 4 (#357)
+* reverting authors
+* updating maintainers
+* Update maintainers (#360)
+* Suppress warning when packages aren't available (#355)
+  * Suppress warning when packages aren't available
+  ROS1 packages aren't available on all platforms.  In order to keep
+  ros1_bridge in ros2.repos without warnings turning CI yellow, we need to
+  suppress this warning.
+* Make sure to use fully-qualified boost placeholders. (#351)
+  Also make sure to declare a direct dependency on boost.
+  While we are always getting it from ROS 1, this code directly
+  uses it and so should also declare a dependency.
+* 0.10.3
+* Changelog
+* Cleanup of README.md (#342)
+  * Reformatted README.md
+  This is an initial cleanup attempt of the README.md file.  All
+  non-code lines have been wrapped to an 80 column width, and some
+  markdown was cleaned up.  Further work is needed.
+  * Added 'bash' info string to appropriate fenced code blocks.
+  Numerous fenced code blocks did not have a
+  [info string](https://github.github.com/gfm/#info-string), which
+  meant that the enclosed code block wouldn't be rendered correctly.
+  As it turned out, all of these were intended to be run in a bash
+  shell, so I added that as their info strings.
+  * WIP: Updated the scripts in the README.md file to use environment variables.
+  The scripts weren't directly executable before, requiring manual
+  substitution of various 'variables'.  This was unfortunate as Github
+  makes copying and pasting code blocks simple and straightforward.
+  The changes in this commit make it possible to copy/paste each example
+  into it's own shell, which should make it slightly easier for new users
+  to start using the bridge.
+  * fix: Unwrapped lines per request from @gbiggs.
+  @gbiggs commented at https://github.com/ros2/ros1_bridge/pull/342#issuecomment-1029508012
+  that files in ROS2 are intentionally not wrapped to make handling
+  diffs in PRs easier.  I've copied in the relevant original lines
+  to unwrap the lines I wrapped earlier.
+  * Update README.md
+  Accepted suggestion from @gbiggs
+  Co-authored-by: Geoffrey Biggs <gbiggs@killbots.net>
+  * Update README.md
+  Co-authored-by: Geoffrey Biggs <gbiggs@killbots.net>
+  * Update README.md
+  Co-authored-by: Geoffrey Biggs <gbiggs@killbots.net>
+  * Update README.md
+  Co-authored-by: Geoffrey Biggs <gbiggs@killbots.net>
+  * Update README.md
+  Co-authored-by: Geoffrey Biggs <gbiggs@killbots.net>
+  * Update README.md
+  Co-authored-by: Geoffrey Biggs <gbiggs@killbots.net>
+  * Update README.md
+  Co-authored-by: Geoffrey Biggs <gbiggs@killbots.net>
+  * Update README.md
+  Co-authored-by: Geoffrey Biggs <gbiggs@killbots.net>
+  * Update README.md
+  Co-authored-by: Geoffrey Biggs <gbiggs@killbots.net>
+  * The service name might provide more debug information than host:port details (#346)
+  * The service name might provide more debug information than host:port details
+  Co-authored-by: Tomoya Fujita <Tomoya.Fujita@sony.com>
+  * fix: Changed 'galactic' to 'rolling'
+  Changes due to suggestions from @gbiggs in the discussion of [PR 342](https://github.com/ros2/ros1_bridge/pull/342#discussion_r834287510)
+  Co-authored-by: Geoffrey Biggs <gbiggs@killbots.net>
+  Co-authored-by: Tim Clephas <tim.clephas@nobleo.nl>
+  Co-authored-by: Tomoya Fujita <Tomoya.Fujita@sony.com>
+* The service name might provide more debug information than host:port details (#346)
+  * The service name might provide more debug information than host:port details
+  Co-authored-by: Tomoya Fujita <Tomoya.Fujita@sony.com>
+* Parametrizing service execution timeout (#340)
+  * Parametrizing service execution timeout
+* Fix cpplint error (#341)
+  * Fix cpplint error
+* Update package maintainers (#335)
+  * Update package maintainers
+* 0.10.2
+* Changelog.
+* Example for `parameter_bridge` (#330)
+  * Add example for using the parameter_bridge
+* Use rcpputils/scope_exit.hpp instead of rclcpp/scope_exit.hpp (#324)
+* Use FindPython3 and make Python dependency explicit (#322)
+* Bump ros-tooling/setup-ros@v0.2 (#323)
+  See if that fixes the apt-update part of CI
+* Add GitHub workflow for CI (#310)
+  * init docker based CI
+  * target rolling only
+  * use setup-ros and action-ros-ci instead of custom scripts
+  * quiet blind except warnings
+  https://github.com/ros2/ros1_bridge/pull/310#discussion_r621492261
+  * remove ccache
+  build times are not a concern and it is not significantly improved when using ros-tooling actions
+* Update includes after rcutils/get_env.h deprecation (#311)
+* 0.10.1
+* Changelog.
+* Fix logging for updated rclcpp interface (#303)
+  * Fix logging for updated rclcpp interface
+  * Update src/bridge.cpp
+  Co-authored-by: Ivan Santiago Paunovic <ivanpauno@ekumenlabs.com>
+  * Update to pass char *
+  * Uncrustify
+  Co-authored-by: Ivan Santiago Paunovic <ivanpauno@ekumenlabs.com>
+* Fix typo in comments (#297)
+  * very minor typo in comments
+  * Fix other copy-paste typos.
+  Co-authored-by: Steven! Ragnarök <nuclearsandwich@users.noreply.github.com>
+  Co-authored-by: tomoya <Tomoya.Fujita@sony.com>
+* 0.10.0
+* fix bug with sizeof when type of the arrays differ (#298)
+* 0.9.5
+* [forward port] update to use rosidl_parser and .idl files rather than rosidl_adapter and .msg files (#296)
+  * update to use rosidl_parser and .idl files rather than rosidl_adapter and .msg files
+  * fix quote style linting error
+* Update maintainers (#286)
+* Contributors: Andrej Orsula, Audrow Nash, Cem Karan, Chris Lalancette, Christophe Bedard, Derek, Dharini Dutia, Gary Servin, Geoffrey Biggs, Harsh Deshpande, Jacob Perron, Jorge Perez, Loy, Loy van Beek, Marco Bassa, Michael Carroll, Nick Sims, Paul Bovbel, Shane Loretz, Tim Clephas, Vicidel, William Woodall, locus-services, methylDragon, quarkytale, xlla
+
 0.9.4 (2020-09-10)
 ------------------
 * use hardcoded QoS (keep all, transient local) for /tf_static topic in dynamic_bridge (`#282 <https://github.com/ros2/ros1_bridge/issues/282>`_)
