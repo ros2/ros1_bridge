@@ -116,6 +116,7 @@ create_bridge_from_2_to_1(
   const std::string & ros1_type_name,
   const std::string & ros1_topic_name,
   size_t publisher_queue_size,
+  bool publisher_latch,
   rclcpp::PublisherBase::SharedPtr ros2_pub = nullptr);
 
 BridgeHandles
