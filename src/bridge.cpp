@@ -79,6 +79,7 @@ create_bridge_from_2_to_1(
   rclcpp::PublisherBase::SharedPtr ros2_pub)
 {
   auto subscriber_qos = rclcpp::SensorDataQoS(rclcpp::KeepLast(subscriber_queue_size));
+  auto publisher_latch = false;
   return create_bridge_from_2_to_1(
     ros2_node,
     ros1_node,
@@ -88,6 +89,7 @@ create_bridge_from_2_to_1(
     ros1_type_name,
     ros1_topic_name,
     publisher_queue_size,
+    publisher_latch,
     ros2_pub);
 }
 
@@ -101,11 +103,12 @@ create_bridge_from_2_to_1(
   const std::string & ros1_type_name,
   const std::string & ros1_topic_name,
   size_t publisher_queue_size,
+  bool publisher_latch,
   rclcpp::PublisherBase::SharedPtr ros2_pub)
 {
   auto factory = get_factory(ros1_type_name, ros2_type_name);
   auto ros1_pub = factory->create_ros1_publisher(
-    ros1_node, ros1_topic_name, publisher_queue_size);
+    ros1_node, ros1_topic_name, publisher_queue_size, publisher_latch);
 
   auto ros2_sub = factory->create_ros2_subscriber(
     ros2_node, ros2_topic_name, subscriber_qos, ros1_pub, ros2_pub);
