@@ -405,27 +405,27 @@ void ActionFactory_@(frm_)_@(to_)<
 @(action["ros2_package"])::action::@(action["ros2_name"])
 >::translate_@(type.lower())_@(frm)_to_@(to)(
 @[      if type == "Goal"]@
-  @(const_1)ROS@(frm)@(type) &@(type.lower())@(frm),
-  @(const_2)ROS@(to)@(type) &@(type.lower())@(to))
+  @(const_1)ROS@(frm)@(type) &@(type.lower())_msg@(frm),
+  @(const_2)ROS@(to)@(type) &@(type.lower())_msg@(to))
 @[      else]@
-  @(const_1)ROS@(to)@(type) &@(type.lower())@(to),
-  @(const_2)ROS@(frm)@(type) &@(type.lower())@(frm))
+  @(const_1)ROS@(to)@(type) &@(type.lower())_msg@(to),
+  @(const_2)ROS@(frm)@(type) &@(type.lower())_msg@(frm))
 @[      end if]@
 {
 @[      for field in action["fields"][type.lower()]]@
 @[        if field["array"]]@
-  @(type.lower())@(to).@(field["ros" + to]["name"]).resize(@(type.lower())@(frm).@(field["ros" + frm]["name"]).size());
-  auto @(field["ros" + frm]["name"])@(frm)_it = @(type.lower())@(frm).@(field["ros" + frm]["name"]).begin();
-  auto @(field["ros" + to]["name"])@(to)_it = @(type.lower())@(to).@(field["ros" + to]["name"]).begin();
+  @(type.lower())_msg@(to).@(field["ros" + to]["name"]).resize(@(type.lower())_msg@(frm).@(field["ros" + frm]["name"]).size());
+  auto @(field["ros" + frm]["name"])@(frm)_it = @(type.lower())_msg@(frm).@(field["ros" + frm]["name"]).begin();
+  auto @(field["ros" + to]["name"])@(to)_it = @(type.lower())_msg@(to).@(field["ros" + to]["name"]).begin();
   while (
-    @(field["ros" + frm]["name"])@(frm)_it != @(type.lower())@(frm).@(field["ros" + frm]["name"]).end() &&
-    @(field["ros" + to]["name"])@(to)_it != @(type.lower())@(to).@(field["ros" + to]["name"]).end()
+    @(field["ros" + frm]["name"])@(frm)_it != @(type.lower())_msg@(frm).@(field["ros" + frm]["name"]).end() &&
+    @(field["ros" + to]["name"])@(to)_it != @(type.lower())_msg@(to).@(field["ros" + to]["name"]).end()
   ) {
     auto & @(field["ros" + frm]["name"])@(frm) = *(@(field["ros" + frm]["name"])@(frm)_it++);
     auto & @(field["ros" + to]["name"])@(to) = *(@(field["ros" + to]["name"])@(to)_it++);
 @[        else]@
-  auto & @(field["ros" + frm]["name"])@(frm) = @(type.lower())@(frm).@(field["ros" + frm]["name"]);
-  auto & @(field["ros" + to]["name"])@(to) = @(type.lower())@(to).@(field["ros" + to]["name"]);
+  auto & @(field["ros" + frm]["name"])@(frm) = @(type.lower())_msg@(frm).@(field["ros" + frm]["name"]);
+  auto & @(field["ros" + to]["name"])@(to) = @(type.lower())_msg@(to).@(field["ros" + to]["name"]);
 @[        end if]@
 @[      if field["basic"]]@
 @[        if field["ros2"]["type"].startswith("builtin_interfaces") ]@
