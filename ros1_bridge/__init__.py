@@ -15,7 +15,10 @@
 from collections import OrderedDict
 import os
 import re
+import shutil
 import sys
+import tempfile
+import filecmp
 
 import ament_index_python
 from catkin_pkg.package import parse_package
@@ -72,6 +75,15 @@ import rosmsg  # noqa
 
 
 def generate_cpp(output_path, template_dir):
+    # Temporary directory is used to hold generated files, which are only
+    # copied into place if they differ from previously generated files. This
+    # ensures that timestamps on files that have not changed are not updated
+    # and saves a ton of compile time.
+    with tempfile.TemporaryDirectory() as tempdir:
+        _generate_cpp(output_path, template_dir, tempdir)
+
+
+def _generate_cpp(output_path, template_dir, temporary_dir):
     rospack = rospkg.RosPack()
     data = generate_messages(rospack)
     message_string_pairs = {
@@ -84,11 +96,17 @@ def generate_cpp(output_path, template_dir):
     data.update(generate_actions(
         rospack, message_string_pairs=message_string_pairs))
 
+    # create output folder if it doesn't exist
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+
     template_file = os.path.join(template_dir, 'get_mappings.cpp.em')
+    temporary_file = os.path.join(temporary_dir, 'get_mappings.cpp')
     output_file = os.path.join(output_path, 'get_mappings.cpp')
     data_for_template = {
         'mappings': data['mappings'], 'services': data['services'], 'actions': data['actions']}
-    expand_template(template_file, data_for_template, output_file)
+    expand_template(template_file, data_for_template, temporary_file)
+    update_output_file(temporary_file, output_file)
 
     unique_package_names = set(
         data['ros2_package_names_msg'] + data['ros2_package_names_srv'])
@@ -97,8 +115,10 @@ def generate_cpp(output_path, template_dir):
     data['ros2_package_names'] = list(unique_package_names)
 
     template_file = os.path.join(template_dir, 'get_factory.cpp.em')
+    temporary_file = os.path.join(temporary_dir, 'get_factory.cpp')
     output_file = os.path.join(output_path, 'get_factory.cpp')
-    expand_template(template_file, data, output_file)
+    expand_template(template_file, data, temporary_file)
+    update_output_file(temporary_file, output_file)
 
     for ros2_package_name in data['ros2_package_names']:
         data_pkg_hpp = {
@@ -126,9 +146,12 @@ def generate_cpp(output_path, template_dir):
                 if m.ros2_msg.package_name == ros2_package_name],
         }
         template_file = os.path.join(template_dir, 'pkg_factories.hpp.em')
+        temporary_file = os.path.join(
+            temporary_dir, '%s_factories.hpp' % ros2_package_name)
         output_file = os.path.join(
             output_path, '%s_factories.hpp' % ros2_package_name)
-        expand_template(template_file, data_pkg_hpp, output_file)
+        expand_template(template_file, data_pkg_hpp, temporary_file)
+        update_output_file(temporary_file, output_file)
 
         data_pkg_cpp = {
             'ros2_package_name': ros2_package_name,
@@ -138,9 +161,12 @@ def generate_cpp(output_path, template_dir):
             'ros2_action_types': data_pkg_hpp['ros2_action_types'],
         }
         template_file = os.path.join(template_dir, 'pkg_factories.cpp.em')
+        temporary_file = os.path.join(
+            temporary_dir, '%s_factories.cpp' % ros2_package_name)
         output_file = os.path.join(
             output_path, '%s_factories.cpp' % ros2_package_name)
-        expand_template(template_file, data_pkg_cpp, output_file)
+        expand_template(template_file, data_pkg_cpp, temporary_file)
+        update_output_file(temporary_file, output_file)
 
         for interface_type, interfaces in zip(
             ['msg', 'srv', 'action'], [data['all_ros2_msgs'],
@@ -175,10 +201,25 @@ def generate_cpp(output_path, template_dir):
 
                 template_file = os.path.join(
                     template_dir, 'interface_factories.cpp.em')
+                temporary_file = os.path.join(
+                    temporary_dir, '%s__%s__%s__factories.cpp' %
+                    (ros2_package_name, interface_type, interface.message_name))
                 output_file = os.path.join(
                     output_path, '%s__%s__%s__factories.cpp' %
                     (ros2_package_name, interface_type, interface.message_name))
-                expand_template(template_file, data_idl_cpp, output_file)
+                expand_template(template_file, data_idl_cpp, temporary_file)
+                update_output_file(temporary_file, output_file)
+
+
+def update_output_file(temporary_file, output_file):
+    """Copy temporary file to output file if the two differ"""
+    try:
+        files_same = filecmp.cmp(temporary_file, output_file)
+    except FileNotFoundError:
+        files_same = False
+
+    if not files_same:
+        shutil.copyfile(temporary_file, output_file)
 
 
 def generate_messages(rospack=None):
