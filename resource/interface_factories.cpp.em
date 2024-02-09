@@ -350,7 +350,9 @@ void ServiceFactory<
 ) {
 @[      for field in service["fields"][type.lower()]]@
 @[        if field["array"]]@
+@[          if field["variable_length_array"]]@
   req@(to).@(field["ros" + to]["name"]).resize(req@(frm).@(field["ros" + frm]["name"]).size());
+@[          end if]@
   auto @(field["ros1"]["name"])1_it = req1.@(field["ros1"]["name"]).begin();
   auto @(field["ros2"]["name"])2_it = req2.@(field["ros2"]["name"]).begin();
   while (
