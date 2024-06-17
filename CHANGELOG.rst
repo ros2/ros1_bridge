@@ -60,8 +60,8 @@ Changelog for package ros1_bridge
 * Update maintainers (#286)
 * Contributors: Chris Lalancette, Jacob Perron, Michael Carroll, Paul Bovbel, Vicidel, William Woodall, locus-services
 
-Forthcoming
------------
+0.13.0 (2024-06-17)
+-------------------
 * Correctly handle fixed length array conversion in services and actions (#4)
 * RST-6618 fixes for action bridge (#2)
   Fixed action_bridge changes to work with newer ros2 releases and added support for skipping previously built generated factories to speed up recompiling.
