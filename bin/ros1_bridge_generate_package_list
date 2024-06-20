@@ -1,0 +1,16 @@
+#!/usr/bin/env python3
+
+import sys
+from catkin_pkg.package import parse_package
+
+def main(argv=sys.argv[1:]):
+    pkg = parse_package("package.xml")
+    packages = []
+
+    for depend in pkg["build_depends"]:
+        packages.append(depend.name)
+
+    print(';'.join(packages), end='')
+
+if __name__ == '__main__':
+    sys.exit(main())

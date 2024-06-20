@@ -33,7 +33,7 @@ from genmsg.base import COMMENTCHAR, IODELIM
 import genmsg.msg_loader
 
 import rosidl_adapter.parser
-from rosidl_cmake import expand_template
+from rosidl_pycommon import expand_template
 import rosidl_parser.parser
 
 import yaml
@@ -80,27 +80,41 @@ array_pattern = re.compile(r'\[\d*\]$')
 variable_length_array_pattern = re.compile(r'\[\]$')
 
 
-def generate_cpp(output_path, template_dir):
+def generate_cpp(output_path, template_dir, pkg_includes, pkg_ignores):
     # Temporary directory is used to hold generated files, which are only
     # copied into place if they differ from previously generated files. This
     # ensures that timestamps on files that have not changed are not updated
     # and saves a ton of compile time.
     with tempfile.TemporaryDirectory() as tempdir:
-        _generate_cpp(output_path, template_dir, tempdir)
+        _generate_cpp(output_path, template_dir, tempdir, pkg_includes, pkg_ignores)
 
 
-def _generate_cpp(output_path, template_dir, temporary_dir):
+def _generate_cpp(output_path, template_dir, temporary_dir, pkg_includes, pkg_ignores):
     rospack = rospkg.RosPack()
-    data = generate_messages(rospack)
+    data = generate_messages(rospack, pkg_includes, pkg_ignores)
     message_string_pairs = {
         (
             '%s/%s' % (m.ros1_msg.package_name, m.ros1_msg.message_name),
             '%s/%s' % (m.ros2_msg.package_name, m.ros2_msg.message_name))
         for m in data['mappings']}
+
     data.update(
-        generate_services(rospack, message_string_pairs=message_string_pairs))
-    data.update(generate_actions(
-        rospack, message_string_pairs=message_string_pairs))
+        generate_services(
+            rospack,
+            message_string_pairs=message_string_pairs,
+            includes=pkg_includes,
+            ignores=pkg_ignores,
+        )
+    )
+
+    data.update(
+        generate_actions(
+            rospack,
+            message_string_pairs=message_string_pairs,
+            includes=pkg_includes,
+            ignores=pkg_ignores
+        )
+    )
 
     # create output folder if it doesn't exist
     if not os.path.exists(output_path):
@@ -228,14 +242,16 @@ def update_output_file(temporary_file, output_file):
         shutil.copyfile(temporary_file, output_file)
 
 
-def generate_messages(rospack=None):
+def generate_messages(rospack=None, includes=[], ignores=[]):
     ros1_msgs = get_ros1_messages(rospack=rospack)
-    ros2_package_names, ros2_msgs, mapping_rules = get_ros2_messages()
+    ros2_package_names, ros2_msgs, mapping_rules = get_ros2_messages(includes, ignores)
 
     package_pairs = determine_package_pairs(
-        ros1_msgs, ros2_msgs, mapping_rules)
+        ros1_msgs, ros2_msgs, mapping_rules, includes, ignores
+    )
     message_pairs = determine_message_pairs(
-        ros1_msgs, ros2_msgs, package_pairs, mapping_rules)
+        ros1_msgs, ros2_msgs, package_pairs, mapping_rules
+    )
 
     mappings = []
     # add custom mapping for builtin_interfaces
@@ -299,9 +315,9 @@ def generate_messages(rospack=None):
     }
 
 
-def generate_services(rospack=None, message_string_pairs=None):
+def generate_services(rospack=None, message_string_pairs=None, includes=[], ignores=[]):
     ros1_srvs = get_ros1_services(rospack=rospack)
-    ros2_pkgs, ros2_srvs, mapping_rules = get_ros2_services()
+    ros2_pkgs, ros2_srvs, mapping_rules = get_ros2_services(includes, ignores)
     services = determine_common_services(
         ros1_srvs, ros2_srvs, mapping_rules,
         message_string_pairs=message_string_pairs)
@@ -312,12 +328,20 @@ def generate_services(rospack=None, message_string_pairs=None):
     }
 
 
-def generate_actions(rospack=None, message_string_pairs=None):
+def generate_actions(rospack=None, message_string_pairs=None, includes=[], ignores=[]):
     ros1_actions = get_ros1_actions(rospack)
-    ros2_pkgs, ros2_actions, mapping_rules = get_ros2_actions()
+    ros2_pkgs, ros2_actions, mapping_rules = get_ros2_actions(includes=includes, ignores=ignores)
 
     actions = determine_common_actions(
-        ros1_actions, ros2_actions, mapping_rules, message_string_pairs=message_string_pairs)
+        ros1_actions,
+        ros2_actions,
+        mapping_rules,
+        message_string_pairs=message_string_pairs,
+        includes=includes,
+        ignores=ignores
+    )
+
+
     return {
         'actions': actions,
         'ros2_package_names_actions': ros2_pkgs,
@@ -336,7 +360,7 @@ def get_ros1_messages(rospack=None):
     return msgs
 
 
-def get_ros2_messages():
+def get_ros2_messages(includes=[], ignores=[]):
     pkgs = []
     msgs = []
     rules = []
@@ -351,8 +375,16 @@ def get_ros2_messages():
     })
     for package_name, val_tuple in resources.items():
         prefix_path, resource_type = val_tuple
+
+        if (includes and not package_name in includes) or (
+            ignores and package_name in ignores
+        ):
+            # Ignore package
+            continue
+
         if resource_type == 'rosidl_interfaces':  # Required, otherwise linking fails
             pkgs.append(package_name)
+
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
         message_names = {
@@ -399,7 +431,7 @@ def get_ros1_services(rospack=None):
     return srvs
 
 
-def get_ros2_services():
+def get_ros2_services(includes=[], ignores=[]):
     pkgs = []
     srvs = []
     rules = []
@@ -414,8 +446,16 @@ def get_ros2_services():
     resource_type = 'rosidl_interfaces'
     for package_name, val_tuple in resources.items():
         prefix_path, resource_type = val_tuple
+
+        if (includes and not package_name in includes) or (
+            ignores and package_name in ignores
+        ):
+            # Ignore package
+            continue
+
         if resource_type == 'rosidl_interfaces':  # Required, otherwise linking fails
             pkgs.append(package_name)
+
         resource, _ = ament_index_python.get_resource(resource_type, package_name)
         interfaces = resource.splitlines()
         service_names = {
@@ -475,13 +515,17 @@ def get_ros1_actions(rospack=None):
     return actions
 
 
-def get_ros2_actions():
+def get_ros2_actions(includes=[], ignores=[]):
     pkgs = []
     actions = []
     rules = []
     resource_type = 'rosidl_interfaces'
     resources = ament_index_python.get_resources(resource_type)
     for package_name, prefix_path in resources.items():
+        if (includes and not package_name in includes) or (ignores and package_name in ignores):
+            # Ignore package
+            continue
+
         pkgs.append(package_name)
         resource, _ = ament_index_python.get_resource(
             resource_type, package_name)
@@ -708,7 +752,7 @@ class ActionMappingRule(MappingRule):
         return 'ActionMappingRule(%s, %s)' % (self.ros1_package_name, self.ros2_package_name)
 
 
-def determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules):
+def determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules, includes, ignores):
     pairs = []
     # determine package names considered equal between ROS 1 and ROS 2
     ros1_suffix = '_msgs'
@@ -720,7 +764,19 @@ def determine_package_pairs(ros1_msgs, ros2_msgs, mapping_rules):
             continue
         ros1_package_basename = ros1_package_name[:-len(ros1_suffix)]
 
+        if (includes and not ros1_package_name in includes) or (
+            ignores and ros1_package_name in ignores
+        ):
+            # Ignore package
+            continue
+
         for ros2_package_name in ros2_package_names:
+            if (includes and not ros2_package_name in includes) or (
+                ignores and ros2_package_name in ignores
+            ):
+                # Ignore package
+                continue
+
             for ros2_suffix in ros2_suffixes:
                 if ros2_package_name.endswith(ros2_suffix):
                     break
@@ -881,7 +937,7 @@ def determine_common_services(
 
 
 def determine_common_actions(
-    ros1_actions, ros2_actions, mapping_rules, message_string_pairs=None
+    ros1_actions, ros2_actions, mapping_rules, message_string_pairs=None, includes=[], ignores=[]
 ):
     if message_string_pairs is None:
         message_string_pairs = set()
@@ -891,12 +947,19 @@ def determine_common_actions(
     for ros1_action in ros1_actions:
         for ros2_action in ros2_actions:
             if ros1_action.package_name == ros2_action.package_name:
+                if (includes and not ros1_action.package_name in includes) or (ignores and ros1_action.package_name in ignores):
+                    # Ignore package
+                    continue
+
                 if ros1_action.message_name == ros2_action.message_name:
                     pairs.append((ros1_action, ros2_action))
 
     for rule in mapping_rules:
         for ros1_action in ros1_actions:
             for ros2_action in ros2_actions:
+                if (includes and not ros1_action.package_name in includes) or (ignores and ros1_action.package_name in ignores):
+                    # Ignore package
+                    continue
                 if rule.ros1_package_name == ros1_action.package_name and \
                    rule.ros2_package_name == ros2_action.package_name:
                     if rule.ros1_action_name is None and rule.ros2_action_name is None:

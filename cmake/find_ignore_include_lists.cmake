@@ -1,0 +1,25 @@
+function(filter_packages)
+  set(options "")
+  set(oneValueArgs PKG_LIST)
+  set(multiValueArgs INCLUDE_PKGS IGNORE_PKGS)
+
+  cmake_parse_arguments(BRIDGE "${options}"
+                        "${oneValueArgs}" "${multiValueArgs}" "${ARGN}")
+
+  set(ros2_packages ${${BRIDGE_PKG_LIST}})
+  if(BRIDGE_INCLUDE_PKGS)
+    foreach(pkg ${ros2_packages})
+      if(NOT ${pkg} IN_LIST BRIDGE_INCLUDE_PKGS)
+        list(REMOVE_ITEM ros2_packages ${pkg})
+      endif(NOT ${pkg} IN_LIST BRIDGE_INCLUDE_PKGS)
+    endforeach()
+  elseif(BRIDGE_IGNORE_PKGS)
+    foreach(pkg ${ros2_packages})
+      if(${pkg} IN_LIST BRIDGE_IGNORE_PKGS)
+        list(REMOVE_ITEM ros2_packages ${pkg})
+      endif(${pkg} IN_LIST BRIDGE_IGNORE_PKGS)
+    endforeach()
+  endif(BRIDGE_INCLUDE_PKGS)
+
+  set(${BRIDGE_PKG_LIST} "${ros2_packages}" PARENT_SCOPE)
+endfunction(filter_packages ros2_packages)
