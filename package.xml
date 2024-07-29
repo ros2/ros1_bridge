@@ -35,6 +35,7 @@
   <build_depend>std_msgs</build_depend>
   <build_depend>xmlrpcpp</build_depend>
   <build_depend>geometry_msgs</build_depend>
+  <build_depend>nav_msgs</build_depend>
 
   <buildtool_export_depend>pkg-config</buildtool_export_depend>
 
