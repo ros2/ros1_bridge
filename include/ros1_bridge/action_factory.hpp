@@ -121,7 +121,7 @@ public:
 private:
   class GoalHandler
   {
-  public:
+public:
     void cancel()
     {
       std::lock_guard<std::mutex> lock(mutex_gh_);
@@ -193,7 +193,7 @@ private:
     GoalHandler(ROS1GoalHandle & gh1, ROS2ClientSharedPtr & client, rclcpp::Logger logger)
     : gh1_(gh1), gh2_(nullptr), client_(client), logger_(logger), canceled_(false) {}
 
-  private:
+private:
     ROS1GoalHandle gh1_;
     ROS2ClientGoalHandle gh2_;
     ROS2ClientSharedPtr client_;
@@ -312,7 +312,7 @@ public:
 private:
   class GoalHandler
   {
-  public:
+public:
     void cancel()
     {
       std::lock_guard<std::mutex> lock(mutex_);
@@ -382,7 +382,7 @@ private:
     GoalHandler(std::shared_ptr<ROS2ServerGoalHandle> & gh2, std::shared_ptr<ROS1Client> & client)
     : gh2_(gh2), client_(client), canceled_(false) {}
 
-  private:
+private:
     std::shared_ptr<ROS1ClientGoalHandle> gh1_;
     std::shared_ptr<ROS2ServerGoalHandle> gh2_;
     std::shared_ptr<ROS1Client> client_;

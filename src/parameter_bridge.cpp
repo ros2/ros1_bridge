@@ -250,7 +250,9 @@ bool parse_command_options(
     "--ros2-args",
   };
 
-  if (ros1_bridge::find_command_option(args, "-h") || ros1_bridge::find_command_option(args, "--help")) {
+  if (ros1_bridge::find_command_option(args, "-h") ||
+    ros1_bridge::find_command_option(args, "--help"))
+  {
     std::stringstream ss;
     ss << "Usage:" << std::endl;
     ss << "ros2 run ros1_bridge parameter_bridge [Bridge specific options] \\" << std::endl;
@@ -262,9 +264,11 @@ bool parse_command_options(
     ss << std::endl;
     ss << " --topics: Name of the parameter that contains the list of topics to bridge.";
     ss << std::endl;
-    ss << " --services-1-to-2: Name of the parameter that contains the list of services to bridge from ROS 1 to ROS 2.";
+    ss << " --services-1-to-2: Name of the parameter that contains the list of services to bridge"
+      " from ROS 1 to ROS 2.";
     ss << std::endl;
-    ss << " --services-2-to-1: Name of the parameter that contains the list of services to bridge from ROS 2 to ROS 1.";
+    ss << " --services-2-to-1: Name of the parameter that contains the list of services to bridge"
+      " from ROS 2 to ROS 1.";
     ss << std::endl;
     ss << " --ros1-args: Arguments to pass to the ROS 1 bridge node." << std::endl;
     ss << " --ros2-args: Arguments to pass to the ROS 2 bridge node." << std::endl;
@@ -298,11 +302,17 @@ bool parse_command_options(
     printf("Using default topics parameter name: %s\n", topics_parameter_name);
   }
 
-  if (!ros1_bridge::get_option_value(args, "--services-1-to-2", services_1_to_2_parameter_name, true)) {
+  if (!ros1_bridge::get_option_value(
+      args, "--services-1-to-2",
+      services_1_to_2_parameter_name, true))
+  {
     printf("Using default services 1 to 2 parameter name: %s\n", services_1_to_2_parameter_name);
   }
 
-  if (!ros1_bridge::get_option_value(args, "--services-2-to-1", services_2_to_1_parameter_name, true)) {
+  if (!ros1_bridge::get_option_value(
+      args, "--services-2-to-1",
+      services_2_to_1_parameter_name, true))
+  {
     printf("Using default services 2 to 1 parameter name: %s\n", services_2_to_1_parameter_name);
   }
 
@@ -330,8 +340,10 @@ bool parse_command_options(
 
   ros2_args.insert(ros2_args.begin(), args.at(0));
 
-  if (ros1_bridge::find_command_option(args, "--ros-args") or args.size() > 1) {
-    RCLCPP_WARN(logger, "Warning: passing the ROS node arguments directly to the node is deprecated, use --ros1-args and --ros2-args instead.");
+  if (ros1_bridge::find_command_option(args, "--ros-args") || args.size() > 1) {
+    RCLCPP_WARN(
+      logger, "Warning: passing the ROS node arguments directly to the node is "
+      "deprecated, use --ros1-args and --ros2-args instead.");
 
     ros1_bridge::split_ros1_ros2_args(args, ros1_args, ros2_args);
   }
@@ -362,7 +374,8 @@ int main(int argc, char * argv[])
 
   if (!parse_command_options(
       argc, argv, ros1_args, ros2_args, topics_parameter_name,
-      services_1_to_2_parameter_name, services_2_to_1_parameter_name)) {
+      services_1_to_2_parameter_name, services_2_to_1_parameter_name))
+  {
     return 0;
   }
 

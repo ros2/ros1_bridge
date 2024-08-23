@@ -60,6 +60,13 @@
   <test_depend>launch_testing_ros</test_depend>
   <test_depend>ros2run</test_depend>
   <test_depend>sensor_msgs</test_depend>
+  <test_depend>python3-ament-pep257</test_depend>
+  <test_depend>python3-ament-cmake-test</test_depend>
+  <test_depend>python3-ament-xmllint</test_depend>
+  <test_depend>python3-ament-lint-cmake</test_depend>
+  <test_depend>python3-ament-uncrustify</test_depend>
+  <test_depend>python3-ament-flake8</test_depend>
+  <test_depend>python3-ament-copyright</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

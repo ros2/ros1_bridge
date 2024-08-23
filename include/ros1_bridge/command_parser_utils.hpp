@@ -22,14 +22,14 @@ namespace ros1_bridge
 {
 
 bool find_command_option(
-    const std::vector<const char *> & args,
-    const std::string & option);
+  const std::vector<const char *> & args,
+  const std::string & option);
 
 bool get_option_value(
-    std::vector<const char *> & args,
-    const std::string & option,
-    const char * & value,
-    bool remove = false);
+  std::vector<const char *> & args,
+  const std::string & option,
+  const char * & value,
+  bool remove = false);
 
 bool get_option_values(
   std::vector<const char *> & args, const std::string & option,
@@ -37,9 +37,9 @@ bool get_option_values(
   std::vector<const char *> & values, bool remove = false);
 
 bool get_option_flag(
-    std::vector<const char *> & args,
-    const std::string & option,
-    bool remove = false);
+  std::vector<const char *> & args,
+  const std::string & option,
+  bool remove = false);
 
 void split_ros1_ros2_args(
   const std::vector<const char *> & args,
