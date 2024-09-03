@@ -134,10 +134,6 @@ bool parse_command_options(
   return true;
 }
 
-
-  return true;
-}
-
 void update_bridge(
   ros::NodeHandle & ros1_node,
   rclcpp::Node::SharedPtr ros2_node,
