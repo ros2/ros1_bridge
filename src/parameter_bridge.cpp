@@ -276,6 +276,9 @@ int main(int argc, char * argv[])
   {
     for (size_t i = 0; i < static_cast<size_t>(topics.size()); ++i) {
       std::string topic_name = static_cast<std::string>(topics[i]["topic"]);
+      std::string topic_name_ros2 = topic_name;
+      if (topics[i].hasMember("topic_ros2"))
+        topic_name_ros2 = static_cast<std::string>(topics[i]["topic_ros2"]);
       std::string type_name = static_cast<std::string>(topics[i]["type"]);
       size_t queue_size = static_cast<int>(topics[i]["queue_size"]);
       if (!queue_size) {
@@ -283,8 +286,8 @@ int main(int argc, char * argv[])
       }
       printf(
         "Trying to create bidirectional bridge for topic '%s' "
-        "with ROS 2 type '%s'\n",
-        topic_name.c_str(), type_name.c_str());
+        "with ROS 2 name '%s' and type '%s'\n",
+        topic_name.c_str(), topic_name_ros2.c_str(), type_name.c_str());
 
       try {
         if (topics[i].hasMember("qos")) {
@@ -292,11 +295,11 @@ int main(int argc, char * argv[])
           auto qos_settings = qos_from_params(topics[i]["qos"]);
           printf("\n");
           ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
-            ros1_node, ros2_node, "", type_name, topic_name, queue_size, qos_settings);
+            ros1_node, ros2_node, "", type_name, topic_name, queue_size, qos_settings, topic_name_ros2);
           all_handles.push_back(handles);
         } else {
           ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
-            ros1_node, ros2_node, "", type_name, topic_name, queue_size);
+            ros1_node, ros2_node, "", type_name, topic_name, queue_size, topic_name_ros2);
           all_handles.push_back(handles);
         }
       } catch (std::runtime_error & e) {
