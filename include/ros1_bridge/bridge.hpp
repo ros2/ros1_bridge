@@ -132,7 +132,7 @@ create_bidirectional_bridge(
   const std::string & ros2_type_name,
   const std::string & topic_name,
   size_t queue_size = 10,
-  const std::string & topic_name_ros2 = "");
+  std::string topic_name_ros2 = "");
 
 BridgeHandles
 create_bidirectional_bridge(
@@ -143,7 +143,7 @@ create_bidirectional_bridge(
   const std::string & topic_name,
   size_t queue_size,
   const rclcpp::QoS & publisher_qos,
-  const std::string & topic_name_ros2 = "");
+  std::string topic_name_ros2 = "");
 
 }  // namespace ros1_bridge
 

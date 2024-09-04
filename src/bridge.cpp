@@ -124,7 +124,7 @@ create_bidirectional_bridge(
   const std::string & ros2_type_name,
   const std::string & topic_name,
   size_t queue_size,
-  const std::string & topic_name_ros2)
+  std::string topic_name_ros2)
 {
   if (topic_name_ros2.empty()) topic_name_ros2 = topic_name;
   RCLCPP_INFO(
@@ -150,7 +150,7 @@ create_bidirectional_bridge(
   const std::string & topic_name,
   size_t queue_size,
   const rclcpp::QoS & publisher_qos,
-  const std::string & topic_name_ros2)
+  std::string topic_name_ros2)
 {
   if (topic_name_ros2.empty()) topic_name_ros2 = topic_name;
   RCLCPP_INFO(
