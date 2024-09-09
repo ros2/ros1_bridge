@@ -456,7 +456,7 @@ int main(int argc, char * argv[])
 
   // ROS 2 spinning loop
   rclcpp::executors::MultiThreadedExecutor executor(rclcpp::ExecutorOptions(), 4);
-  executor.add_node(ros2_node.get_node_base_interface());
+  executor.add_node(ros2_node->get_node_base_interface());
   executor.spin();
 
   // TODO: why was it implemented like this?
