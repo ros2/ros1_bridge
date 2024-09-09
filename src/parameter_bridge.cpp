@@ -328,7 +328,7 @@ int main(int argc, char * argv[])
     for (size_t i = 0; i < static_cast<size_t>(services_1_to_2.size()); ++i) {
       std::string service_name = static_cast<std::string>(services_1_to_2[i]["service"]);
       std::string service_name_ros2 = service_name;
-      if (topics[i].hasMember("service_ros2"))
+      if (services_1_to_2[i].hasMember("service_ros2"))
         service_name_ros2 = static_cast<std::string>(services_1_to_2[i]["service_ros2"]);
       std::string type_name = static_cast<std::string>(services_1_to_2[i]["type"]);
       {
@@ -394,7 +394,7 @@ int main(int argc, char * argv[])
     for (size_t i = 0; i < static_cast<size_t>(services_2_to_1.size()); ++i) {
       std::string service_name = static_cast<std::string>(services_2_to_1[i]["service"]);
       std::string service_name_ros2 = service_name;
-      if (topics[i].hasMember("service_ros2"))
+      if (services_2_to_1[i].hasMember("service_ros2"))
         service_name_ros2 = static_cast<std::string>(services_2_to_1[i]["service_ros2"]);
       std::string type_name = static_cast<std::string>(services_2_to_1[i]["type"]);
       {
