@@ -138,10 +138,10 @@ class ServiceFactoryInterface
 {
 public:
   virtual ServiceBridge1to2 service_bridge_1_to_2(
-    ros::NodeHandle &, rclcpp::Node::SharedPtr, const std::string &, int) = 0;
+    ros::NodeHandle &, rclcpp::Node::SharedPtr, const std::string &, int, std::string service_name_ros2="") = 0;
 
   virtual ServiceBridge2to1 service_bridge_2_to_1(
-    ros::NodeHandle &, rclcpp::Node::SharedPtr, const std::string &) = 0;
+    ros::NodeHandle &, rclcpp::Node::SharedPtr, const std::string &, std::string service_name_ros2="") = 0;
 };
 
 class ActionFactoryInterface

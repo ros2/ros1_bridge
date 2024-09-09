@@ -450,10 +450,11 @@ public:
 
   ServiceBridge1to2 service_bridge_1_to_2(
     ros::NodeHandle & ros1_node, rclcpp::Node::SharedPtr ros2_node, const std::string & name,
-    int service_execution_timeout)
+    int service_execution_timeout, std::string service_name_ros2)
   {
     ServiceBridge1to2 bridge;
-    bridge.client = ros2_node->create_client<ROS2_T>(name);
+    if (service_name_ros2.empty()) service_name_ros2 = name;
+    bridge.client = ros2_node->create_client<ROS2_T>(service_name_ros2);
     auto m = &ServiceFactory<ROS1_T, ROS2_T>::forward_1_to_2;
     auto f = std::bind(
       m, this, bridge.client, ros2_node->get_logger(), std::placeholders::_1,
@@ -463,9 +464,11 @@ public:
   }
 
   ServiceBridge2to1 service_bridge_2_to_1(
-    ros::NodeHandle & ros1_node, rclcpp::Node::SharedPtr ros2_node, const std::string & name)
+    ros::NodeHandle & ros1_node, rclcpp::Node::SharedPtr ros2_node, const std::string & name,
+    std::string service_name_ros2)
   {
     ServiceBridge2to1 bridge;
+    if (service_name_ros2.empty()) service_name_ros2 = name;
     bridge.client = ros1_node.serviceClient<ROS1_T>(name);
     auto m = &ServiceFactory<ROS1_T, ROS2_T>::forward_2_to_1;
     std::function<
@@ -476,7 +479,7 @@ public:
     f = std::bind(
       m, this, bridge.client, ros2_node->get_logger(), std::placeholders::_1,
       std::placeholders::_2, std::placeholders::_3);
-    bridge.server = ros2_node->create_service<ROS2_T>(name, f);
+    bridge.server = ros2_node->create_service<ROS2_T>(service_name_ros2, f);
     return bridge;
   }
 
