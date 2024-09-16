@@ -60,6 +60,51 @@ Changelog for package ros1_bridge
 * Update maintainers (#286)
 * Contributors: Chris Lalancette, Jacob Perron, Michael Carroll, Paul Bovbel, Vicidel, William Woodall, locus-services
 
+Forthcoming
+-----------
+* Add std_srvs to ros1_bridge build (#11)
+* Add wireless_msgs to the build (#10)
+  This will be needed for the BLE nodes as they monitor the /connection
+  topic which is ROS1.
+* Update Jenkinsfile to use the jammy docker image (#9)
+  * Update Jenkinsfile to use the jammy docker image
+  * Package wide linting fixes
+  CPP, CMake, python, etc. Mostly updated using tools, some manual
+  edits.
+* Remove upstream github actions that fail (#8)
+  We probably shouldn't be running our proprietary code on an upstream
+  CI anyways so remove this action.
+* Add nav_msgs to ros1_bridge (#7)
+* Whitelist packages (#6)
+  * Introduces package include and exclude lists
+  * Adds cmake file that parses package include resp. exclude list
+  * Filtering cmake dependencies based on include/exclude list
+  https://github.com/ros2/ros1_bridge/issues/284
+  Co-authored-by: James Prestwood <jprestwood@locusrobotics.com>
+  * Passes package incl./excl. to bridge generation
+  * CMake passes package include/ignore lists to python scripts generating
+  the bridge c++ code
+  * Generation of factories and mappings restricted to packages filtered
+  by include/ignore lists
+  https://github.com/ros2/ros1_bridge/issues/284
+  Co-authored-by: James Prestwood <jprestwood@locusrobotics.com>
+  * Create package whitelist from package.xml
+  The prior mechanism to generate an ignore/include list was to
+  use a static file at the workspace root. This doesn't play very
+  well with our build system so instead use package.xml. Any
+  <build_depend> package will now be included in the ros1_bridge
+  build.
+  This is done using a simple python script to parse package.xml
+  which is then called by cmake (stdout of the script is the list).
+  We then feed that list into a modified filter_packages() function
+  that takes a list of include/ignore packages rather than using
+  the static list.
+  * Replace rosidl_cmake with rosidl_common
+  The former is deprecated and the build was warning of this.
+  ---------
+  Co-authored-by: norro <github@norro.de>
+* Contributors: James Prestwood
+
 0.13.0 (2024-06-17)
 -------------------
 * Correctly handle fixed length array conversion in services and actions (#4)
