@@ -60,8 +60,8 @@ Changelog for package ros1_bridge
 * Update maintainers (#286)
 * Contributors: Chris Lalancette, Jacob Perron, Michael Carroll, Paul Bovbel, Vicidel, William Woodall, locus-services
 
-Forthcoming
------------
+0.14.0 (2024-09-16)
+-------------------
 * Add std_srvs to ros1_bridge build (#11)
 * Add wireless_msgs to the build (#10)
   This will be needed for the BLE nodes as they monitor the /connection
