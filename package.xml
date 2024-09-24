@@ -38,6 +38,7 @@
   <build_depend>nav_msgs</build_depend>
   <build_depend>wireless_msgs</build_depend>
   <build_depend>std_srvs</build_depend>
+  <build_depend>localization_msgs</build_depend>
 
   <buildtool_export_depend>pkg-config</buildtool_export_depend>
 
