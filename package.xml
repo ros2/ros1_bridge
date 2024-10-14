@@ -37,6 +37,7 @@
   <build_depend>apriltag_msgs</build_depend>
   <build_depend>builtin_interfaces</build_depend>
   <build_depend>geometry_msgs</build_depend>
+  <build_depend>lifecycle_msgs</build_depend>
   <build_depend>localization_msgs</build_depend>
   <build_depend>nav_msgs</build_depend>
   <build_depend>sensor_msgs</build_depend>
