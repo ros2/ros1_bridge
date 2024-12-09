@@ -16,6 +16,7 @@
 
 #include "ros1_bridge/bridge.hpp"
 
+#include "rmw/qos_profiles.h"
 
 namespace ros1_bridge
 {
@@ -105,7 +106,7 @@ create_bridge_from_2_to_1(
 {
   auto factory = get_factory(ros1_type_name, ros2_type_name);
   auto ros1_pub = factory->create_ros1_publisher(
-    ros1_node, ros1_topic_name, publisher_queue_size);
+    ros1_node, ros1_topic_name, publisher_queue_size, (subscriber_qos.get_rmw_qos_profile().durability == RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL));
 
   auto ros2_sub = factory->create_ros2_subscriber(
     ros2_node, ros2_topic_name, subscriber_qos, ros1_pub, ros2_pub);
@@ -158,7 +159,7 @@ create_bidirectional_bridge(
     ros1_type_name, topic_name, queue_size, ros2_type_name, topic_name, publisher_qos);
   handles.bridge2to1 = create_bridge_from_2_to_1(
     ros2_node, ros1_node,
-    ros2_type_name, topic_name, queue_size, ros1_type_name, topic_name, queue_size,
+    ros2_type_name, topic_name, publisher_qos, ros1_type_name, topic_name, queue_size,
     handles.bridge1to2.ros2_publisher);
   return handles;
 }
