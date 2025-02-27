@@ -408,7 +408,8 @@ streamPrimitiveVector(ros::serialization::IStream & stream, VEC_PRIMITIVE_T& vec
 
 // This version is for write
 template<typename VEC_PRIMITIVE_T>
-static void streamPrimitiveVector(ros::serialization::OStream & stream, const VEC_PRIMITIVE_T& vec)
+static typename std::enable_if_t<!is_vector_or_array_of_bool<VEC_PRIMITIVE_T>::value, void>
+streamPrimitiveVector(ros::serialization::OStream & stream, const VEC_PRIMITIVE_T& vec)
 {
   const uint32_t data_len = vec.size() * sizeof(typename VEC_PRIMITIVE_T::value_type);
   // copy data from std::vector/std::array into stream
@@ -425,7 +426,8 @@ static void streamPrimitiveVector(ros::serialization::LStream & stream, const VE
 
 // This version is for read
 template<typename VEC_PRIMITIVE_T>
-static void streamPrimitiveVector(ros::serialization::IStream & stream, VEC_PRIMITIVE_T& vec)
+static typename std::enable_if_t<!is_vector_or_array_of_bool<VEC_PRIMITIVE_T>::value, void>
+streamPrimitiveVector(ros::serialization::IStream & stream, VEC_PRIMITIVE_T& vec)
 {
   const uint32_t data_len = vec.size() * sizeof(typename VEC_PRIMITIVE_T::value_type);
   // copy data from stream into std::vector/std::array
