@@ -45,7 +45,7 @@ public:
   {
     ts_lib_ = rclcpp::get_typesupport_library(ros2_type_name, "rosidl_typesupport_cpp");
     if (static_cast<bool>(ts_lib_)) {
-      type_support_ = rclcpp::get_typesupport_handle(
+      type_support_ = rclcpp::get_message_typesupport_handle(
         ros2_type_name, "rosidl_typesupport_cpp",
         *ts_lib_);
     }
