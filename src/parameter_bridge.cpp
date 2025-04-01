@@ -287,12 +287,22 @@ int main(int argc, char * argv[])
         topic_name.c_str(), type_name.c_str());
 
       try {
-        if (topics[i].hasMember("qos")) {
+        if (topic_name == "/tf_static")
+        {
+          bool publisher_latch = true;
           printf("Setting up QoS for '%s': ", topic_name.c_str());
           auto qos_settings = qos_from_params(topics[i]["qos"]);
           printf("\n");
           ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
-            ros1_node, ros2_node, "", type_name, topic_name, queue_size, qos_settings);
+            ros1_node, ros2_node, "", type_name, topic_name, queue_size, publisher_latch, qos_settings);
+          all_handles.push_back(handles);
+        }
+        else if (topics[i].hasMember("qos")) {
+          printf("Setting up QoS for '%s': ", topic_name.c_str());
+          auto qos_settings = qos_from_params(topics[i]["qos"]);
+          printf("\n");
+          ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
+            ros1_node, ros2_node, "", type_name, topic_name, queue_size, false, qos_settings);
           all_handles.push_back(handles);
         } else {
           ros1_bridge::BridgeHandles handles = ros1_bridge::create_bidirectional_bridge(
