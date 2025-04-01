@@ -359,9 +359,57 @@ static void streamVectorSize(STREAM_T& stream, VEC_T& vec)
   vec.resize(data_len);
 }
 
+// ############################################################################
+//    Deal with the special case of std::vector<bool> or std::array<bool, N>
+// ############################################################################
+
+// Check if a type is a std::vector<bool>
+template<typename T>
+struct is_vector_bool : std::is_same<T, std::vector<bool>> {};
+
+// Check if a type is a std::array<bool, N> for any N
+template<typename T>
+struct is_array_bool : std::false_type {};
+
+template<std::size_t N>
+struct is_array_bool<std::array<bool, N>> : std::true_type {};
+
+// Combined trait for checking either std::vector<bool> or std::array<bool, N>
+template<typename T>
+struct is_vector_or_array_of_bool : std::integral_constant<bool,
+    is_vector_bool<T>::value || is_array_bool<T>::value> {};
+
 // This version is for write
 template<typename VEC_PRIMITIVE_T>
-static void streamPrimitiveVector(ros::serialization::OStream & stream, const VEC_PRIMITIVE_T& vec)
+static typename std::enable_if_t<is_vector_or_array_of_bool<VEC_PRIMITIVE_T>::value, void>
+streamPrimitiveVector(ros::serialization::OStream & stream, const VEC_PRIMITIVE_T& vec)
+{
+  // copy data from std::vector/std::array into stream
+  for (size_t i = 0; i < vec.size(); ++i)
+  {
+    *(stream.advance(1)) = static_cast<uint8_t>(vec[i]);
+  }
+}
+
+// This version is for read
+template<typename VEC_PRIMITIVE_T>
+static typename std::enable_if_t<is_vector_or_array_of_bool<VEC_PRIMITIVE_T>::value, void>
+streamPrimitiveVector(ros::serialization::IStream & stream, VEC_PRIMITIVE_T& vec)
+{
+  // copy data from stream into std::vector/std::array
+  for (size_t i = 0; i < vec.size(); ++i)
+  {
+    uint8_t element;
+    stream.next(element);
+    vec[i] = static_cast<bool>(element);
+  }
+}
+// ############################################################################
+
+// This version is for write
+template<typename VEC_PRIMITIVE_T>
+static typename std::enable_if_t<!is_vector_or_array_of_bool<VEC_PRIMITIVE_T>::value, void>
+streamPrimitiveVector(ros::serialization::OStream & stream, const VEC_PRIMITIVE_T& vec)
 {
   const uint32_t data_len = vec.size() * sizeof(typename VEC_PRIMITIVE_T::value_type);
   // copy data from std::vector/std::array into stream
@@ -378,7 +426,8 @@ static void streamPrimitiveVector(ros::serialization::LStream & stream, const VE
 
 // This version is for read
 template<typename VEC_PRIMITIVE_T>
-static void streamPrimitiveVector(ros::serialization::IStream & stream, VEC_PRIMITIVE_T& vec)
+static typename std::enable_if_t<!is_vector_or_array_of_bool<VEC_PRIMITIVE_T>::value, void>
+streamPrimitiveVector(ros::serialization::IStream & stream, VEC_PRIMITIVE_T& vec)
 {
   const uint32_t data_len = vec.size() * sizeof(typename VEC_PRIMITIVE_T::value_type);
   // copy data from stream into std::vector/std::array
