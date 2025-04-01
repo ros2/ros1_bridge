@@ -46,7 +46,7 @@ To run the following examples you will also need these ROS 1 packages:
 
 ### Prerequisites for the examples in this file
 
-In order to make the examples below portable between versions of ROS, we define two environment variables, `ROS1_INSTALL_PATH` and `ROS2_INSTALL_PATH`. 
+In order to make the examples below portable between versions of ROS, we define two environment variables, `ROS1_INSTALL_PATH` and `ROS2_INSTALL_PATH`.
 These are defined as the paths to the installation location of their respective ROS versions.
 
 If you installed Noetic in the default location, then the definition of `ROS1_INSTALL_PATH` will be `/opt/ros/noetic`.
@@ -125,6 +125,31 @@ colcon build --symlink-install --packages-select ros1_bridge --cmake-force-confi
 
 *Note:* If you are building on a memory constrained system you might want to limit the number of parallel jobs by setting e.g. the environment variable `MAKEFLAGS=-j1`.
 
+## Running the bridge
+
+There are two types of bridges that are available for general use:
+
+* The dynamic bridge which will watch the available ROS 1 and ROS 2 topics.
+  Once a *matching* topic has been detected it starts to bridge the messages on this topic.
+* The parameter bridge which will just bridge specific topics with specific QoS profiles depending on a configuration provided by the user. For more details see the [Example 4](#example-4-bridge-only-selected-topics-and-services) section.
+
+Too see the available command line options for each type of bridge run:
+
+```bash
+ros2 run ros1_bridge [dynamic_bridge|parameter_bridge] --help
+```
+
+To pass arguments to the ROS 1 node of the bridge, use the `--ros1-args` option. For example, to run the dynamic bridge changing the ROS 1 node namespace to `ros1_bridge`:
+
+```bash
+ros2 run ros1_bridge dynamic_bridge --ros1-args __ns:=ros1_bridge
+```
+
+To pass arguments to the ROS 2 node of the bridge, use the `--ros2-args` option. For example, to run the dynamic bridge changing the ROS 2 node namespace to `ros2_bridge`:
+
+```bash
+ros2 run ros1_bridge dynamic_bridge --ros2-args __ns:=ros2_bridge
+```
 
 ## Example 1: run the bridge and the example talker and listener
 
