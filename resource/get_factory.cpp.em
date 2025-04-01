@@ -65,8 +65,25 @@ std::unique_ptr<ServiceFactoryInterface> get_service_factory(const std::string &
     return factory;
   }
 @[end for]@
-  // fprintf(stderr, "No template specialization for the service %s:%s/%s\n", ros_id.data(), package_name.data(), service_name.data());
   return factory;
+}
+
+std::unique_ptr<ActionFactoryInterface> get_action_factory(const std::string & ros_id, const std::string & package_name, const std::string & action_name)
+{
+@[if not ros2_package_names]@
+  (void)ros_id;
+  (void)package_name;
+  (void)action_name;
+@[else]@
+  std::unique_ptr<ActionFactoryInterface> factory;
+@[end if]@
+@[for ros2_package_name in sorted(ros2_package_names)]@
+  factory = get_action_factory_@(ros2_package_name)(ros_id, package_name, action_name);
+  if (factory) {
+    return factory;
+  }
+@[end for]@
+  return nullptr;
 }
 
 }  // namespace ros1_bridge
