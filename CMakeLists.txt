@@ -10,8 +10,10 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra)
 endif()
 
-find_package(rmw REQUIRED)
+set(ROS1_BRIDGE_ONLY "none" CACHE STRING "Compile only these packages and their dependencies. Use semi colon to separate.")
+set(ROS1_BRIDGE_IGNORE "none" CACHE STRING "Ignore these packages and the ones that depend on them. Use semi colon to separate.")
 
+find_package(rmw REQUIRED)
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rmw_implementation_cmake REQUIRED)
@@ -47,20 +49,6 @@ find_ros1_package(std_msgs REQUIRED)
 # Dependency that we should only look for if ROS 1 is installed (it's not present on a ROS 2
 # system; see https://github.com/ros2/ros1_bridge/pull/331#issuecomment-1188111510)
 find_package(xmlrpcpp REQUIRED)
-
-# find ROS 1 packages with messages / services
-include(cmake/find_ros1_interface_packages.cmake)
-find_ros1_interface_packages(ros1_message_packages)
-
-set(prefixed_ros1_message_packages "")
-foreach(ros1_message_package ${ros1_message_packages})
-  # TODO(karsten1987): This is currently a workaround to work with ROS 2 classloader
-  # rather than ROS 1 classloader.
-  if(NOT "${ros1_message_package}" STREQUAL "nodelet")
-    find_ros1_package(${ros1_message_package} REQUIRED)
-    list(APPEND prefixed_ros1_message_packages "ros1_${ros1_message_package}")
-  endif()
-endforeach()
 
 set(TEST_ROS1_BRIDGE FALSE)
 if(BUILD_TESTING)
@@ -131,18 +119,53 @@ set(generated_path "${CMAKE_BINARY_DIR}/generated")
 set(generated_files "${generated_path}/get_factory.cpp")
 list(APPEND generated_files "${generated_path}/get_mappings.cpp")
 
+
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+# get useful ROS 2 packages to FIND and paths to ROS 1 message headers
+execute_process(
+COMMAND bin/ros1_bridge_common_interfaces --only "${ROS1_BRIDGE_ONLY}" --ignore "${ROS1_BRIDGE_IGNORE}"
+OUTPUT_VARIABLE all_interfaces
+WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# parse output to get 2 lists: ROS 1 packages and ROS 2 per-package interfaces
+list(GET all_interfaces 0 ros1_packages)
+string(REPLACE ":" ";" ros1_packages ${ros1_packages})
+list(GET all_interfaces 1 ros2_interfaces)
+string(REPLACE ":" ";" ros2_interfaces ${ros2_interfaces})
+
+# find ROS 1 packages with messages / services
+# deprecated as Python now returns these depending on the only / ignores
+#include(cmake/find_ros1_interface_packages.cmake)
+#find_ros1_interface_packages(ros1_message_packages)
+
+set(prefixed_ros1_message_packages "")
+foreach(ros1_message_package ${ros1_packages})
+  # TODO(karsten1987): This is currently a workaround to work with ROS 2 classloader
+  # rather than ROS 1 classloader.
+  if(NOT "${ros1_message_package}" STREQUAL "nodelet")
+    find_ros1_package(${ros1_message_package} REQUIRED)
+    list(APPEND prefixed_ros1_message_packages "ros1_${ros1_message_package}")
+  endif()
+endforeach()
+
 # generate per interface compilation units to keep the memory usage low
-ament_index_get_resources(ros2_interface_packages "rosidl_interfaces")
-# actionlib_msgs is deprecated, but we will quiet the warning until the bridge has support for
-# ROS actions: https://github.com/ros2/design/issues/195
-set(actionlib_msgs_DEPRECATED_QUIET TRUE)
-foreach(package_name ${ros2_interface_packages})
+foreach(package_interfaces ${ros2_interfaces})
+
+  # get interfaces for this package
+  string(REPLACE "+" ";" package_interfaces ${package_interfaces})
+
+  # extract package name for dependencies
+  list(POP_FRONT package_interfaces package_name)
+  list(APPEND ros2_interface_packages ${package_name})
+
   find_package(${package_name} QUIET REQUIRED)
   message(STATUS "Found ${package_name}: ${${package_name}_VERSION} (${${package_name}_DIR})")
   if(NOT "${package_name}" STREQUAL "builtin_interfaces")
     list(APPEND generated_files "${generated_path}/${package_name}_factories.cpp")
     list(APPEND generated_files "${generated_path}/${package_name}_factories.hpp")
-    foreach(interface_file ${${package_name}_IDL_FILES})
+    foreach(interface_file ${package_interfaces})
       file(TO_CMAKE_PATH "${interface_file}" interface_name)
       get_filename_component(interface_basename "${interface_name}" NAME_WE)
       # skipping actions and request and response messages of services
@@ -172,6 +195,7 @@ add_custom_command(
   COMMAND Python3::Interpreter
   ARGS bin/ros1_bridge_generate_factories
     --output-path "${generated_path}" --template-dir resource
+    --only "${ROS1_BRIDGE_ONLY}" --ignore "${ROS1_BRIDGE_IGNORE}"
   DEPENDS ${target_dependencies}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Generating factories for interface types")
@@ -182,7 +206,7 @@ if(NOT WIN32)
     PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter")
 endif()
 
-include_directories(include ${generated_path})
+include_directories(include ${generated_path} ${ros1_includes})
 
 function(custom_executable target)
   cmake_parse_arguments(

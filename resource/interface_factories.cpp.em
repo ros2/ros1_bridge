@@ -368,9 +368,29 @@ static void streamPrimitiveVector(ros::serialization::OStream & stream, const VE
   memcpy(stream.advance(data_len), &vec.front(), data_len);
 }
 
+// This version is for write vector<bool>
+template<typename VEC_PRIMITIVE_T>
+static void streamPrimitiveVectorBool(ros::serialization::OStream & stream, const VEC_PRIMITIVE_T& vec)
+{
+  const uint32_t step = sizeof(bool);
+  const uint32_t data_len = vec.size() * sizeof(bool);
+  // element-wise copy because of vector<bool>
+  for(uint i = 0; i < vec.size(); ++i)
+    *(stream.getData()+i*step) = vec[i];
+  stream.advance(data_len);
+}
+
 // This version is for length
 template<typename VEC_PRIMITIVE_T>
 static void streamPrimitiveVector(ros::serialization::LStream & stream, const VEC_PRIMITIVE_T& vec)
+{
+  const uint32_t data_len = vec.size() * sizeof(typename VEC_PRIMITIVE_T::value_type);
+  stream.advance(data_len);
+}
+
+// This version is for length
+template<typename VEC_PRIMITIVE_T>
+static void streamPrimitiveVectorBool(ros::serialization::LStream & stream, const VEC_PRIMITIVE_T& vec)
 {
   const uint32_t data_len = vec.size() * sizeof(typename VEC_PRIMITIVE_T::value_type);
   stream.advance(data_len);
@@ -383,6 +403,18 @@ static void streamPrimitiveVector(ros::serialization::IStream & stream, VEC_PRIM
   const uint32_t data_len = vec.size() * sizeof(typename VEC_PRIMITIVE_T::value_type);
   // copy data from stream into std::vector/std::array
   memcpy(&vec.front(), stream.advance(data_len), data_len);
+}
+
+// This version is for read sector<bool>
+template<typename VEC_PRIMITIVE_T>
+static void streamPrimitiveVectorBool(ros::serialization::IStream & stream, VEC_PRIMITIVE_T& vec)
+{
+  const uint32_t step = sizeof(bool);
+  const uint32_t data_len = vec.size() * sizeof(bool);
+  // element-wise copy because of vector<bool>
+  for(uint i = 0; i < vec.size(); ++i)
+    vec[i] = *(stream.getData() + i*step);
+  stream.advance(data_len);
 }
 
 @[for m in mapped_msgs]@
@@ -466,6 +498,9 @@ if isinstance(ros2_fields[-1].type, NamespacedType):
   {
     ros1_bridge::internal_stream_translate_helper(stream, *ros2_it);
   }
+@[            elif ros2_fields[-1].type.value_type.typename == 'boolean']@
+  // write primitive type, specialized
+  streamPrimitiveVectorBool(stream, ros2_msg.@(ros2_field_selection));
 @[            else]@
   // write primitive type
   streamPrimitiveVector(stream, ros2_msg.@(ros2_field_selection));
