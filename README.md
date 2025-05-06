@@ -17,6 +17,23 @@ Therefore it can't be used with the dynamic bridge if no other subscribers are p
 As an alternative you can use the `--bridge-all-2to1-topics` option to bridge all ROS 2 topics to ROS 1 so that tools such as `rostopic echo`, `rostopic list` and `rqt` will see the topics even if there are no matching ROS 1 subscribers.
 Run `ros2 run ros1_bridge dynamic_bridge -- --help` for more options.
 
+## Supported ROS and Ubuntu Versions
+
+> ⚠️ **Important Compatibility Notice**
+
+- `ros1_bridge` **requires ROS 1**, which has reached [end-of-life (EOL)](https://www.ros.org/reps/rep-0003.html#noetic-ninjemys-may-2020-may-2025) as of **May 2025** for ROS Noetic.
+- Ubuntu **24.04 LTS** does **not support ROS 1**, and therefore is **not compatible** with `ros1_bridge`.
+
+| Ubuntu Version | Supported ROS 1 Versions  | Supported ROS 2 Versions              | `ros1_bridge` Support            |
+|----------------|----------------|---------------------------------------|----------------------------------|
+| 20.04 (Focal)  | Noetic Ninjemys   | Foxy Fitzroy (EOL), Galactic Geochelone (EOL), Humble Hawksbill    | ✅ Full support                  |
+| 22.04 (Jammy)  | ⚠️ Partial (unsupported officially) | Humble Hawksbill, Iron Irwini | ⚠️ Requires building from source |
+| 24.04 (Noble)  | ❌ Not available | Jazzy Jalisco, Kilted Kaiju          | ❌ Not supported                 |
+
+To use `ros1_bridge`, you must use a system where both ROS 1 and ROS 2 are installable and buildable. Mixing ROS distributions across unsupported Ubuntu versions is **not recommended** and may lead to broken builds or missing dependencies.
+
+
+
 ## Prerequisites
 
 In order to run the bridge you need to either:
