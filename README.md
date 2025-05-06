@@ -32,8 +32,6 @@ Run `ros2 run ros1_bridge dynamic_bridge -- --help` for more options.
 
 To use `ros1_bridge`, you must use a system where both ROS 1 and ROS 2 are installable and buildable. Mixing ROS distributions across unsupported Ubuntu versions is **not recommended** and may lead to broken builds or missing dependencies.
 
-
-
 ## Prerequisites
 
 In order to run the bridge you need to either:
