@@ -306,26 +306,18 @@ void ServiceFactory<
 @[      for field in service["fields"][type.lower()]]@
 @[        if field["array"]]@
   req@(to).@(field["ros" + to]["name"]).resize(req@(frm).@(field["ros" + frm]["name"]).size());
-  auto @(field["ros1"]["name"])1_it = req1.@(field["ros1"]["name"]).begin();
-  auto @(field["ros2"]["name"])2_it = req2.@(field["ros2"]["name"]).begin();
-  while (
-    @(field["ros1"]["name"])1_it != req1.@(field["ros1"]["name"]).end() &&
-    @(field["ros2"]["name"])2_it != req2.@(field["ros2"]["name"]).end()
-  ) {
-    auto & @(field["ros1"]["name"])1 = *(@(field["ros1"]["name"])1_it++);
-    auto & @(field["ros2"]["name"])2 = *(@(field["ros2"]["name"])2_it++);
-@[      else]@
-  auto & @(field["ros1"]["name"])1 = req1.@(field["ros1"]["name"]);
-  auto & @(field["ros2"]["name"])2 = req2.@(field["ros2"]["name"]);
-@[        end if]@
-@[        if field["basic"]]@
-  @(field["ros2"]["name"])@(to) = @(field["ros1"]["name"])@(frm);
+  for ( size_t i = 0; i < req1.@(field["ros1"]["name"]).size(); ++i)
+@[          if field["basic"]]@
+    req@(to).@(field["ros" + to]["name"])[i] = req@(frm).@(field["ros" + frm]["name"])[i];
+@[          else]@
+    Factory<@(field["ros1"]["cpptype"]),@(field["ros2"]["cpptype"])>::convert_@(frm)_to_@(to)(@
+req@(frm).@(field["ros" + frm]["name"])[i], req@(to).@(field["ros" + to]["name"])[i]);
+@[          end if]@
+@[        elif field["basic"]]@
+  req@(to).@(field["ros" + to]["name"]) = req@(frm).@(field["ros" + frm]["name"]);
 @[        else]@
   Factory<@(field["ros1"]["cpptype"]),@(field["ros2"]["cpptype"])>::convert_@(frm)_to_@(to)(@
-@(field["ros2"]["name"])@(frm), @(field["ros1"]["name"])@(to));
-@[        end if]@
-@[        if field["array"]]@
-  }
+req@(frm).@(field["ros" + frm]["name"]), req@(to).@(field["ros" + to]["name"]));
 @[        end if]@
 @[      end for]@
 }
@@ -368,9 +360,29 @@ static void streamPrimitiveVector(ros::serialization::OStream & stream, const VE
   memcpy(stream.advance(data_len), &vec.front(), data_len);
 }
 
+// This version is for write vector<bool>
+template<typename VEC_PRIMITIVE_T>
+static void streamPrimitiveVectorBool(ros::serialization::OStream & stream, const VEC_PRIMITIVE_T& vec)
+{
+  const uint32_t step = sizeof(bool);
+  const uint32_t data_len = vec.size() * sizeof(bool);
+  // element-wise copy because of vector<bool>
+  for(uint i = 0; i < vec.size(); ++i)
+    *(stream.getData()+i*step) = vec[i];
+  stream.advance(data_len);
+}
+
 // This version is for length
 template<typename VEC_PRIMITIVE_T>
 static void streamPrimitiveVector(ros::serialization::LStream & stream, const VEC_PRIMITIVE_T& vec)
+{
+  const uint32_t data_len = vec.size() * sizeof(typename VEC_PRIMITIVE_T::value_type);
+  stream.advance(data_len);
+}
+
+// This version is for length
+template<typename VEC_PRIMITIVE_T>
+static void streamPrimitiveVectorBool(ros::serialization::LStream & stream, const VEC_PRIMITIVE_T& vec)
 {
   const uint32_t data_len = vec.size() * sizeof(typename VEC_PRIMITIVE_T::value_type);
   stream.advance(data_len);
@@ -383,6 +395,18 @@ static void streamPrimitiveVector(ros::serialization::IStream & stream, VEC_PRIM
   const uint32_t data_len = vec.size() * sizeof(typename VEC_PRIMITIVE_T::value_type);
   // copy data from stream into std::vector/std::array
   memcpy(&vec.front(), stream.advance(data_len), data_len);
+}
+
+// This version is for read sector<bool>
+template<typename VEC_PRIMITIVE_T>
+static void streamPrimitiveVectorBool(ros::serialization::IStream & stream, VEC_PRIMITIVE_T& vec)
+{
+  const uint32_t step = sizeof(bool);
+  const uint32_t data_len = vec.size() * sizeof(bool);
+  // element-wise copy because of vector<bool>
+  for(uint i = 0; i < vec.size(); ++i)
+    vec[i] = *(stream.getData() + i*step);
+  stream.advance(data_len);
 }
 
 @[for m in mapped_msgs]@
@@ -466,6 +490,9 @@ if isinstance(ros2_fields[-1].type, NamespacedType):
   {
     ros1_bridge::internal_stream_translate_helper(stream, *ros2_it);
   }
+@[            elif ros2_fields[-1].type.value_type.typename == 'boolean']@
+  // write primitive type, specialized
+  streamPrimitiveVectorBool(stream, ros2_msg.@(ros2_field_selection));
 @[            else]@
   // write primitive type
   streamPrimitiveVector(stream, ros2_msg.@(ros2_field_selection));
