@@ -144,6 +144,17 @@ public:
     ros::NodeHandle &, rclcpp::Node::SharedPtr, const std::string &) = 0;
 };
 
+class ActionFactoryInterface
+{
+public:
+  virtual void create_server_client(
+    ros::NodeHandle ros1_node,
+    rclcpp::Node::SharedPtr ros2_node,
+    const std::string action_name) = 0;
+
+  virtual void shutdown() = 0;
+};
+
 }  // namespace ros1_bridge
 
 #endif  // ROS1_BRIDGE__FACTORY_INTERFACE_HPP_
