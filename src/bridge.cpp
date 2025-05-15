@@ -132,10 +132,10 @@ create_bidirectional_bridge(
   handles.bridge1to2 = create_bridge_from_1_to_2(
     ros1_node, ros2_node,
     ros1_type_name, topic_name, queue_size, ros2_type_name, topic_name, queue_size);
-  handles.bridge2to1 = create_bridge_from_2_to_1(
-    ros2_node, ros1_node,
-    ros2_type_name, topic_name, queue_size, ros1_type_name, topic_name, queue_size,
-    handles.bridge1to2.ros2_publisher);
+  // handles.bridge2to1 = create_bridge_from_2_to_1(
+  //   ros2_node, ros1_node,
+  //   ros2_type_name, topic_name, queue_size, ros1_type_name, topic_name, queue_size,
+  //   handles.bridge1to2.ros2_publisher);
   return handles;
 }
 
@@ -156,10 +156,10 @@ create_bidirectional_bridge(
   handles.bridge1to2 = create_bridge_from_1_to_2(
     ros1_node, ros2_node,
     ros1_type_name, topic_name, queue_size, ros2_type_name, topic_name, publisher_qos);
-  handles.bridge2to1 = create_bridge_from_2_to_1(
-    ros2_node, ros1_node,
-    ros2_type_name, topic_name, queue_size, ros1_type_name, topic_name, queue_size,
-    handles.bridge1to2.ros2_publisher);
+  // handles.bridge2to1 = create_bridge_from_2_to_1(
+  //   ros2_node, ros1_node,
+  //   ros2_type_name, topic_name, queue_size, ros1_type_name, topic_name, queue_size,
+  //   handles.bridge1to2.ros2_publisher);
   return handles;
 }
 
