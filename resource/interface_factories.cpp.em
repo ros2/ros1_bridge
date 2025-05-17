@@ -321,8 +321,14 @@ void ServiceFactory<
 @[        if field["basic"]]@
   @(field["ros2"]["name"])@(to) = @(field["ros1"]["name"])@(frm);
 @[        else]@
-  Factory<@(field["ros1"]["cpptype"]),@(field["ros2"]["cpptype"])>::convert_@(frm)_to_@(to)(@
-@(field["ros2"]["name"])@(frm), @(field["ros1"]["name"])@(to));
+  Factory<@(field["ros1"]["cpptype"]),@(field["ros2"]["cpptype"])>::convert_@(frm)_to_@(to)(
+@[          if frm == "1"]@
+    @(field["ros1"]["name"])1, @(field["ros2"]["name"])2
+@[          else]@
+    @(field["ros2"]["name"])2, @(field["ros1"]["name"])1
+@[          end if]@
+  );
+
 @[        end if]@
 @[        if field["array"]]@
   }
