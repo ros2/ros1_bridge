@@ -21,7 +21,7 @@ Run `ros2 run ros1_bridge dynamic_bridge -- --help` for more options.
 
 > ⚠️ **Important Compatibility Notice**
 
-- `ros1_bridge` **requires ROS 1**, which has reached [end-of-life (EOL)](https://www.ros.org/reps/rep-0003.html#noetic-ninjemys-may-2020-may-2025) as of **May 2025** for ROS Noetic.
+- `ros1_bridge` **requires ROS 1**, which has reached [end-of-life (EOL)](https://reps.openrobotics.org/rep-0003/#noetic-ninjemys-may-2020-may-2025) as of **May 2025** for ROS Noetic.
 - Ubuntu **24.04 LTS** does **not support ROS 1**, and therefore is **not compatible** with `ros1_bridge`.
 
 | Ubuntu Version | Supported ROS 1 Versions  | Supported ROS 2 Versions              | `ros1_bridge` Support            |
@@ -61,7 +61,7 @@ To run the following examples you will also need these ROS 1 packages:
 
 ### Prerequisites for the examples in this file
 
-In order to make the examples below portable between versions of ROS, we define two environment variables, `ROS1_INSTALL_PATH` and `ROS2_INSTALL_PATH`. 
+In order to make the examples below portable between versions of ROS, we define two environment variables, `ROS1_INSTALL_PATH` and `ROS2_INSTALL_PATH`.
 These are defined as the paths to the installation location of their respective ROS versions.
 
 If you installed Noetic in the default location, then the definition of `ROS1_INSTALL_PATH` will be `/opt/ros/noetic`.
