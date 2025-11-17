@@ -152,7 +152,7 @@ The mapping can optionally only define ``request_fields_1_to_2`` or ``response_f
 How does the bridge know about custom interfaces?
 -------------------------------------------------
 
-The ROS 1 and ROS 2 packages need to be in separate workspaces, so that each workspace can be sourced with its correponding ROS version.
+The ROS 1 and ROS 2 packages need to be in separate workspaces, so that each workspace can be sourced with its corresponding ROS version.
 The bridge should be in its own workspace, as it will need to source both ROS 1 and ROS 2 versions.
 
 Example workspace setup
