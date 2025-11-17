@@ -391,6 +391,34 @@ static void streamPrimitiveVector(ros::serialization::IStream & stream, VEC_PRIM
   memcpy(&vec.front(), stream.advance(data_len), data_len);
 }
 
+// Specializations for std::vector<bool> which uses proxy objects instead of references
+// This version is for write
+static void streamPrimitiveVector(ros::serialization::OStream & stream, const std::vector<bool>& vec)
+{
+  const uint32_t data_len = vec.size() * sizeof(uint8_t);
+  uint8_t* data_ptr = reinterpret_cast<uint8_t*>(stream.advance(data_len));
+  for (size_t i = 0; i < vec.size(); ++i) {
+    data_ptr[i] = vec[i] ? 1 : 0;
+  }
+}
+
+// This version is for length
+static void streamPrimitiveVector(ros::serialization::LStream & stream, const std::vector<bool>& vec)
+{
+  const uint32_t data_len = vec.size() * sizeof(uint8_t);
+  stream.advance(data_len);
+}
+
+// This version is for read
+static void streamPrimitiveVector(ros::serialization::IStream & stream, std::vector<bool>& vec)
+{
+  const uint32_t data_len = vec.size() * sizeof(uint8_t);
+  const uint8_t* data_ptr = reinterpret_cast<const uint8_t*>(stream.advance(data_len));
+  for (size_t i = 0; i < vec.size(); ++i) {
+    vec[i] = (data_ptr[i] != 0);
+  }
+}
+
 @[for m in mapped_msgs]@
 
 @[  if m.ros2_msg.package_name=="std_msgs" and m.ros2_msg.message_name=="Header"]

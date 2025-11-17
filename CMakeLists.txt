@@ -68,6 +68,8 @@ if(BUILD_TESTING)
   find_package(diagnostic_msgs REQUIRED)
   find_ros1_package(diagnostic_msgs)
   find_ros1_package(roslaunch)
+  # Skip pep257 test due to compatibility issues with Python 3.8 and ament_pep257 0.11.4
+  set(ament_cmake_pep257_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
   if(ros1_diagnostic_msgs_FOUND AND ros1_roslaunch_FOUND)
     # ensure that the ROS 2 diagnostic_msgs was found by find_package
