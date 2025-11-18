@@ -31,6 +31,7 @@
 #include "rclcpp/rclcpp.hpp"
 
 #include "ros1_bridge/bridge.hpp"
+#include "ros1_bridge/command_parser_utils.hpp"
 
 rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
 {
@@ -229,19 +230,119 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
   return ros2_publisher_qos;
 }
 
+bool parse_command_options(
+  int argc, char ** argv, std::vector<const char *> & ros1_args,
+  std::vector<const char *> & ros2_args, const char * & topics_parameter_name,
+  const char * & services_1_to_2_parameter_name, const char * & services_2_to_1_parameter_name)
+{
+  topics_parameter_name = "topics";
+  services_1_to_2_parameter_name = "services_1_to_2";
+  services_2_to_1_parameter_name = "services_2_to_1";
+
+  std::vector<const char *> args(argv, argv + argc);
+
+  std::vector<const char *> available_options = {
+    "-h", "--help",
+    "--topics",
+    "--services-1-to-2",
+    "--services-2-to-1",
+    "--ros1-args",
+    "--ros2-args",
+  };
+
+  if (ros1_bridge::find_command_option(args, "-h") || ros1_bridge::find_command_option(args, "--help")) {
+    std::stringstream ss;
+    ss << "Usage:" << std::endl;
+    ss << "ros2 run ros1_bridge parameter_bridge [Bridge specific options] \\" << std::endl;
+    ss << "    [--ros1-args [ROS1 arguments]] [--ros2-args [ROS2 arguments]]" << std::endl;
+    ss << std::endl;
+    ss << "Options:" << std::endl;
+    ss << " -h, --help: This message." << std::endl;
+    ss << " --print-pairs: Print a list of the supported ROS 2 <=> ROS 1 conversion pairs.";
+    ss << std::endl;
+    ss << " --topics: Name of the parameter that contains the list of topics to bridge.";
+    ss << std::endl;
+    ss << " --services-1-to-2: Name of the parameter that contains the list of services to bridge from ROS 1 to ROS 2.";
+    ss << std::endl;
+    ss << " --services-2-to-1: Name of the parameter that contains the list of services to bridge from ROS 2 to ROS 1.";
+    ss << std::endl;
+    ss << " --ros1-args: Arguments to pass to the ROS 1 bridge node." << std::endl;
+    ss << " --ros2-args: Arguments to pass to the ROS 2 bridge node." << std::endl;
+    std::cout << ss.str();
+    return false;
+  }
+
+  if (ros1_bridge::get_option_flag(args, "--print-pairs")) {
+    auto mappings_2to1 = ros1_bridge::get_all_message_mappings_2to1();
+    if (mappings_2to1.size() > 0) {
+      printf("Supported ROS 2 <=> ROS 1 message type conversion pairs:\n");
+      for (auto & pair : mappings_2to1) {
+        printf("  - '%s' (ROS 2) <=> '%s' (ROS 1)\n", pair.first.c_str(), pair.second.c_str());
+      }
+    } else {
+      printf("No message type conversion pairs supported.\n");
+    }
+    mappings_2to1 = ros1_bridge::get_all_service_mappings_2to1();
+    if (mappings_2to1.size() > 0) {
+      printf("Supported ROS 2 <=> ROS 1 service type conversion pairs:\n");
+      for (auto & pair : mappings_2to1) {
+        printf("  - '%s' (ROS 2) <=> '%s' (ROS 1)\n", pair.first.c_str(), pair.second.c_str());
+      }
+    } else {
+      printf("No service type conversion pairs supported.\n");
+    }
+    return false;
+  }
+
+  if (!ros1_bridge::get_option_value(args, "--topics", topics_parameter_name, true)) {
+    printf("Using default topics parameter name: %s\n", topics_parameter_name);
+  }
+
+  if (!ros1_bridge::get_option_value(args, "--services-1-to-2", services_1_to_2_parameter_name, true)) {
+    printf("Using default services 1 to 2 parameter name: %s\n", services_1_to_2_parameter_name);
+  }
+
+  if (!ros1_bridge::get_option_value(args, "--services-2-to-1", services_2_to_1_parameter_name, true)) {
+    printf("Using default services 2 to 1 parameter name: %s\n", services_2_to_1_parameter_name);
+  }
+
+  auto logger = rclcpp::get_logger("ros1_bridge");
+
+  // Get ROS1 arguments
+  if (ros1_bridge::get_option_values(args, "--ros1-args", available_options, ros1_args, true)) {
+    if (ros1_args.size() == 0) {
+      RCLCPP_ERROR(logger, "Error: --ros1-args specified but no arguments provided.");
+      return false;
+    }
+  }
+
+  ros1_args.insert(ros1_args.begin(), args.at(0));
+
+  // Get ROS2 arguments
+  if (ros1_bridge::get_option_values(args, "--ros2-args", available_options, ros2_args, true)) {
+    if (ros2_args.size() == 0) {
+      RCLCPP_ERROR(logger, "Error: --ros2-args specified but no arguments provided.");
+      return false;
+    }
+
+    ros2_args.insert(ros2_args.begin(), "--ros-args");
+  }
+
+  ros2_args.insert(ros2_args.begin(), args.at(0));
+
+  if (ros1_bridge::find_command_option(args, "--ros-args") or args.size() > 1) {
+    RCLCPP_WARN(logger, "Warning: passing the ROS node arguments directly to the node is deprecated, use --ros1-args and --ros2-args instead.");
+
+    ros1_bridge::split_ros1_ros2_args(args, ros1_args, ros2_args);
+  }
+
+  return true;
+}
+
 int main(int argc, char * argv[])
 {
-  // ROS 1 node
-  ros::init(argc, argv, "ros_bridge");
-  ros::NodeHandle ros1_node;
-
-  // ROS 2 node
-  rclcpp::init(argc, argv);
-  auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
-
-  std::list<ros1_bridge::BridgeHandles> all_handles;
-  std::list<ros1_bridge::ServiceBridge1to2> service_bridges_1_to_2;
-  std::list<ros1_bridge::ServiceBridge2to1> service_bridges_2_to_1;
+  std::vector<const char *> ros1_args;
+  std::vector<const char *> ros2_args;
 
   // bridge all topics listed in a ROS 1 parameter
   // the topics parameter needs to be an array
@@ -249,24 +350,34 @@ int main(int argc, char * argv[])
   // topic: the name of the topic to bridge (e.g. '/topic_name')
   // type: the type of the topic to bridge (e.g. 'pkgname/msg/MsgName')
   // queue_size: the queue size to use (default: 100)
-  const char * topics_parameter_name = "topics";
+  const char * topics_parameter_name;
   // the services parameters need to be arrays
   // and each item needs to be a dictionary with the following keys;
   // service: the name of the service to bridge (e.g. '/service_name')
   // type: the type of the service to bridge (e.g. 'pkgname/srv/SrvName')
-  const char * services_1_to_2_parameter_name = "services_1_to_2";
-  const char * services_2_to_1_parameter_name = "services_2_to_1";
+  const char * services_1_to_2_parameter_name;
+  const char * services_2_to_1_parameter_name;
   const char * service_execution_timeout_parameter_name =
     "ros1_bridge/parameter_bridge/service_execution_timeout";
-  if (argc > 1) {
-    topics_parameter_name = argv[1];
+
+  if (!parse_command_options(
+      argc, argv, ros1_args, ros2_args, topics_parameter_name,
+      services_1_to_2_parameter_name, services_2_to_1_parameter_name)) {
+    return 0;
   }
-  if (argc > 2) {
-    services_1_to_2_parameter_name = argv[2];
-  }
-  if (argc > 3) {
-    services_2_to_1_parameter_name = argv[3];
-  }
+
+  // ROS 2 node
+  rclcpp::init(ros2_args.size(), ros2_args.data());
+  auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
+
+  // ROS 1 node
+  int argc_ros1 = ros1_args.size();
+  ros::init(argc_ros1, const_cast<char **>(ros1_args.data()), "ros_bridge");
+  ros::NodeHandle ros1_node;
+
+  std::list<ros1_bridge::BridgeHandles> all_handles;
+  std::list<ros1_bridge::ServiceBridge1to2> service_bridges_1_to_2;
+  std::list<ros1_bridge::ServiceBridge2to1> service_bridges_2_to_1;
 
   // Topics
   XmlRpc::XmlRpcValue topics;
