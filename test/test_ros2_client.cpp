@@ -33,7 +33,7 @@ int main(int argc, char ** argv)
 
   auto future = client->async_send_request(request);
   if (
-    rclcpp::spin_until_future_complete(node, future, 2s) ==
+    rclcpp::spin_until_complete(node, future, 2s) ==
     rclcpp::FutureReturnCode::SUCCESS)
   {
     auto response = future.get();
