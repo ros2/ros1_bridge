@@ -192,13 +192,17 @@ void update_bridge(
         bridge.ros1_type_name, topic_name, 10,
         bridge.ros2_type_name, topic_name, ros2_publisher_qos);
     } catch (std::runtime_error & e) {
-      fprintf(
-        stderr,
-        "failed to create 1to2 bridge for topic '%s' "
-        "with ROS 1 type '%s' and ROS 2 type '%s': %s\n",
-        topic_name.c_str(), bridge.ros1_type_name.c_str(), bridge.ros2_type_name.c_str(), e.what());
-      if (std::string(e.what()).find("No template specialization") != std::string::npos) {
-        fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
+      static std::set<std::string> logged_topic_errors;
+      auto entry = logged_topic_errors.emplace(topic_name);
+      if (entry.second) {  // topic name was not already in the set, so log once
+        fprintf(
+          stderr,
+          "failed to create 1to2 bridge for topic '%s' "
+          "with ROS 1 type '%s' and ROS 2 type '%s': %s\n",
+          topic_name.c_str(), bridge.ros1_type_name.c_str(), bridge.ros2_type_name.c_str(), e.what());
+        if (std::string(e.what()).find("No template specialization") != std::string::npos) {
+          fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
+        }
       }
       continue;
     }
@@ -258,13 +262,17 @@ void update_bridge(
         bridge.ros2_type_name, topic_name, 10,
         bridge.ros1_type_name, topic_name, 10);
     } catch (std::runtime_error & e) {
-      fprintf(
-        stderr,
-        "failed to create 2to1 bridge for topic '%s' "
-        "with ROS 2 type '%s' and ROS 1 type '%s': %s\n",
-        topic_name.c_str(), bridge.ros2_type_name.c_str(), bridge.ros1_type_name.c_str(), e.what());
-      if (std::string(e.what()).find("No template specialization") != std::string::npos) {
-        fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
+      static std::set<std::string> logged_topic_errors;
+      auto entry = logged_topic_errors.emplace(topic_name);
+      if (entry.second) {  // topic name was not already in the set, so log once
+        fprintf(
+          stderr,
+          "failed to create 2to1 bridge for topic '%s' "
+          "with ROS 2 type '%s' and ROS 1 type '%s': %s\n",
+          topic_name.c_str(), bridge.ros2_type_name.c_str(), bridge.ros1_type_name.c_str(), e.what());
+        if (std::string(e.what()).find("No template specialization") != std::string::npos) {
+          fprintf(stderr, "check the list of supported pairs with the `--print-pairs` option\n");
+        }
       }
       continue;
     }
