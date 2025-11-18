@@ -23,13 +23,17 @@ def main(argv=sys.argv[1:]):
         '--template-dir',
         required=True,
         help='The location of the template files')
+    parser.add_argument('--only', type=str, help='Compile only these packages', default='')
+    parser.add_argument('--ignore', type=str, help='Skip these packages', default='')
+
     args = parser.parse_args(argv)
 
     try:
         return generate_cpp(
             args.output_path,
             args.template_dir,
-        )
+            args.only, args.ignore)
+
     except RuntimeError as e:
         print(str(e), file=sys.stderr)
         return 1

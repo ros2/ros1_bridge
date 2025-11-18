@@ -16,6 +16,7 @@ from collections import OrderedDict
 import os
 import re
 import sys
+from copy import deepcopy
 
 import ament_index_python
 from catkin_pkg.package import parse_package
@@ -53,7 +54,8 @@ except ImportError:
 # since ROS 2 should be sourced after ROS 1 it will overlay
 # e.g. the message packages, to prevent that from happening (and ROS 1 code to
 # fail) ROS 1 paths are moved to the front of the search path
-rpp = os.environ.get('ROS_PACKAGE_PATH', '').split(os.pathsep)
+rpp = os.environ.get('ROS_PACKAGE_PATH', '').split(os.pathsep) + ['/usr/share']
+os.environ['ROS_PACKAGE_PATH'] = os.pathsep.join(rpp)
 for package_path in reversed([p for p in rpp if p]):
     if not package_path.endswith(os.sep + 'share'):
         continue
@@ -65,27 +67,95 @@ for package_path in reversed([p for p in rpp if p]):
 import rosmsg  # noqa
 
 
-def generate_cpp(output_path, template_dir):
+def parse_cmake_args(pkgs: str):
+    '''
+    Changes a CMake list to a Python set, ignores '' and 'none'
+    '''
+    pkgs = set(pkgs.split(';'))
+    for to_remove in ('', 'none'):
+        if to_remove in pkgs:
+            pkgs.remove(to_remove)
+    return pkgs
+
+
+def generate_bridged_pairs(only: str, ignores: str):
+    '''
+    Generate list of messages and services that can and should be bridged
+    '''
+
+    # explode CMake args to lists
+    only = parse_cmake_args(only)
+    ignores = parse_cmake_args(ignores)
+
     rospack = rospkg.RosPack()
     data = generate_messages(rospack)
+
     message_string_pairs = {
         (
             '%s/%s' % (m.ros1_msg.package_name, m.ros1_msg.message_name),
             '%s/%s' % (m.ros2_msg.package_name, m.ros2_msg.message_name))
         for m in data['mappings']}
+
     data.update(
-        generate_services(rospack, message_string_pairs=message_string_pairs))
+        generate_services(rospack, message_string_pairs=message_string_pairs, ros2_pkgs=data['ros2_package_names_msg']))
+
+    # update dependencies for services
+    ros2_pkgs = data['ros2_pkg_depends']
+    for srv in data['services']:
+        pkg = srv['ros2_package']
+        deps = [field['ros2']['type'] for field in srv['fields']['request'] + srv['fields']['response']]
+        deps = set(dep.split('/')[0] for dep in deps if '/' in dep)
+        if pkg in ros2_pkgs:
+            ros2_pkgs[pkg].update(deps)
+        else:
+            ros2_pkgs[pkg] = deps
+
+    # build full dependency graph
+
+    # identify desired ROS 2 packages
+    if only:
+        prev_size = len(only)+1
+        while prev_size != len(only):
+            prev_size = len(only)
+            for pkg in only:
+                only.update(ros2_pkgs[pkg])
+                break
+        ros2_pkgs = {pkg: ros2_pkgs[pkg] for pkg in only}
+
+    # then remove the ignored ones
+    if ignores:
+        pkgs = len(ros2_pkgs)+1
+        while pkgs != len(ros2_pkgs):
+            pkgs = len(ros2_pkgs)
+            for to_remove in ignores:
+                for pkg,deps in ros2_pkgs.items():
+                    if to_remove in deps:
+                        ros2_pkgs.pop(pkg)
+                        break
+
+    # clean data structure according to relevant packages
+    unique_package_names = set(ros2_pkgs.keys())
+    # skip builtin_interfaces since there is a custom implementation
+    unique_package_names -= {'builtin_interfaces'}
+    data['ros2_package_names'] = list(unique_package_names)
+    data.pop('ros2_package_names_msg')
+    data.pop('ros2_package_names_srv')
+    data.pop('ros2_pkg_depends')
+
+    data['mappings'] = [m for m in data['mappings'] if m.ros2_msg.package_name in ros2_pkgs]
+    data['services'] = [s for s in data['services'] if s['ros2_package'] in ros2_pkgs]
+
+    return data
+
+
+def generate_cpp(output_path, template_dir, only, ignores):
+    data = generate_bridged_pairs(only, ignores)
 
     template_file = os.path.join(template_dir, 'get_mappings.cpp.em')
     output_file = os.path.join(output_path, 'get_mappings.cpp')
     data_for_template = {
         'mappings': data['mappings'], 'services': data['services']}
     expand_template(template_file, data_for_template, output_file)
-
-    unique_package_names = set(data['ros2_package_names_msg'] + data['ros2_package_names_srv'])
-    # skip builtin_interfaces since there is a custom implementation
-    unique_package_names -= {'builtin_interfaces'}
-    data['ros2_package_names'] = list(unique_package_names)
 
     template_file = os.path.join(template_dir, 'get_factory.cpp.em')
     output_file = os.path.join(output_path, 'get_factory.cpp')
@@ -190,6 +260,16 @@ def generate_messages(rospack=None):
 
     # order mappings topologically to allow template specialization
     ordered_mappings = []
+
+    # keep track of dependencies to handle white/black lists
+    ros2_pkg_depends = {}
+    for m in mappings:
+        if m.depends_on_ros2_messages:
+            pkg = m.ros2_msg.package_name
+            if pkg not in ros2_pkg_depends:
+                ros2_pkg_depends[pkg] = set([pkg])
+            ros2_pkg_depends[pkg].update(dep.package_name for dep in m.depends_on_ros2_messages)
+
     while mappings:
         # pick first mapping without unsatisfied dependencies
         for m in mappings:
@@ -197,9 +277,8 @@ def generate_messages(rospack=None):
                 break
         else:
             break
-        # move mapping to ordered list
-        mappings.remove(m)
         ordered_mappings.append(m)
+        mappings.remove(m)
         ros2_msg = m.ros2_msg
         # update unsatisfied dependencies of remaining mappings
         for m in mappings:
@@ -220,22 +299,30 @@ def generate_messages(rospack=None):
     return {
         'ros1_msgs': [m.ros1_msg for m in ordered_mappings],
         'ros2_msgs': [m.ros2_msg for m in ordered_mappings],
+        'ros2_pkg_depends': ros2_pkg_depends,
         'mappings': ordered_mappings,
-        'ros2_package_names_msg': ros2_package_names,
-        'all_ros2_msgs': ros2_msgs,
+        'ros2_package_names_msg': [p2 for p1,p2 in package_pairs if p2 in ros2_pkg_depends],
+        'all_ros2_msgs': [m2 for m1,m2 in message_pairs if m2.package_name in ros2_pkg_depends]
     }
 
 
-def generate_services(rospack=None, message_string_pairs=None):
+def generate_services(rospack=None, message_string_pairs=None, ros2_pkgs=None):
     ros1_srvs = get_ros1_services(rospack=rospack)
     ros2_pkgs, ros2_srvs, mapping_rules = get_ros2_services()
     services = determine_common_services(
         ros1_srvs, ros2_srvs, mapping_rules,
         message_string_pairs=message_string_pairs)
+
+    # keep only the ones that can be bridged
+    ros2_pkgs = list(set(srv['ros2_package'] for srv in services))
+    ros2_used = set(Message(srv['ros2_package'],srv['ros2_name'], '') for srv in services)
+    ros2_srvs = [srv for srv in ros2_srvs if srv in ros2_used]
+
     return {
         'services': services,
         'ros2_package_names_srv': ros2_pkgs,
         'all_ros2_srvs': ros2_srvs,
+        'all_ros1_srvs': ros1_srvs,
     }
 
 
@@ -383,7 +470,9 @@ class Message:
         return hash('%s/%s' % (self.package_name, self.message_name))
 
     def __str__(self):
-        return self.prefix_path + ':' + self.package_name + ':' + self.message_name
+        if self.prefix_path:
+            return self.prefix_path + ':' + self.package_name + ':' + self.message_name
+        return self.package_name + ':' + self.message_name
 
     def __repr__(self):
         return self.__str__()
@@ -639,9 +728,8 @@ def determine_common_services(
                 ros2_type = str(ros2_fields[direction][i].type)
                 ros1_name = ros1_field[1]
                 ros2_name = ros2_fields[direction][i].name
-                if ros1_type != ros2_type or ros1_name != ros2_name:
-                    # if the message types have a custom mapping their names
-                    # might not be equal, therefore check the message pairs
+                if ros1_type != ros2_type:
+                    # if the message types have a custom mapping, check the message pairs
                     if (ros1_type, ros2_type) not in message_string_pairs:
                         match = False
                         break
