@@ -231,13 +231,13 @@ rclcpp::QoS qos_from_params(XmlRpc::XmlRpcValue qos_params)
 
 int main(int argc, char * argv[])
 {
-  // ROS 1 node
-  ros::init(argc, argv, "ros_bridge");
-  ros::NodeHandle ros1_node;
-
   // ROS 2 node
   rclcpp::init(argc, argv);
   auto ros2_node = rclcpp::Node::make_shared("ros_bridge");
+  
+  // ROS 1 node
+  ros::init(argc, argv, "ros_bridge");
+  ros::NodeHandle ros1_node;
 
   std::list<ros1_bridge::BridgeHandles> all_handles;
   std::list<ros1_bridge::ServiceBridge1to2> service_bridges_1_to_2;
