@@ -814,11 +814,20 @@ def determine_field_mapping(ros1_msg, ros2_msg, mapping_rules, msg_idx):
         # check that no fields exist in ROS 2 but not in ROS 1
         # since then it might be the case that those have been renamed and should be mapped
         for ros2_member in ros2_spec.structure.members:
+            if ros2_member.name in [field[0].name for field in mapping.fields_2_to_1.keys()]:
+                continue
             for ros1_field in ros1_spec.parsed_fields():
                 if ros1_field.name.lower() == ros2_member.name:
                     break
             else:
                 # if fields from both sides are not mappable the whole message is not mappable
+                print(
+                    f"ROS 1 message '{ros1_msg.package_name}/{ros1_msg.message_name}' has fields "
+                    "that are missing in ROS 2 and "
+                    f"ROS 2 message '{ros2_msg.package_name}/{ros2_msg.message_name}' has fields "
+                    "that are missing in ROS 1, therefore no mapping will be generated for these "
+                    "messages",
+                    file=sys.stderr)
                 return None
 
     return mapping
